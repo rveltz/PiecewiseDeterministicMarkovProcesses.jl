@@ -1,1 +1,8 @@
 julia 0.4
+Distributions
+StatsBase
+DataFrames
+DataArrays
+ODE
+Sundials
+FastAnonymous
