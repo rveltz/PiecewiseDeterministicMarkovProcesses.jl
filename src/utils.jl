@@ -9,15 +9,15 @@ end
 @doc doc"""
   A type storing the call.
   """ ->
-type pdmpArgs
-  xc::Vector{Float64} # continuous variable
-  xd::Vector{Int64}# discrete variable
-  F::Any
-  R::Any
-  nu::Matrix{Int64}
-  parms::Vector{Float64}
-  tf::Float64
-end
+  type pdmpArgs
+    xc::Vector{Float64} # continuous variable  
+    xd::Vector{Int64}# discrete variable
+    F::Any
+    R::Any
+    nu::Matrix{Int64}
+    parms::Vector{Float64}
+    tf::Float64
+  end
 
 @doc doc"""
   This type stores the output, and comprises of:
@@ -28,10 +28,11 @@ end
       - **args** : arguments passed.
   """ ->
 type pdmpResult
-  time::Vector{Float64}
-  data::Matrix{Float64}
-  stats::pdmpStats
-  args::pdmpArgs
+	time::Vector{Float64}
+	xc::Matrix{Float64}
+	xd::Matrix{Int64}
+	stats::pdmpStats
+	args::pdmpArgs
 end
 
 @doc doc"""
