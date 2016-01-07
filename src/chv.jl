@@ -1,6 +1,3 @@
-immutable Feqn; end
-immutable Reqn; end
-
 function cvode_ode_wrapper(t, x, xdot, user_data)
 	x = Sundials.asarray(x)
 	xdot = Sundials.asarray(xdot)
@@ -27,47 +24,14 @@ function f_CHV(F::Function,R::Function,t::Float64, x::Vector{Float64}, 	xdot::Ve
 		xdot[i] = y[i]/r
 	end
 	xdot[end] = 1.0/r
+	return Int32(0)
 end
-#
-# function f_CHV(F::Function,R::Function,t::Float64, x::Vector{Float64},
-# 	xdot::Vector{Float64},xd, parms::Vector{Float64})
-# 	# used for the exact method
-# 	r::Float64 = sum(R(x,xd,t,parms))
-# 	y=F(x,xd,t,parms)
-# 	ly=length(y)
-# 	for i in 1:ly
-# 		xdot[i] = y[i]/r
-# 	end
-# 	xdot[end] = 1.0/r
-# end
-
-# function f_CHV(F::Type{Feqn},R::Type{Reqn},t::Float64, x::Vector{Float64}, xdot::Vector{Float64},xd, parms::Vector{Float64})
-# 	# used for the exact method
-# 	r::Float64 = sum(evaluate(R,x,xd,t,parms))
-# 	y=evaluate(F,x,xd,t,parms)
-# 	ly=length(y)
-# 	for i in 1:ly
-# 		xdot[i] = y[i]/r
-# 	end
-# 	xdot[end] = 1.0/r
-# end
-
-# function f_CHV{f}(fr::Type{f},t::Float64, x::Vector{Float64}, xdot::Vector{Float64},xd, parms::Vector{Float64})
-# 	# used for the exact method
-# 	r::Float64 = sum(R(fr,x,xd,t,parms))
-# 	y=F(fr,x,xd,t,parms)
-# 	ly=length(y)
-# 	for i in 1:ly
-# 		xdot[i] = y[i]/r
-# 	end
-# 	xdot[end] = 1.0/r
-# end
 
 
 @doc doc"""
 This function performs a pdmp simulation using the Change of Variable (CHV) method.
 """ ->
-function chv{F,R}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},DX::Any,nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
@@ -107,11 +71,10 @@ function chv{F,R}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F
 
 		dt = -log(rand())
 		if verbose println("--> t = ",t," - dt = ",dt) end
-		#         tp = linspace(0, dt, npoints)
 
-		# res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
-		res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
+    res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
 		if verbose println("--> Sundials done!") end
+
 		X0 = vec(res_ode[end,:])
 		pf = R(X0[1:end-1],Xd,X0[end],parms)
 		pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
@@ -151,7 +114,7 @@ function chv{F,R}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F
 	return(result)
 end
 
-function chv(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Any,nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
