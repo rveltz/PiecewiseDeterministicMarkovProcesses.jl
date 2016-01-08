@@ -162,7 +162,7 @@ function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}
 		if verbose println("--> t = ",t," - dt = ",dt) end
 
     	# res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
-		res_ode = evolve(mem, X0,Xd, [0.0, dt])
+		res_ode = evolve(mem,F,R,Xd,parms, X0, [0.0, dt])
 		if verbose println("--> Sundials done!") end
 
 		X0 = vec(res_ode[end,:])

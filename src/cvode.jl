@@ -29,9 +29,11 @@ function cvode_optim{f,r}(::Type{f},::Type{r},d::Array{Int64},p::Vector{Float64}
 end
 
 
-function evolve(mem, y0::Vector{Float64}, d::Array{Int64}, t::Vector{Float64})
+function evolve{f,r}(mem, ::Type{f},::Type{r},d::Array{Int64},p::Vector{Float64},y0::Vector{Float64}, t::Vector{Float64})
 	# How do I update the parameter d in mem??
 	Sundials.CVodeReInit(mem,t[1],y0)
+	Sundials.CVodeSetUserData(mem, {f,r,d,p})
+	
     yres = zeros(length(t), length(y0))
     yres[1,:] = y0
     y = copy(y0)
