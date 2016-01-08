@@ -10,12 +10,12 @@ end
   A type storing the call.
   """ ->
   type pdmpArgs
-    xc::Vector{Float64} # continuous variable  
+    xc::Vector{Float64} # continuous variable
     xd::Vector{Int64}# discrete variable
     F::Any
     R::Any
     nu::Matrix{Int64}
-    parms::Vector{Float64}
+    parms::Vector{Any}
     tf::Float64
   end
 

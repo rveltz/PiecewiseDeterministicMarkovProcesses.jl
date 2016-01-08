@@ -14,7 +14,7 @@ function cvode_ode_wrapper(t, x, xdot, user_data)
 	return Int32(0)
 end
 
-function f_CHV(F::Function,R::Function,t::Float64, x::Vector{Float64}, 	xdot::Vector{Float64},xd::Array{Int64,2}, parms::Vector{Float64})
+function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, 	xdot::Vector{Float64},xd::Array{Int64,2}, parms::Vector{T})
 	# used for the exact method
 	r::Float64 = sum(R(x,xd,t,parms))
 	# y = F(x,xd,t,parms)
@@ -28,7 +28,7 @@ end
 @doc doc"""
 This function performs a pdmp simulation using the Change of Variable (CHV) method.
 """ ->
-function chv{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{Any},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
@@ -114,7 +114,7 @@ end
 @doc doc"""
 This function performs a pdmp simulation using the Change of Variable (CHV) method.
 """ ->
-function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
@@ -198,7 +198,7 @@ function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}
 	return(result)
 end
 
-function chv(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{Float64},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
