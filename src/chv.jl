@@ -1,29 +1,26 @@
 function cvode_ode_wrapper(t, x, xdot, user_data)
-	x = Sundials.asarray(x)
+	# Reminder: user_data = [F R Xd params]
+  x = Sundials.asarray(x)
 	xdot = Sundials.asarray(xdot)
 
-	# user_data = [F R Xd params]
-  r::Float64 = sum(user_data[2](x,user_data[3],t,user_data[4]))
-	y = user_data[1](x,user_data[3],t,user_data[4])
-	ly=length(y)
+  # This is the most costly line in the code
+  r::Float64 = sum(user_data[2](x, user_data[3],t ,user_data[4]))
+	user_data[1](xdot, x, user_data[3], t, user_data[4])
+	ly = length(xdot)
 	for i in 1:ly
-		xdot[i] = y[i]/r
+		xdot[i] = xdot[i]/r
 	end
 	xdot[end] = 1.0/r
-
 	return Int32(0)
 end
 
 function f_CHV(F::Function,R::Function,t::Float64, x::Vector{Float64}, 	xdot::Vector{Float64},xd::Array{Int64,2}, parms::Vector{Float64})
 	# used for the exact method
-	r::Float64 = sum(R(x,xd,t,parms));
-	y = F(x,xd,t,parms)
-	# xdot[:] = [y./r,1.0/r]
-	ly=length(y)
-	for i in 1:ly
-		xdot[i] = y[i]/r
-	end
-	xdot[end] = 1.0/r
+	r::Float64 = sum(R(x,xd,t,parms))
+	# y = F(x,xd,t,parms)
+	F(xdot,x,xd,t,parms)
+	xdot[end] = 1.0
+	scale!(xdot, 1.0/r)
 	return Int32(0)
 end
 
@@ -139,7 +136,7 @@ function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}
 	t_hist  = Array(Float64, n_max)
 	xc_hist = Array(Float64, length(xc0), n_max)
 	xd_hist = Array(Int64,   length(xd0), n_max)
-	res_ode = Array{Float64,2}
+	res_ode = zeros(2, length(X0))
 
 	# initialise arrays
 	t_hist[nsteps] = t
@@ -161,8 +158,7 @@ function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}
 		dt = -log(rand())
 		if verbose println("--> t = ",t," - dt = ",dt) end
 
-    	# res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
-		res_ode = evolve(mem,F,R,Xd,parms, X0, [0.0, dt])
+		evolve(res_ode, mem,F,R,Xd,parms, X0, [0.0, dt])
 		if verbose println("--> Sundials done!") end
 
 		X0 = vec(res_ode[end,:])
@@ -174,6 +170,7 @@ function chv_optim{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}
 		# Update event
 		ev = sample(pf)
 		deltaxd = nu[ev,:]
+    ############ This is a costy line:
 		deltaxc = DX(X0[1:end-1],Xd,X0[end],parms,ev)
 		# Xd = Xd .+ deltax
 		Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
