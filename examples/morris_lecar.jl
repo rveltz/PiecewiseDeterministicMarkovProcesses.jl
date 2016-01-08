@@ -1,5 +1,6 @@
 using PDMP, JSON
-
+push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
+cd("/Users/rveltz/work/prog_gd/julia/PDMP.jl/examples")
 const p  = ( JSON.parsefile("ml.json"))["type II"]
 const p1  = ( JSON.parsefile("ml.json"))
 
@@ -30,12 +31,12 @@ xd0 = vec([p["N"],    #Na closed
 
 nu = [[-1 1 0 0 0];[1 -1 0 1 0];[0 0 -1 1 0];[0 0 1 -1 0];[0 0 0 0 1]]
 parms = [0.1,0.01]
-tf = 134.0
+tf = 5340.0
 
 # Warm up
 srand(1234)
-result = chv(650,xc0,xd0, F_ml, R_ml, nu , parms,0.0,0.01)
+result = chv(650,xc0,xd0, F_ml, R_ml,(x,y,t,p,id)->vec([0.]), nu , parms,0.0,0.01,false)
 # Real run
-srand(1234)
-result = @time chv(650,xc0,xd0, F_ml, R_ml, nu , parms,0.0,tf)
-println(result.stats)
+srand(Int(floor(time()/10000)))
+result = @time chv(6500,xc0,xd0, F_ml, R_ml,(x,y,t,p,id)->vec([0.]), nu , parms,0.0,tf,false)
+GR.plot(result.time,[result.xc[1,:][:] 0*result.xd[1,:][:] 1*result.xd[2,:][:]],title = string("#Jumps = ",length(result.time)))
