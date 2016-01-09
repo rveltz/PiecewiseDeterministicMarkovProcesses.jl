@@ -11,17 +11,26 @@ function F_ml(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Fl
   fna::Float64 = parms[1]["g_Na"] * (parms[1]["v_Na"] - xc[1])
   fk::Float64  = parms[1]["g_K"]  * (parms[1]["v_K"]  - xc[1])
   fl::Float64  = parms[1]["g_L"]  * (parms[1]["v_L"]  - xc[1])
-  r::Float64   = mod(xd[1],2)
-  xcdot[1] = xd[2] / convert(Float64,parms[1]["N"]) * fna + xd[4]/convert(Float64,parms[1]["M"]) * fk + fl + parms[1]["I_app"]
+
+  xcdot[1] = xd[2] / convert(Float64,parms[1]["N"]) * fna +
+             xd[4] / convert(Float64,parms[1]["M"]) * fk  + fl + parms[1]["I_app"]
+
   nothing
 end
 
-function R_ml(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Dict{AbstractString,Any}})
-  return vec([ parms[1]["beta_na"] * exp(4.0 * parms[1]["gamma_na"] * xc[1] + 4.0 * parms[1]["k_na"]) * xd[1],
-             parms[1]["beta_na"] * xd[2],
-              parms[1]["beta_k"]  * exp(parms[1]["gamma_k"] * xc[1] + parms[1]["k_k"]) * xd[3],
-              parms[1]["beta_k"] * exp(-parms[1]["gamma_k"] * xc[1]  -parms[1]["k_k"]) * xd[4],
-              0.0]) # for printing
+function R_ml(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Dict{AbstractString,Any}}, sum_rate::Bool)
+  if sum_rate==false
+    return vec([parms[1]["beta_na"] * exp(4.0 * parms[1]["gamma_na"] * xc[1] + 4.0 * parms[1]["k_na"]) * xd[1],
+                parms[1]["beta_na"] * xd[2],
+                parms[1]["beta_k"] * exp(parms[1]["gamma_k"] * xc[1] + parms[1]["k_k"]) * xd[3],
+                parms[1]["beta_k"] * exp(-parms[1]["gamma_k"] * xc[1]  -parms[1]["k_k"]) * xd[4],
+                0.0]) # for printing
+  else
+    return parms[1]["beta_na"] * exp(4.0 * parms[1]["gamma_na"] * xc[1] + 4.0 * parms[1]["k_na"]) * xd[1]+
+           parms[1]["beta_na"] * xd[2]+
+           parms[1]["beta_k"] * exp(parms[1]["gamma_k"] * xc[1] + parms[1]["k_k"]) * xd[3]
+           parms[1]["beta_k"] * exp(-parms[1]["gamma_k"] * xc[1]  -parms[1]["k_k"]) * xd[4]
+  end
 end
 
 function Delta_ml(xc::Array{Float64},xd::Array{Int64},t::Float64,parms::Vector{Dict{AbstractString,Any}},ind_reaction::Int64)
@@ -33,7 +42,7 @@ immutable F_type; end
 call(::Type{F_type},xcd, xc, xd, t, parms) = F_ml(xcd, xc, xd, t, parms)
 
 immutable R_type; end
-call(::Type{R_type},xc, xd, t, parms) = R_ml(xc, xd, t, parms)
+call(::Type{R_type},xc, xd, t, parms, sr) = R_ml(xc, xd, t, parms, sr)
 
 immutable DX_type; end
 call(::Type{DX_type},xc, xd, t, parms, ind_reaction) = Delta_ml(xc, xd, t, parms, ind_reaction)
@@ -55,12 +64,15 @@ srand(1234)
 result = chv(650,xc0,xd0, F_ml, R_ml,(x,y,t,p,id)->vec([0.]), nu , parms,0.0,0.01,false)
 # Real run
 srand(Int(floor(time()/10000)))
-result = @time chv(2500,xc0,xd0, F_ml, R_ml,(x,y,t,p,id)->vec([0.]), nu , parms,0.0,tf,false)
+result = @time chv(1500,xc0,xd0, F_ml, R_ml,(x,y,t,p,id)->vec([0.]), nu , parms,0.0,tf,false)
 GR.plot(result.time,[result.xc[1,:][:] 0*result.xd[1,:][:] 1*result.xd[5,:][:]],title = string("#Jumps = ",length(result.time)))
 
 reload("PDMP")
 dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false)
-dummy_t =  @time PDMP.chv_optim(3000,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false)
+result =  @time PDMP.chv_optim(1500,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false)
+GR.plot(result.time,[result.xc[1,:][:] 1*result.xd[3,:][:] 1*result.xd[1,:][:]],title = string("#Jumps = ",length(result.time)))
+
+println(length(dummy_t.time))
 
 @profile PDMP.chv_optim(3000,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false)
 using ProfileView
