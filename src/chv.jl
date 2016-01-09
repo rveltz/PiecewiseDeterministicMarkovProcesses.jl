@@ -28,7 +28,7 @@ end
 @doc doc"""
 This function performs a pdmp simulation using the Change of Variable (CHV) method.
 """ ->
-function chv{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{Any},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
@@ -69,7 +69,7 @@ function chv{F,R,DX}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Typ
 		dt = -log(rand())
 		if verbose println("--> t = ",t," - dt = ",dt) end
 
-    	res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
+    res_ode = cvode(F,R,Xd,parms, X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
 		if verbose println("--> Sundials done!") end
 
 		X0 = vec(res_ode[end,:])
@@ -185,8 +185,9 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 
 		# save state
 		t_hist[nsteps] = t
-		xc_hist[:,nsteps] = copy(X0[1:end-1])
-		xd_hist[:,nsteps] = copy(Xd)
+
+		xc_hist[:,nsteps] = X0[1:end-1] # copy cols: faster
+		xd_hist[:,nsteps] = Xd
 		nsteps += 1
 	end
 	Sundials.CVodeFree([mem])
