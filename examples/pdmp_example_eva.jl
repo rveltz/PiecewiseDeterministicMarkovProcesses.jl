@@ -31,8 +31,9 @@ function Delta_xc_tcp(xc::Array{Float64,1},xd::Array{Int64},t::Float64,parms::Ve
   # this function return the jump in the continuous component
   if ind_reaction==2
     return vec(-xc)
+  else
+    return vec(-xc*0)
   end
-  return vec(-xc*0)
 end
 
 immutable F_type; end
@@ -50,7 +51,6 @@ xd0 = vec([0, 1])
 const nu_tcp = [[1 0];[-1 0];[0 1]]
 parms = [0.1,0.01]
 tf = 1000.
-
 
 reload("PDMP")
 println("Case with types:")
@@ -84,5 +84,5 @@ result = @time PDMP.chv_optim(100000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,
 
 println(size(result.time))
 ind = find(result.time.<34)
-GR.plot(result.time[ind],[result.xc[1,:][ind]],colors=["b",".w"],title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time[ind],result.xc[1,:][ind],"b" ,title = string("#Jumps = ",length(result.time)))
 

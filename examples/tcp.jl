@@ -70,7 +70,7 @@ println("For simulations:")
 # srand(1234)
 parms[1] = 1000.
 xd0 = vec([0, 1001])
-result = @time PDMP.chv_optim(1600,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+result = @time PDMP.chv_optim(2600,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 println(size(result.time))
 ind = find(result.time.<49)
 GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))

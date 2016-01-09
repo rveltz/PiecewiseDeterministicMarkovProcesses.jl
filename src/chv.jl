@@ -3,8 +3,7 @@ function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
   x = Sundials.asarray(x)
 	xdot = Sundials.asarray(xdot)
 
-  # This is the most costly line in the code
-  const r = 1.0 / user_data[2](x, user_data[3], t, user_data[4], true)
+  const r = 1.0 / user_data[2](x, user_data[3], t, user_data[4], true)::Float64
 	user_data[1](xdot, x, user_data[3], t, user_data[4])
 	const ly = length(xdot)
 	for i in 1:ly
@@ -14,10 +13,9 @@ function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
 	return Int32(0)
 end
 
-function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, 	xdot::Vector{Float64},xd::Array{Int64,2}, parms::Vector{T})
+function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
 	# used for the exact method
-	r = 1.0 / R(x,xd,t,parms,true)::Float64
-	# y = F(x,xd,t,parms)
+	const r = 1.0 / R(x,xd,t,parms,true)::Float64
 	F(xdot,x,xd,t,parms)
 	xdot[end] = 1.0
 	scale!(xdot, r)
@@ -76,12 +74,7 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
 		pf = R(X0[1:end-1],Xd,X0[end],parms, false)
 		pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
 
-		# Update time
-		# if sum(pf) == 0.0
-		#             termination_status = "zeroprop"
-		#             break
-		#         end
-		# jumping time:
+		# jump time:
 		t = res_ode[end,end]
 		# Update event
 		ev = sample(pf)
@@ -161,7 +154,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
 		pf = R(X0[1:end-1],Xd,X0[end],parms, false)
 		pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
 
-    # jumping time:
+    # jump time:
 		t = res_ode[end,end]
 		# Update event
 		ev = sample(pf)
