@@ -13,6 +13,10 @@ function cvode{f,r,T}(::Type{f},::Type{r},d::Array{Int64},p::Vector{T}, y0::Vect
   tout = [0.0]
   for k in 2:length(t)
     flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
+    if flag != Sundials.CV_SUCCESS
+      throw(KeyError("SUNDIALS_ERROR: CVODE failed with flag = ", flag))
+    end
+    # BAD!! should be copy  cols, much faster
     yres[k,:] = y
   end
   Sundials.CVodeFree([mem])
@@ -40,6 +44,10 @@ function evolve{f,r,T}(yres::Array{Float64,2}, mem, ::Type{f},::Type{r},d::Array
   tout = [0.0]
   for k in 2:length(t)
     flag = Sundials.CVode(mem, t[k], y, tout, Sundials.CV_NORMAL)
+    if flag != Sundials.CV_SUCCESS
+      throw(KeyError("SUNDIALS_ERROR: CVODE failed with flag = ", flag))
+    end
+    # BAD!! should be copy  cols, much faster
     yres[k,:] = y
   end
 #   return yres

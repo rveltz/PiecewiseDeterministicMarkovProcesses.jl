@@ -14,20 +14,24 @@ function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::F
   nothing
 end
 
-function R_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector)
+function R_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector, sum_rate::Bool)
   # fonction de tau
-  return vec([1.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
+  if sum_rate==false
+    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1)
+  else
+    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1
+  end
 end
 
 function Delta_xc_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector,ind_reaction::Int64)
-  return vec(-xc*0)
+  return vec([0.])
 end
 
 immutable F_type; end
 call(::Type{F_type},xcd, xc, xd, t, parms) = F_tcp(xcd, xc, xd, t, parms)
 
 immutable R_type; end
-call(::Type{R_type},xc, xd, t, parms) = R_tcp(xc, xd, t, parms)
+call(::Type{R_type},xc, xd, t, parms, sr) = R_tcp(xc, xd, t, parms, sr)
 
 immutable DX_type; end
 call(::Type{DX_type},xc, xd, t, parms, ind_reaction) = Delta_xc_tcp(xc, xd, t, parms, ind_reaction)
@@ -35,7 +39,7 @@ call(::Type{DX_type},xc, xd, t, parms, ind_reaction) = Delta_xc_tcp(xc, xd, t, p
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
-const nu_tcp = [[1 0];[0 1]]
+const nu_tcp = [[1 0];[0 -1]]
 parms = vec([100.])
 tf = 10.
 
@@ -59,10 +63,18 @@ println(norm(dummy_f.time-dummy_t.time))
 println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
 println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
+reload("PDMP")
 println("For simulations:")
 # srand(1234)
 parms[1] = 1000.
-result = @time PDMP.chv_optim(12000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+xd0 = vec([0, 1001])
+result = @time PDMP.chv_optim(1600,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 println(size(result.time))
 ind = find(result.time.<49)
-# GR.plot(result.time[ind],[result.xc[1,:][ind]],colors=["b"],title = string("#Jumps = ",length(result.time)))@profile PDMP.chv_optim(3000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+GR.plot(result.time[ind],[result.xc[1,:][ind]],colors=["b"],title = string("#Jumps = ",length(result.time)))
+
+using ProfileView
+Profile.clear()
+@profile PDMP.chv_optim(12000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+ProfileView.view()
+
