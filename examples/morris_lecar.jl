@@ -2,32 +2,29 @@ push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
 cd("/Users/rveltz/work/prog_gd/julia/PDMP.jl/examples")
 using PDMP, JSON, GR
 GR.inline()
-const p  = convert(Dict{AbstractString,Float64}, JSON.parsefile("ml.json")["type II"])
+const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("ml.json")["type II"])
 const p1  = ( JSON.parsefile("ml.json"))
+include("morris_lecar_variables.jl")
+const p = ml(p0)
 
 function F_ml(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector)
   # vector field used for the continuous variable
   #compute the current, v = xc[1]
-#   const fna = p["g_Na"] * (p["v_Na"] - xc[1])
-#   const fk  = p["g_K"]  * (p["v_K"]  - xc[1])
-#   const fl  = p["g_L"]  * (p["v_L"]  - xc[1])
-
-#   xcdot[1] = xd[2] / p["N"] * fna + xd[4] / p["M"] * fk  + fl + p["I_app"]
-  xcdot[1] = xd[2] / p["N"] * (p["g_Na"] * (p["v_Na"] - xc[1])) + xd[4] / p["M"] * (p["g_K"]  * (p["v_K"]  - xc[1]))  + (p["g_L"]  * (p["v_L"]  - xc[1])) + p["I_app"]
+  xcdot[1] = xd[2] / p.N * (p.g_Na * (p.v_Na - xc[1])) + xd[4] / p.M * (p.g_K  * (p.v_K  - xc[1]))  + (p.g_L  * (p.v_L  - xc[1])) + p.I_app
   nothing
 end
 
 function R_ml(xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector, sum_rate::Bool)
   if sum_rate==false
-    return vec([p["beta_na"] * exp(4.0 * p["gamma_na"] * xc[1] + 4.0 * p["k_na"]) * xd[1],
-                p["beta_na"] * xd[2],
-                p["beta_k"] * exp(p["gamma_k"] * xc[1] + p["k_k"]) * xd[3],
-                p["beta_k"] * exp(-p["gamma_k"] * xc[1]  -p["k_k"]) * xd[4]])
+    return vec([p.beta_na * exp(4.0 * p.gamma_na * xc[1] + 4.0 * p.k_na) * xd[1],
+                p.beta_na * xd[2],
+                p.beta_k * exp(p.gamma_k * xc[1] + p.k_k) * xd[3],
+                p.beta_k * exp(-p.gamma_k * xc[1]  -p.k_k) * xd[4]])
   else
-    return p["beta_na"] * exp(4.0 * p["gamma_na"] * xc[1] + 4.0 * p["k_na"]) * xd[1] +
-           p["beta_na"] * xd[2] +
-           p["beta_k"] * exp( p["gamma_k"] * xc[1] + p["k_k"]) * xd[3] +
-           p["beta_k"] * exp(-p["gamma_k"] * xc[1] - p["k_k"]) * xd[4]
+    return p.beta_na * exp(4.0 * p.gamma_na * xc[1] + 4.0 * p.k_na) * xd[1] +
+           p.beta_na * xd[2] +
+           p.beta_k * exp( p.gamma_k * xc[1] + p.k_k) * xd[3] +
+           p.beta_k * exp(-p.gamma_k * xc[1] - p.k_k) * xd[4]
   end
 end
 
