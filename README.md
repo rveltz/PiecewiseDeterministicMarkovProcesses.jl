@@ -54,6 +54,6 @@ ind = find(result.time.<49)
 GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 ```
 
-![SIR](https://github.com/sdwfrost/Gillespie.jl/blob/master/sir.png)
+![SIR](examples/tcp.svg)
 
-Passing functions as arguments in Julia (currently) incurs a performance penalty. One can circumvent this by passing an immutable object, with ```call``` overloaded. An example of this approach is given [here](/examples/tcp.svg).
+Passing functions as arguments in Julia (currently) incurs a performance penalty. One can circumvent this by passing an immutable object, with ```call``` overloaded. An example of this approach is given [here](https://).
