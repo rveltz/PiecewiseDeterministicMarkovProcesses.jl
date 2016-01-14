@@ -2,44 +2,56 @@
 
 [![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/Gillespie.jl)
 
-This is a preliminary implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of Piecewise Deterministic Markov Processes (PDMP).
+This is an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
 
-It borrows the basic interface (although none of the code) from the R library [`GillespieSSA`](http://www.jstatsoft.org/v25/i12/paper) by Mario Pineda-Krch, although `Gillespie.jl` only implements the standard exact method at present, whereas `GillespieSSA` also includes tau-leaping, *etc.*.
+A rejection method will be added soon.
 
-An example of an SIR epidemiological model:
+An example of a TCP process:
 
 ```julia
-using Gillespie
-using Gadfly
+using PDMP
 
-function F(x,parms)
-  (S,I,R) = x
-  (beta,mu) = parms
-  infection = beta*S*I
-  recovery = mu*I
-  [infection,recovery]
+function F_tcp(xcdot, xc, xd, t, parms )
+  # vector field used for the continuous variable
+  if mod(xd[1],2)==0
+    xcdot[1] = xc[1]
+  else
+    xcdot[1] = -xc[1]
+  end
+  nothing
 end
 
-x0 = [999,1,0]
-nu = [[-1 1 0];[0 -1 1]]
-parms = [0.1/1000.0,0.01]
-tf = 250.0
-srand(1234)
+function R_tcp(xc, xd, t, parms, sum_rate::Bool)
+  # rate function
+  if sum_rate==false
+    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1)
+  else
+    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1
+  end
+end
 
-result = ssa(x0,F,nu,parms,tf)
+function Delta_xc_tcp(xc, xd, t, parms, ind_reaction::Int64)
+	# jump on the continuous variable
+  return vec([0.])
+end
 
-data = ssa_data(result)
 
-p=plot(data,
-  layer(x="time",y="x1",Geom.step,Theme(default_color=color("red"))),
-  layer(x="time",y="x2",Geom.step,Theme(default_color=color("blue"))),
-  layer(x="time",y="x3",Geom.step,Theme(default_color=color("green"))),
-  Guide.xlabel("Time"),
-  Guide.ylabel("Number"),
-  Guide.manual_color_key("Population",
-                            ["S", "I", "R"],
-                            ["red", "blue", "green"]),
-  Guide.title("SIR epidemiological model"))
+xc0 = vec([0.05])
+xd0 = vec([0, 1])
+
+const nu_tcp = [[1 0];[0 -1]]
+parms = [0.]
+tf = 2000.
+
+dummy =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+
+println("#jumps = ", length(result.time))
+
+using GR
+GR.inline()
+ind = find(result.time.<49)
+GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 ```
 
 ![SIR](https://github.com/sdwfrost/Gillespie.jl/blob/master/sir.png)

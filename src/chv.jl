@@ -269,6 +269,8 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 	if verbose println("-->Done") end
 	stats = pdmpStats(termination_status,nsteps)
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
+  if verbose println("--> time = ",t_hist[1:nsteps-1]) end
+  println("--> chv_optim, #jumps = ",length(t_hist[1:nsteps-1]))
 	result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
 	return(result)
 end
