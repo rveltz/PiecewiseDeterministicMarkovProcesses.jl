@@ -1,12 +1,22 @@
-# PDMP
+# PDMP 
 
-[![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/Gillespie.jl)
+[![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/PDMP.jl)
 
-This is an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
+This is a joint work of (Veltz Romain, Frost Simon).
 
-A rejection method will be added soon.
+PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
 
-An example of a TCP process:
+It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. (A rejection method will be added soon.)
+
+We briefly recall facts about a simple class of PDMPs. They are decribed by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can be added to the continuous variable $x_c$ too.
+
+##Installation
+To install this (unregistered) package, run the command 	```Pkg.clone(https://github.com/sdwfrost/PDMP.jl.git)```
+
+##Examples
+See the [examples directory](https://github.com/sdwfrost/PDMP.jl/tree/master/examples).
+
+A simple example of a TCP process is given below:
 
 ```julia
 using PDMP

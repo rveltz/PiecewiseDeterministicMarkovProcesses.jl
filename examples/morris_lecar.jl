@@ -16,21 +16,21 @@ end
 
 function R_ml(xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector, sum_rate::Bool)
   if sum_rate==false
-    return vec([p_ml.beta_na * exp(4.0 * p_ml.gamma_na * xc[1] + 4.0 * p_ml.k_na) * xd[1],
+    return 1.*vec([p_ml.beta_na * exp(4.0 * p_ml.gamma_na * xc[1] + 4.0 * p_ml.k_na) * xd[1],
                 p_ml.beta_na * xd[2],
                 p_ml.beta_k * exp(p_ml.gamma_k * xc[1] + p_ml.k_k) * xd[3],
                 p_ml.beta_k * exp(-p_ml.gamma_k * xc[1]  -p_ml.k_k) * xd[4]])
   else
-    return p_ml.beta_na * exp(4.0 * p_ml.gamma_na * xc[1] + 4.0 * p_ml.k_na) * xd[1] +
+    return 1.*(p_ml.beta_na * exp(4.0 * p_ml.gamma_na * xc[1] + 4.0 * p_ml.k_na) * xd[1] +
       p_ml.beta_na * xd[2] +
       p_ml.beta_k * exp( p_ml.gamma_k * xc[1] + p_ml.k_k) * xd[3] +
-      p_ml.beta_k * exp(-p_ml.gamma_k * xc[1] - p_ml.k_k) * xd[4]
+      p_ml.beta_k * exp(-p_ml.gamma_k * xc[1] - p_ml.k_k) * xd[4])
   end
 end
 
 function Delta_ml(xc::Array{Float64},xd::Array{Int64},t::Float64,parms::Vector,ind_reaction::Int64)
   # this function return the jump in the continuous component
-  return vec([0.])
+  return true
 end
 
 immutable F_type; end
@@ -44,9 +44,9 @@ call(::Type{DX_type},xc, xd, t, parms, ind_reaction) = Delta_ml(xc, xd, t, parms
 
 xc0 = vec([p1["v(0)"]])
 xd0 = vec([Int(p0["N"]),    #Na closed
-           0,         #Na opened
+           0,               #Na opened
            Int(p0["M"]),    #K closed
-           0])         #K opened
+           0])              #K opened
 
 nu = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
@@ -68,8 +68,8 @@ try
 end
 GR.plot(result.time,result.xc[1,:][:],"y",result.time, 0*result.xd[3,:][:] ,result.time,0*result.xd[1,:][:],title = string("#Jumps = ",length(result.time)))
 
-using ProfileView
-Profile.clear()
-@profile for i=1:10 PDMP.chv_optim(3000,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false) end
-ProfileView.view()
+# using ProfileView
+# Profile.clear()
+# @profile for i=1:10 PDMP.chv(3000,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false) end
+# ProfileView.view()
 

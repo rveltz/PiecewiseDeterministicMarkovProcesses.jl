@@ -79,15 +79,12 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
 		# Update event
 		ev = sample(pf)
 		deltaxd = nu[ev,:]
-		deltaxc = DX(X0[1:end-1],Xd,X0[end],parms,ev)
+
 		# Xd = Xd .+ deltax
 		Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-		## Faire une fonction qui modifie en place Xc car
-		# si ev = end, on n'a pas besoin d'ajouter un deltaxc = 0,0,0,0...
-		# Base.LinAlg.BLAS.axpy!(1.0, deltaxc, X0[1:end-1])
-		X0[1:end-1] = X0[1:end-1] .+ deltaxc
-		# println("\nX0,delta = ",X0[1:end-1],deltaxc)
+    # Xc = Xc .+ deltax
+		DX(X0,Xd,X0[end],parms,ev)
 
 		if verbose println("--> Which reaction? ",ev) end
 
@@ -147,7 +144,6 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
 		dt = -log(rand())
 		if verbose println("--> t = ",t," - dt = ",dt) end
 
-
 		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
 		if verbose println("--> Sundials done!") end
 		X0 = vec(res_ode[end,:])
@@ -159,15 +155,12 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
 		# Update event
 		ev = sample(pf)
 		deltaxd = nu[ev,:]
-		deltaxc = DX(X0[1:end-1],Xd,X0[end],parms,ev)
+
 		# Xd = Xd .+ deltax
 		Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-		## Faire une fonction qui modifie en place Xc car
-		# si ev = end, on n'a pas besoin d'ajouter un deltaxc = 0,0,0,0...
-		# Base.LinAlg.BLAS.axpy!(1.0, deltaxc, X0[1:end-1])
-		X0[1:end-1] = X0[1:end-1] .+ deltaxc
-		# println("\nX0,delta = ",X0[1:end-1],deltaxc)
+		# Xc = Xc .+ deltax
+		DX(X0,Xd,X0[end],parms,ev)
 
 		if verbose println("--> Which reaction? ",ev) end
 
@@ -241,18 +234,12 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 		# Update event
 		ev = sample(pf)
 		deltaxd = nu[ev,:]
-    ############ This is a costy line:
-    #Bad ! modify inplace deltaxc and in fact X0
-		deltaxc = DX(X0[1:end-1],Xd,X0[end],parms,ev)
+
 		# Xd = Xd .+ deltax
 		Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-		## Faire une fonction qui modifie en place Xc car
-		# si ev = end, on n'a pas besoin d'ajouter un deltaxc = 0,0,0,0...
-		# Base.LinAlg.BLAS.axpy!(1.0, deltaxc, X0[1:end-1])
-    # BAD! modify inplace X0
-		X0[1:end-1] = X0[1:end-1] .+ deltaxc
-
+		# Xc = Xc .+ deltax
+		DX(X0,Xd,X0[end],parms,ev)
 
 		if verbose println("--> Which reaction? ",ev) end
 

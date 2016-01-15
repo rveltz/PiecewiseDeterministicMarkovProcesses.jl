@@ -24,7 +24,8 @@ function R_tcp(xc, xd, t, parms, sum_rate::Bool)
 end
 
 function Delta_xc_tcp(xc, xd, t, parms, ind_reaction::Int64)
-  return vec([0.])
+  # inplace implementation of the jump of the continuous variable xc
+  return true
 end
 
 
@@ -36,11 +37,11 @@ parms = [0.]
 tf = 2000.
 
 
-# reload("PDMP")
+reload("PDMP")
 result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.chv(4000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 
 println("#jumps = ", length(result.time))
-ind = find(result.time.<49)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+ind = find(result.time.<1000)
+GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],0*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 
