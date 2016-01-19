@@ -1,15 +1,12 @@
-using GR
+using PDMP, GR
 GR.inline()
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
-# import PDMP
-reload("PDMP")
 
 function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector)
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
-    xcdot[1] = 3. * xc[1]
+    xcdot[1] = xc[1]
   else
-    xcdot[1] = -4. * xc[1]
+    xcdot[1] = -xc[1]
   end
   nothing
 end
@@ -24,7 +21,7 @@ function R_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector, s
 end
 
 function Delta_xc_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector,ind_reaction::Int64)
-  return vec([0.])
+  return true
 end
 
 immutable F_type; end
@@ -69,8 +66,8 @@ reload("PDMP")
 println("For simulations:")
 # srand(1234)
 parms[1] = 1000.
-xd0 = vec([0, 1001])
-result = @time PDMP.chv_optim(2600,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+xd0 = vec([0, 1])
+result = @time PDMP.chv_optim(2000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 println(size(result.time))
 ind = find(result.time.<49)
 GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))

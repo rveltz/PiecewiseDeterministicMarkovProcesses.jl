@@ -1,8 +1,5 @@
-using GR
+using PDMP, GR
 GR.inline()
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
-# import PDMP
-reload("PDMP")
 
 function F_tcp(xcdot, xc, xd, t, parms )
   # vector field used for the continuous variable
@@ -39,9 +36,9 @@ tf = 2000.
 
 reload("PDMP")
 result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.chv(4000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 
 println("#jumps = ", length(result.time))
 ind = find(result.time.<1000)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],0*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],1*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 

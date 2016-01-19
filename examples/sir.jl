@@ -1,20 +1,22 @@
-using GR
+using PDMP, GR
 GR.inline()
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
-# import PDMP
-reload("PDMP")
 
-function R_sir(xc,xd,t::Float64,parms)
+function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
   (S,I,R) = xd
   (beta,mu) = parms
   infection = beta*S*I
   recovery = mu*I
-  [infection,recovery]
+  if sum_rate == false
+    return [infection,recovery]
+  else
+    return infection+recovery
+  end
 end
 
-function F_sir(xc,xd,t::Float64,parms)
+function F_sir(xdot,xc,xd,t::Float64,parms)
   # vector field used for the continuous variable
-  return vec([0.])
+  xdot[1] = 0.0
+  nothing
 end
 
 xc0 = vec([0.0])
@@ -25,7 +27,6 @@ tf = 2000.0
 
 srand(1)
 dummy = PDMP.chv(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-# srand(1)
 result = @time PDMP.chv(100000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
 GR.plot(result.time,[result.xd[1,:][:] result.xd[2,:][:] result.xd[3,:][:]],title = string("#Jumps = ",length(result.time)))
 

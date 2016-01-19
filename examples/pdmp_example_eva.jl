@@ -1,8 +1,5 @@
-using GR
+using PDMP, GR
 GR.inline()
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
-# import PDMP
-reload("PDMP")
 
 function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -11,7 +8,7 @@ function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::F
 end
 
 function R_tcp(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64}, sum_rate::Bool)
-  # fonction de tau
+  # rate function
   rate_print = 10.
   if sum_rate == false
     if xd[1] == 0
@@ -62,11 +59,6 @@ println("Case with types optimised:")
 dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 srand(1234)
 dummy_t =  @time PDMP.chv_optim(200000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
-
-#   Profile.clear()
-#   @profile PDMP.chv_optim(200000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
-#   using  ProfileView
-#   ProfileView.view()
 
 println("Case with functions:")
 dummy_f =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
