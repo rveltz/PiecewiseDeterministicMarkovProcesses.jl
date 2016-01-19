@@ -23,7 +23,8 @@ end
   This type stores the output, and comprises of:
 
       - **time** : a `Vector` of `Float64`, containing the times of simulated events.
-      - **data** : a `Matrix` of `Float64`, containing the simulated states.
+      - **xc** : a `Matrix` of `Float64`, containing the simulated states for the continuous variable.
+      - **xd** : a `Matrix` of `Int	64`, containing the simulated states for the continuous variable.
       - **stats** : an instance of `PDMPStats`.
       - **args** : arguments passed.
   """ ->
