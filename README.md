@@ -2,13 +2,14 @@
 
 [![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/PDMP.jl)
 
-This is a joint work of (Veltz Romain, Frost Simon).
+This is a joint work of [Veltz Romain](https://romainveltz.pythonanywhere.com/) and Frost Simon.
 
 PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
 
 It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. (A rejection method will be added soon.)
 
-We briefly recall facts about a simple class of PDMPs. They are decribed by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can be added to the continuous variable $x_c$ too.
+
+We briefly recall facts about a simple class of PDMPs. They are decribed by a couple ![equation](http://www.sciweavers.org/tex2img.php?eq=(x_c,x_d)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) where ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is solution of the differential equation ![equation](http://www.sciweavers.org/tex2img.php?eq= dx_c/dt = F(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). The second component ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is a jump process with rates ![equation](http://www.sciweavers.org/tex2img.php?eq= R(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). At each jump of ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=), a jump can be added to the continuous variable ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) too.
 
 ##Installation
 To install this (unregistered) package, run the command 	```Pkg.clone(https://github.com/sdwfrost/PDMP.jl.git)```
@@ -32,11 +33,14 @@ function F_tcp(xcdot, xc, xd, t, parms )
 end
 
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)
-  # rate function
+  # rate function for each transition
+  # in this case,  the transitions are xd1->xd1+1 or xd2->xd2-1
+  # sum_rate is a boolean which tells R_tcp the type which must be returned:
+  # i.e. the sum of the rates or the vector of the rates
   if sum_rate==false
-    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1)
+    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
   else
-    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1
+    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
   end
 end
 
@@ -60,10 +64,10 @@ println("#jumps = ", length(result.time))
 
 using GR
 GR.inline()
-ind = find(result.time.<49)
+ind = find(result.time.<149)
 GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 ```
 
-![SIR](examples/tcp.png)
+![TCP](examples/tcp.png)
 
-Passing functions as arguments in Julia (currently) incurs a performance penalty. One can circumvent this by passing an immutable object, with ```call``` overloaded. An example of this approach is given [here](https://).
+Passing functions as arguments in Julia (currently) incurs a performance penalty. One can circumvent this by passing an immutable object, with ```call``` overloaded. An example of this approach is given [here](https://github.com/sdwfrost/PDMP.jl/tree/master/examples/tcp_fast.jl).

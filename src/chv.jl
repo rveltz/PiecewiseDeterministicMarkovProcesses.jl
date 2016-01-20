@@ -70,10 +70,7 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
   # Main loop
   termination_status = "finaltime"
 
-  # prgs = Progress(int(tf), 1)
-
   while (t <= tf) && (nsteps<n_max)
-    # update!(prgs, int(t))
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
@@ -91,10 +88,10 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
     ev = sample(pf)
     deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltax
+    # Xd = Xd .+ deltaxd
     Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltax
+    # Xc = Xc .+ deltaxc
     DX(X0,Xd,X0[end],parms,ev)
 
     if verbose println("--> Which reaction? ",ev) end
@@ -105,7 +102,7 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
     xd_hist[:,nsteps] = copy(Xd)
     nsteps += 1
   end
-  if verbose println("-->Done") end
+  if verbose println("--> Done") end
   stats = pdmpStats(termination_status,nsteps)
   if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
   result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
@@ -160,10 +157,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
   # Main loop
   termination_status = "finaltime"
 
-  # prgs = Progress(int(tf), 1)
-
   while (t <= tf) && (nsteps<n_max)
-    # update!(prgs, int(t))
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
@@ -180,10 +174,10 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
     ev = sample(pf)
     deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltax
+    # Xd = Xd .+ deltaxd
     Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltax
+    # Xc = Xc .+ deltaxc
     DX(X0,Xd,X0[end],parms,ev)
 
     if verbose println("--> Which reaction? ",ev) end
@@ -270,10 +264,10 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
     ev = sample(pf)
     deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltax
+    # Xd = Xd .+ deltaxd
     Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltax
+    # Xc = Xc .+ deltaxc
     DX(X0,Xd,X0[end],parms,ev)
 
     if verbose println("--> Which reaction? ",ev) end
@@ -292,7 +286,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
   stats = pdmpStats(termination_status,nsteps)
   if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
   if verbose println("--> time = ",t_hist[1:nsteps-1]) end
-  println("--> chv_optim, #jumps = ",length(t_hist[1:nsteps-1]))
+  if verbose println("--> chv_optim, #jumps = ",length(t_hist[1:nsteps-1])) end
   result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
   return(result)
 end
