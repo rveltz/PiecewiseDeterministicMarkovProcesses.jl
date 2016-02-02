@@ -14,6 +14,7 @@ end
     xd::Vector{Int64}# discrete variable
     F::Any
     R::Any
+	Delta::Any
     nu::Matrix{Int64}
     parms::Vector{Any}
     tf::Float64

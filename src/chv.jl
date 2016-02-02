@@ -1,3 +1,5 @@
+using ProgressMeter
+
 function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
   # Reminder: user_data = [F R Xd params]
   x = Sundials.asarray(x)
@@ -24,7 +26,9 @@ end
 
 
 @doc doc"""
-This function performs a pdmp simulation using the Change of Variable (CHV) method. It takes the following arguments:
+This function performs a pdmp simulation using the Change of Variable (CHV) method.
+It takes the following arguments:
+
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
@@ -44,7 +48,7 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
   npoints = 2 # number of points for ODE integration
 
   # Args
-  args = pdmpArgs(xc0,xd0,F,R,nu,parms,tf)
+  args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
   if verbose println("--> Args saved!") end
 
   # Set up initial variables
@@ -70,7 +74,7 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
   # Main loop
   termination_status = "finaltime"
 
-  while (t <= tf) && (nsteps<n_max)
+  while (t < tf) && (nsteps<n_max)
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
@@ -111,7 +115,9 @@ end
 
 
 @doc doc"""
-This function performs a pdmp simulation using the Change of Variable (CHV) method. It takes the following arguments:
+This function performs a pdmp simulation using the Change of Variable (CHV) method.
+It takes the following arguments:
+
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
@@ -131,7 +137,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
   npoints = 2 # number of points for ODE integration
 
   # Args
-  args = pdmpArgs(xc0,xd0,F,R,nu,parms,tf)
+  args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
   if verbose println("--> Args saved!") end
 
   # Set up initial variables
@@ -157,7 +163,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
   # Main loop
   termination_status = "finaltime"
 
-  while (t <= tf) && (nsteps<n_max)
+  while (t < tf) && (nsteps < n_max)
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
@@ -170,23 +176,34 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
 
     # jump time:
     t = res_ode[end,end]
-    # Update event
-    ev = sample(pf)
-    deltaxd = nu[ev,:]
+    if (t < tf)
+      # Update event
+      ev = sample(pf)
+      deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltaxd
-    Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+      # Xd = Xd .+ deltaxd
+      Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltaxc
-    DX(X0,Xd,X0[end],parms,ev)
+      # Xc = Xc .+ deltaxc
+      DX(X0,Xd,X0[end],parms,ev)
 
-    if verbose println("--> Which reaction? ",ev) end
+      if verbose println("--> Which reaction? ",ev) end
+      # save state
+      t_hist[nsteps] = t
+      xc_hist[:,nsteps] = copy(X0[1:end-1])
+      xd_hist[:,nsteps] = copy(Xd)
+      nsteps += 1
 
-    # save state
-    t_hist[nsteps] = t
-    xc_hist[:,nsteps] = copy(X0[1:end-1])
-    xd_hist[:,nsteps] = copy(Xd)
-    nsteps += 1
+    else
+      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
+      t = tf
+
+      # save state
+      t_hist[nsteps] = t
+      xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
+      xd_hist[:,nsteps] = copy(Xd)
+      nsteps += 1
+    end
   end
   if verbose println("-->Done") end
   stats = pdmpStats(termination_status,nsteps)
@@ -197,7 +214,8 @@ end
 
 
 @doc doc"""
-This function performs a pdmp simulation using the Change of Variable (CHV) method. It takes the following arguments:
+This function performs a pdmp simulation using the Change of Variable (CHV) method. Its use of Sundials solver is optimized in term of memory consumption. It takes the following arguments:
+
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
@@ -217,7 +235,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
   npoints = 2 # number of points for ODE integration
 
   # Args
-  args = pdmpArgs(xc0,xd0,F,R,nu,parms,tf)
+  args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
   if verbose println("--> Args saved!") end
 
   # Set up initial variables
@@ -244,10 +262,11 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
   termination_status = "finaltime"
 
   # save Sundials solver
+
   mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-10, reltol = 1e-8)
-
+  #   prgs = Progress(n_max, 1)
   while (t <= tf) && (nsteps<n_max)
-
+    #     update!(prgs, nsteps)
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 

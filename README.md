@@ -9,6 +9,8 @@ PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Mar
 It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. (A rejection method will be added soon.)
 
 
+<!--We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.-->
+
 We briefly recall facts about a simple class of PDMPs. They are decribed by a couple ![equation](http://www.sciweavers.org/tex2img.php?eq=(x_c,x_d)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) where ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is solution of the differential equation ![equation](http://www.sciweavers.org/tex2img.php?eq= dx_c/dt = F(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). The second component ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is a jump process with rates ![equation](http://www.sciweavers.org/tex2img.php?eq= R(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). At each jump of ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=), a jump can be added to the continuous variable ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) too.
 
 ##Installation
@@ -49,11 +51,14 @@ function Delta_xc_tcp(xc, xd, t, parms, ind_reaction::Int64)
   return true #in this example, no jump
 end
 
-
+# initial conditions for the continuous/discrete variables
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
+# matrix of jumps for the discrete variables, analogous to chemical reactions
 const nu_tcp = [[1 0];[0 -1]]
+
+# parameters  
 parms = [0.]
 tf = 2000.
 
@@ -62,6 +67,7 @@ result =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,
 
 println("#jumps = ", length(result.time))
 
+# plotting
 using GR
 GR.inline()
 ind = find(result.time.<149)
