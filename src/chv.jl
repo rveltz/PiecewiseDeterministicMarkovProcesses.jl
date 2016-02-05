@@ -89,21 +89,31 @@ function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::T
     # jump time:
     t = res_ode[end,end]
     # Update event
-    ev = sample(pf)
-    deltaxd = nu[ev,:]
+    if (t < tf)
+      # Update event
+      ev = sample(pf)
+      deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltaxd
-    Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+      # Xd = Xd .+ deltaxd
+      Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltaxc
-    DX(X0,Xd,X0[end],parms,ev)
+      # Xc = Xc .+ deltaxc
+      DX(X0,Xd,X0[end],parms,ev)
 
-    if verbose println("--> Which reaction? ",ev) end
+      if verbose println("--> Which reaction? ",ev) end
+      # save state
+      t_hist[nsteps] = t
+      xc_hist[:,nsteps] = copy(X0[1:end-1])
+      xd_hist[:,nsteps] = copy(Xd)
+    else
+      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
+      t = tf
 
-    # save state
-    t_hist[nsteps] = t
-    xc_hist[:,nsteps] = copy(X0[1:end-1])
-    xd_hist[:,nsteps] = copy(Xd)
+      # save state
+      t_hist[nsteps] = t
+      xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
+      xd_hist[:,nsteps] = copy(Xd)
+    end
     nsteps += 1
   end
   if verbose println("--> Done") end
@@ -192,8 +202,6 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
       t_hist[nsteps] = t
       xc_hist[:,nsteps] = copy(X0[1:end-1])
       xd_hist[:,nsteps] = copy(Xd)
-      nsteps += 1
-
     else
       res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
       t = tf
@@ -202,8 +210,8 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
       t_hist[nsteps] = t
       xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
       xd_hist[:,nsteps] = copy(Xd)
-      nsteps += 1
     end
+    nsteps += 1
   end
   if verbose println("-->Done") end
   stats = pdmpStats(termination_status,nsteps)
@@ -265,7 +273,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 
   mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-10, reltol = 1e-8)
   #   prgs = Progress(n_max, 1)
-  while (t <= tf) && (nsteps<n_max)
+  while (t < tf) && (nsteps<n_max)
     #     update!(prgs, nsteps)
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
@@ -280,22 +288,34 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
     # Update time
     t = res_ode[end,end]
     # Update event
-    ev = sample(pf)
-    deltaxd = nu[ev,:]
+    if (t < tf)
+      ev = sample(pf)
+      deltaxd = nu[ev,:]
 
-    # Xd = Xd .+ deltaxd
-    Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+      # Xd = Xd .+ deltaxd
+      Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
-    # Xc = Xc .+ deltaxc
-    DX(X0,Xd,X0[end],parms,ev)
+      # Xc = Xc .+ deltaxc
+      DX(X0,Xd,X0[end],parms,ev)
 
-    if verbose println("--> Which reaction? ",ev) end
+      if verbose println("--> Which reaction? ",ev) end
 
-    # save state
-    t_hist[nsteps] = t
-    # copy cols: faster, cf. performance tips in JuliaLang
-    xc_hist[:,nsteps] = X0[1:end-1]
-    xd_hist[:,nsteps] = Xd
+      # save state
+      t_hist[nsteps] = t
+      # copy cols: faster, cf. performance tips in JuliaLang
+      xc_hist[:,nsteps] = X0[1:end-1]
+      xd_hist[:,nsteps] = Xd
+    else
+      println("Get tf!!")
+      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
+      t = tf
+
+
+      # save state
+      t_hist[nsteps] = t
+      xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
+      xd_hist[:,nsteps] = copy(Xd)
+    end
     nsteps += 1
   end
 

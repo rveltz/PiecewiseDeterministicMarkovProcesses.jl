@@ -31,12 +31,12 @@ xd0 = vec([0, 1])
 
 const nu_tcp = [[1 0];[0 -1]]
 parms = [0.]
-tf = 2000.
+tf = 200.
 
 result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-
+result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
-ind = find(result.time.<1000)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],1*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+ind = find(result.time.<210)
+GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],0*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
 
