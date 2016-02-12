@@ -1,5 +1,6 @@
 using PDMP, GR
 GR.inline()
+reload("PDMP")
 
 function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector)
   # vector field used for the continuous variable
@@ -63,6 +64,7 @@ println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
 println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
 println("For simulations:")
+
 tf = 1000.
 parms[1] = 0.1
 xd0 = vec([0, 1])
