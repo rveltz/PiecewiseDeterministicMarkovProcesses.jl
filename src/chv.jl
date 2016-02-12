@@ -7,6 +7,7 @@ function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
 
   const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
   @assert sr > 0.0 "Total rate must be positive"
+
   const isr = 1.0 / sr
   user_data[1](xdot, x, user_data[3], t, user_data[4])
   const ly = length(xdot)
@@ -19,9 +20,9 @@ end
 
 function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
   # used for the exact method
-  const r = R(x,xd,t,parms,true)::Float64
-  @assert r > 0.0 "Total rate must be positive"
-  const ir = 1.0 / r
+  const sr = R(x,xd,t,parms,true)::Float64
+  @assert sr > 0.0 "Total rate must be positive"
+  const ir = 1.0 / sr
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
   scale!(xdot, ir)
@@ -176,13 +177,13 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
 
   # Main loop
   termination_status = "finaltime"
-
   while (t < tf) && (nsteps < n_max)
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 
     res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
+
     if verbose println("--> Sundials done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
