@@ -5,22 +5,26 @@ function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
   x = Sundials.asarray(x)
   xdot = Sundials.asarray(xdot)
 
-  const r = 1.0 / user_data[2](x, user_data[3], t, user_data[4], true)::Float64
+  const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
+  @assert sr > 0.0 "Total rate must be positive"
+  const isr = 1.0 / sr
   user_data[1](xdot, x, user_data[3], t, user_data[4])
   const ly = length(xdot)
   for i in 1:ly
-    xdot[i] = xdot[i] * r
+    xdot[i] = xdot[i] * isr
   end
-  xdot[end] = r
+  xdot[end] = isr
   return Int32(0)
 end
 
 function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
   # used for the exact method
-  const r = 1.0 / R(x,xd,t,parms,true)::Float64
+  const r = R(x,xd,t,parms,true)::Float64
+  @assert r > 0.0 "Total rate must be positive"
+  const ir = 1.0 / r
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
-  scale!(xdot, r)
+  scale!(xdot, ir)
   return Int32(0)
 end
 
