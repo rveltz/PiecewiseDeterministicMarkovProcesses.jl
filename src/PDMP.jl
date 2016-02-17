@@ -16,5 +16,6 @@ export chv,
 include("utils.jl")
 include("cvode.jl")
 include("chv.jl")
+include("rejection.jl")
 
 end # module

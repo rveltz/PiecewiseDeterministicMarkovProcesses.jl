@@ -6,7 +6,9 @@ This is a joint work of [Veltz Romain](https://romainveltz.pythonanywhere.com/) 
 
 PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
 
-It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. (A rejection method will be added soon.)
+It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. It requires solving stiff ODEs in an efficient manner. Sundials solvers are used but others could be easily added. (See [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml))
+
+> A rejection method will be added soon.
 
 
 <!--We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.-->

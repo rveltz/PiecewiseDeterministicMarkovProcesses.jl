@@ -28,7 +28,7 @@ tf = 1000.0
 
 dummy = PDMP.chv(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
 result = @time PDMP.chv(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-GR.plot(result.time,result.xd[1,:][:],"r",result.time, result.xd[2,:][:],"g",result.time, result.xd[3,:][:],"b",title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time,result.xd[1,:][:],"r+",result.time, result.xd[2,:][:],"g",result.time, result.xd[3,:][:],"b",title = string("#Jumps = ",length(result.time)))
 
 
 

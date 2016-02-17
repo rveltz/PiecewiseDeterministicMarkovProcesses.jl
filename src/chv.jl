@@ -8,7 +8,7 @@ function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
   const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
   @assert sr > 0.0 "Total rate must be positive"
 
-  const isr = 1.0 / sr
+  const isr = min(1.0e9,1.0 / sr)
   user_data[1](xdot, x, user_data[3], t, user_data[4])
   const ly = length(xdot)
   for i in 1:ly
@@ -22,7 +22,7 @@ function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::
   # used for the exact method
   const sr = R(x,xd,t,parms,true)::Float64
   @assert sr > 0.0 "Total rate must be positive"
-  const ir = 1.0 / sr
+  const ir = min(1.0e9,1.0 / sr)
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
   scale!(xdot, ir)
@@ -146,6 +146,7 @@ It takes the following arguments:
 "
 """ ->
 function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
+  println("---- Basic CHV")
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -182,7 +183,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 
-    res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-10, reltol = 1e-8)
+    res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 
     if verbose println("--> Sundials done!") end
     X0 = vec(res_ode[end,:])
@@ -208,7 +209,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functio
       xc_hist[:,nsteps] = copy(X0[1:end-1])
       xd_hist[:,nsteps] = copy(Xd)
     else
-      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
+      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
       t = tf
 
       # save state
@@ -276,7 +277,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 
   # save Sundials solver
 
-  mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-10, reltol = 1e-8)
+  mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
   #   prgs = Progress(n_max, 1)
   while (t < tf) && (nsteps<n_max)
     #     update!(prgs, nsteps)
@@ -311,10 +312,8 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
       xc_hist[:,nsteps] = X0[1:end-1]
       xd_hist[:,nsteps] = Xd
     else
-      println("Get tf!!")
-      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-10, reltol = 1e-8)
+      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
       t = tf
-
 
       # save state
       t_hist[nsteps] = t
