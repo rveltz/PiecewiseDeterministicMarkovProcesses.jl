@@ -9,6 +9,7 @@ using Distributions,
   Sundials
 
 export chv,
+  rejection,
   pdmpArgs,
   pdmpResult,
   pdmp_data
