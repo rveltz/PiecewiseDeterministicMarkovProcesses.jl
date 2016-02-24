@@ -38,5 +38,5 @@ result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,t
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
 ind = find(result.time.<210)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],0*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time[ind],result.xc[1,ind],"k",result.time[ind],result.xd[1,ind],"r",title = string("#Jumps = ",length(result.time)))
 

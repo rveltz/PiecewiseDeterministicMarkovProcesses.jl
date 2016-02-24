@@ -1,5 +1,6 @@
 using PDMP, JSON, GR
 GR.inline()
+
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("ml.json")["type II"])
 const p1  = ( JSON.parsefile("ml.json"))
 include("morris_lecar_variables.jl")
@@ -50,8 +51,6 @@ nu = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 tf = p1["t_end"]
 
-reload("PDMP")
-println(p_ml)
 dummy_t = chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu , parms,0.0,0.01,false)
 srand(123)
 dummy_t = @time chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu , parms,0.0,tf,false)
@@ -64,10 +63,5 @@ try
   println("--> xc_f-xc_t = ",norm(dummy_t.xc-result.xc))
   println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
 end
-GR.plot(result.time,result.xc[1,:][:],"y",result.time, 0*result.xd[3,:][:] ,result.time,0*result.xd[1,:][:],title = string("#Jumps = ",length(result.time)))
-
-# using ProfileView
-# Profile.clear()
-# @profile for i=1:10 PDMP.chv(3000,xc0,xd0,F_type,R_type,DX_type,nu,parms,0.0,tf,false) end
-# ProfileView.view()
+GR.plot(result.time,result.xc[1,:],"y",result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))
 

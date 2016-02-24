@@ -1,6 +1,5 @@
 using PDMP, GR
 GR.inline()
-reload("PDMP")
 
 function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector)
   # vector field used for the continuous variable
@@ -38,14 +37,13 @@ xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
 const nu_tcp = [[1 0];[0 -1]]
-parms = vec([1.])
-tf = 20000.
+parms = vec([1.]) # sampling rate
+tf = 50.
 
 println("Case with functions:")
 dummy_f =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 srand(1234)
 dummy_f =  @time PDMP.chv(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-
 
 println("Case with types:")
 dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
@@ -57,15 +55,13 @@ dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,fa
 srand(1234)
 dummy_t =  @time PDMP.chv_optim(2000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 
-
 println("#jumps = ", length(dummy_f.time))
 println(norm(dummy_f.time-dummy_t.time))
 println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
 println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
 println("For simulations:")
-
-tf = 1000.
+tf = 100.
 parms[1] = 0.1
 xd0 = vec([0, 1])
 result = @time PDMP.chv_optim(2000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)

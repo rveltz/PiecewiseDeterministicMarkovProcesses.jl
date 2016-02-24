@@ -49,14 +49,13 @@ const nu_tcp = [[1 0];[-1 0];[0 1]]
 parms = [0.1,0.01]
 tf = 100.
 
-reload("PDMP")
 println("Case with types:")
 dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 srand(1234)
 dummy_t =  @time PDMP.chv(200000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 
 println("Case with types optimised:")
-dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
+dummy_t =  PDMP.chv_optim(20,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 srand(1234)
 dummy_t =  @time PDMP.chv_optim(200000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,false)
 
@@ -66,7 +65,6 @@ srand(1234)
 dummy_f =  @time PDMP.chv(200000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 
 println("#jumps = ", length(dummy_f.time))
-assert(norm(dummy_f.time-dummy_t.time)==0.0)
 println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
 println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
@@ -76,5 +74,5 @@ result = @time PDMP.chv(1000,xc0,xd0,F_type,R_type,DX_type,nu_tcp,parms,0.0,tf,f
 
 println(size(result.time))
 ind = find(result.time.<34)
-GR.plot(result.time[ind],result.xc[1,:][ind],"b" ,title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time[ind],result.xc[1,ind],"b" ,title = string("#Jumps = ",length(result.time)))
 
