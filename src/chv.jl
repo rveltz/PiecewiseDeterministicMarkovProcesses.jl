@@ -22,6 +22,7 @@ function f_CHV{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::
   # used for the exact method
   const sr = R(x,xd,t,parms,true)::Float64
   @assert sr > 0.0 "Total rate must be positive"
+
   const ir = min(1.0e9,1.0 / sr)
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
@@ -146,7 +147,6 @@ It takes the following arguments:
 "
 """ ->
 function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
-  println("---- Basic CHV")
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
