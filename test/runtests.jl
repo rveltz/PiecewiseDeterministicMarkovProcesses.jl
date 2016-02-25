@@ -2,12 +2,13 @@ using PDMP
 using Base.Test
 
 # run cvode example
-println("== start pdmp example")
-include("../examples/tcp_test.jl")
+println("== start pdmp examples")
 
-#println("result at t=$(t[end]):")
-#println(result[end,:], "\n")
-
+include("../examples/morris_lecar.jl")
+include("../examples/pdmp_example_eva.jl")
+include("../examples/sir.jl")
+include("../examples/tcp.jl")
+include("../examples/tcp_fast.jl")
 
 # run ida examples
 #println("== start ida_Roberts example")
