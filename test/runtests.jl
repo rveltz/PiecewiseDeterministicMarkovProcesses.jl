@@ -5,8 +5,8 @@ using Base.Test
 println("== start pdmp example")
 include("../examples/tcp.jl")
 
-println("result at t=$(t[end]):")
-println(result[end,:], "\n")
+#println("result at t=$(t[end]):")
+#println(result[end,:], "\n")
 
 
 # run ida examples
