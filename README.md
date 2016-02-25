@@ -2,14 +2,9 @@
 
 [![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/PDMP.jl)
 
-This is a joint work of [Veltz Romain](https://romainveltz.pythonanywhere.com/) and Frost Simon.
+This is a joint work of [Romain Veltz](https://romainveltz.pythonanywhere.com/) ([@rveltz](http://github.com/rveltz)) and [Simon Frost](http://www.vet.cam.ac.uk/directory/sdf22@cam.ac.uk) ([@sdwfrost](http://github.com/sdwfrost)).
 
-PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Markov Processes (PDMP) also called hybrid systems.
-
-It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP. It requires solving stiff ODEs in an efficient manner. Sundials solvers are used but others could be easily added. (See [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml))
-
-> A rejection method will be added soon.
-
+PDMP.jl is a Julia package that allows simulation of Piecewise Deterministic Markov Processes (PDMP); this encompasses hybrid systems, comprising of continuous and discrete components, as well as processes with time-varying rates. It is based on an implementation of the [True Jump Method method](http://arxiv.org/abs/1504.06873) for performing stochastic simulations of PDMP, and requires solving stiff ODEs in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) is used, but other solvers could be easily added. (See [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml)). A different method based on rejection is planned.
 
 <!--We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.-->
 
