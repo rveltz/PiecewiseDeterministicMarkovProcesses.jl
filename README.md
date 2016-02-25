@@ -1,4 +1,4 @@
-# PDMP 
+# PDMP.jl 
 
 [![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/PDMP.jl)
 
