@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/sdwfrost/PDMP.jl.svg?branch=master)](https://travis-ci.org/sdwfrost/PDMP.jl)
 [![Coverage Status](https://coveralls.io/repos/sdwfrost/PDMP.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/sdwfrost/PDMP.jl?branch=master)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/sdwfrost/PDMP.jl?svg=true&branch=master)](https://ci.appveyor.com/project/sdwfrost/pdmp-jl/branch/master)
 
 This is a joint work of [Romain Veltz](https://romainveltz.pythonanywhere.com/) ([@rveltz](http://github.com/rveltz)) and [Simon Frost](http://www.vet.cam.ac.uk/directory/sdf22@cam.ac.uk) ([@sdwfrost](http://github.com/sdwfrost)).
 
