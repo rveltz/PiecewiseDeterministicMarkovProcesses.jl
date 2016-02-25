@@ -26,11 +26,11 @@ include("../examples/tcp.jl")
 #println("== start kinsol example")
 #include("../examples/kinsol_mkin_simplified.jl")
 
-println("solution:")
-println(res)
-residual = ones(2)
-sysfn(res, residual)
-println("residual:")
-println(residual, "\n")
+#println("solution:")
+#println(res)
+#residual = ones(2)
+#sysfn(res, residual)
+#println("residual:")
+#println(residual, "\n")
 
-@test abs(minimum(residual)) < 1e-5
+#@test abs(minimum(residual)) < 1e-5
