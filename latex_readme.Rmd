@@ -1,0 +1,34 @@
+---
+title: "LaTeX README.md"
+author: "Simon Frost"
+date: "25 February 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(devtools)
+install_git("https://github.com/muschellij2/latexreadme")
+```
+
+```{r}
+library(latexreadme)
+```
+
+
+```{r}
+md = file.path("README_unparse.md")
+download.file("https://raw.githubusercontent.com/sdwfrost/PDMP.jl/master/README_unparse.md",destfile = md, method = "curl")
+new_md = file.path("README.md")
+parse_latex(md,
+            new_md,
+            git_username = "sdwfrost",
+            git_reponame = "PDMP.jl")
+library(knitr)
+new_html = pandoc(new_md, format = "html")
+```
+
+

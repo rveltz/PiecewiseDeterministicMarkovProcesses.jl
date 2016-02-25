@@ -1,0 +1,14 @@
+% Encoding: UTF-8
+
+
+@Article{Pineda-Krch2008,
+  Title                    = {{GillespieSSA}: Implementing the stochastic simulation algorithm in R},
+  Author                   = {Pineda-Krch, Mario},
+  Journal                  = {Journal of Statistical Software},
+  Year                     = {2008},
+  Number                   = {12},
+  Pages                    = {1--18},
+  Volume                   = {25},
+  __markedentry            = {[simon:6]}
+}
+
