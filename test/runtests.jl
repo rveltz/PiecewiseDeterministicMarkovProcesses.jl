@@ -3,7 +3,7 @@ using Base.Test
 
 # run cvode example
 println("== start pdmp example")
-include("../examples/tcp.jl")
+include("../examples/tcp_test.jl")
 
 #println("result at t=$(t[end]):")
 #println(result[end,:], "\n")
