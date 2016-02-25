@@ -4,8 +4,6 @@ using Distributions,
   StatsBase,
   DataFrames,
   DataArrays,
-  FastAnonymous,
-  ODE,
   Sundials
 
 export chv,
