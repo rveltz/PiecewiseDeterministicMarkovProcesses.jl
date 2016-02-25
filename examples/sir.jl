@@ -1,5 +1,6 @@
 using PDMP, GR
-GR.inline()
+# Uncomment below if using IJulia
+# GR.inline()
 
 function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
   (S,I,R,~) = xd
