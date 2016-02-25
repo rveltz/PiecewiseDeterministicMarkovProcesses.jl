@@ -4,7 +4,7 @@ using Base.Test
 # run cvode example
 println("== start pdmp examples")
 
-include("../examples/morris_lecar.jl")
+#include("../examples/morris_lecar.jl")
 include("../examples/pdmp_example_eva.jl")
 include("../examples/sir.jl")
 include("../examples/tcp.jl")
