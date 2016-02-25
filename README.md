@@ -68,7 +68,13 @@ println("#jumps = ", length(result.time))
 using GR
 GR.inline()
 ind = find(result.time.<149)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+GR.plot(result.time[ind],
+	result.xc[1,:][ind],
+	"k",
+	result.time[ind],
+	result.xd[1,:][ind],
+	"r",
+	title = string("#Jumps = ",length(result.time)))
 ```
 
 ![TCP](examples/tcp.png)
