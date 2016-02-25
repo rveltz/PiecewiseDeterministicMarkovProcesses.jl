@@ -1,5 +1,6 @@
 using PDMP, JSON, GR
-GR.inline()
+# Uncomment below if using IJulia
+# GR.inline()
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("ml.json")["type II"])
 const p1  = ( JSON.parsefile("ml.json"))
