@@ -1,5 +1,3 @@
-using ProgressMeter
-
 function cvode_ode_wrapper(t::Float64, x, xdot, user_data)
   # Reminder: user_data = [F R Xd params]
   x = Sundials.asarray(x)
