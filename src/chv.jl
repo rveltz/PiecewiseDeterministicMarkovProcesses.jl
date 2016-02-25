@@ -141,7 +141,6 @@ It takes the following arguments:
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
-"
 """ ->
 function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
   # it is faster to pre-allocate arrays and fill it at run time
@@ -237,7 +236,6 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
-"
 """ ->
 function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
   # it is faster to pre-allocate arrays and fill it at run time
