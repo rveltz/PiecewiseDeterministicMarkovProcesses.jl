@@ -1,5 +1,6 @@
 using PDMP, GR
-GR.inline()
+# Uncomment below if using IJulia
+# GR.inline()
 
 function F_tcp(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64})
   # vector field used for the continuous variable
