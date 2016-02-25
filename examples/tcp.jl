@@ -1,5 +1,6 @@
 using PDMP, GR
-GR.inline()
+# Uncomment below if using IJulia
+# GR.inline()
 
 function F_tcp(xcdot, xc, xd, t, parms )
   # vector field used for the continuous variable
