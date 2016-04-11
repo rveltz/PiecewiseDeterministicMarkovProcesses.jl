@@ -13,7 +13,7 @@ function F_tcp(xcdot, xc, xd, t, parms )
 end
 
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)
-  # fonction de tau
+  # rate fonction
   if sum_rate==false
     return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
   else
@@ -40,4 +40,3 @@ println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
 ind = find(result.time.<210)
 GR.plot(result.time[ind],result.xc[1,ind],"k",result.time[ind],result.xd[1,ind],"r",title = string("#Jumps = ",length(result.time)))
-

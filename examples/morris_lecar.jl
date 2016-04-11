@@ -64,4 +64,3 @@ try
   println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
 end
 GR.plot(result.time,result.xc[1,:],"y",result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))
-

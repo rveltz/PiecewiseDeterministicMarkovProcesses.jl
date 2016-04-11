@@ -10,7 +10,7 @@ end
 
 function R_eva(xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, sum_rate::Bool)
   # rate function
-  rate_print = 1.
+  rate_print = 10.
   if sum_rate == false
     if xd[1] == 0
       return vec([1.0,0.0,rate_print]) #transition 0->1
@@ -71,9 +71,8 @@ println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
 println("For simulations:")
 srand(1234)
-result = @time PDMP.chv(1000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
+result = @time PDMP.chv(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
 
 println(size(result.time))
-ind = find(result.time.<34)
+ind = find(result.time.<134)
 GR.plot(result.time[ind],result.xc[1,ind],"b" ,title = string("#Jumps = ",length(dummy_f.time)))
-
