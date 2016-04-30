@@ -4,7 +4,8 @@ using Distributions,
   StatsBase,
   DataFrames,
   DataArrays,
-  Sundials
+  Sundials,
+  ProgressMeter
 
 export chv,
   rejection,

@@ -50,7 +50,7 @@ xd0 = vec([Int(p0["N"]),    #Na closed
 nu_ml = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 tf = p1["t_end"]
-
+tf=350.
 dummy_t = chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,0.01,false)
 srand(123)
 dummy_t = @time chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,tf,false)
@@ -64,3 +64,5 @@ try
   println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
 end
 GR.plot(result.time,result.xc[1,:],"y",result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))
+
+
