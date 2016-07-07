@@ -115,7 +115,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   xc_hist = Array(Float64, length(xc0), n_max)
   xd_hist = Array(Int64,   length(xd0), n_max)
   res_ode = Array(Float64,2,length(xc0))
-  rate_vector = copy(X0) .* 0.
+  rate_vector = zeros(length(nu[1,:]))
 
 
   # initialise arrays
@@ -127,6 +127,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   termination_status = "finaltime"
 
   const reject = true
+  const nb_rejet::Int = 0
   const lambda_star = 0.0 # this is the bound for the rejection method
   tp = [0.,0.]
   lambda_star = R(rate_vector,X0,Xd,t,parms,true)[2]
@@ -145,23 +146,18 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
     while (reject) && (nsteps < 10^6) && (t < tf)
 
       tp = [t, t - log(rand())/lambda_star ] #mettre un lambda_star?
-	    Phi(res_ode,X0,Xd,tp,parms) # we evolve the flow
+      Phi(res_ode,X0,Xd,tp,parms) # we evolve the flow
       X0 = vec(res_ode[end,:])
       t = tp[end]
       ppf = R(rate_vector,X0,Xd,t,parms,true) #we don't want the full rate vector, just the sum of rates
-      @assert ppf[1] <= ppf[2]
-      # println(ppf)
-      if ppf[1] > ppf[2]
-        println("--> ERROR in rejection !!!")
-      end
+      @assert(ppf[1] <= ppf[2])
       reject = rand() <  (1. - ppf[1] / ppf[2])
       nsteps += 1
     end
+    # keep track of nb of rejections
+    nb_rejet += nsteps
 
-    if nsteps >= 10^6-1
-      println("--> Warning, too many rejections!!")
-    end
-    # println("--> rejet = ", nsteps)
+    @assert(nsteps <= 10^6,"Error, too many rejections!!")
     njumps += 1
     t_hist[njumps] = t
     xc_hist[:,njumps] = copy(X0[1:end])
@@ -180,10 +176,10 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
         Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
       end
       # Xc = Xc .+ deltaxc
-      DX(X0,Xd,X0[end],parms,ev)
+      DX(X0,Xd,t,parms,ev)
     end
   end
-  println("njumps = ",njumps)
+  println("njumps = ",njumps," / rejections = ", nb_rejet)
   if verbose println("-->Done") end
   stats = pdmpStats(termination_status,nsteps)
   # if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
