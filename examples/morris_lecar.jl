@@ -50,9 +50,9 @@ nu_ml = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 tf = p1["t_end"]
 tf=350.
-dummy_t = chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,0.01,false)
+dummy_t = PDMP.chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,0.01,false)
 srand(123)
-dummy_t = @time chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,tf,false)
+dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,tf,false)
 result =  PDMP.chv_optim(2,xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false)
 srand(123)
 result =  @time PDMP.chv_optim(4500,xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false) #cpp= 100ms/2200 jumps
