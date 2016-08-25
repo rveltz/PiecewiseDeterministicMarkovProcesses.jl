@@ -9,16 +9,16 @@ end
 @doc doc"""
   A type storing the call.
   """ ->
-  type pdmpArgs
-    xc::Vector{Float64} # continuous variable
-    xd::Vector{Int64}# discrete variable
-    F::Any
-    R::Any
-	  Delta::Any
-    nu::Matrix{Int64}
-    parms::Vector{Any}
-    tf::Float64
-  end
+type pdmpArgs
+	xc::Vector{Float64} # continuous variable
+	xd::Vector{Int64}# discrete variable
+	F::Any
+	R::Any
+	Delta::Any
+	nu::Matrix{Int64}
+	parms::Vector{Any}
+	tf::Float64
+end
 
 @doc doc"""
   This type stores the output, and comprises of:
@@ -42,6 +42,6 @@ end
   """ ->
 function pdmp_data(s::pdmpResult)
 	println("--> Entry in pdmp_data_list")
-  df = hcat(DataFrame(time=s.time),convert(DataFrame,s.data))
-  df
+	df = hcat(DataFrame(time=s.time),convert(DataFrame,s.data))
+	df
 end

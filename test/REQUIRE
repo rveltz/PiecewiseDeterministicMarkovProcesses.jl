@@ -1,6 +1,6 @@
 Distributions
-StatsBase
 DataFrames
+StatsBase
 DataArrays
 Sundials
 PDMP

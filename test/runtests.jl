@@ -1,7 +1,7 @@
 using PDMP
 using Base.Test
 
-cd(Pkg.dir("PDMP")*"/examples")
+# cd(Pkg.dir("PDMP")*"/examples")
 
 println("== start pdmp examples")
 
@@ -17,6 +17,7 @@ include("../examples/pdmp_example_eva.jl")
 
 println("\n\n==== Example sir ")
 include("../examples/sir.jl")
+include("../examples/sir-rejection.jl")
 
 
 println("\n\n==== Simple example of neuron model, Morris-Leccar")

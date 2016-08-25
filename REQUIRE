@@ -1,5 +1,7 @@
 Distributions
-StatsBase
 DataFrames
+StatsBase
 DataArrays
 Sundials
+Plots
+PyPlot

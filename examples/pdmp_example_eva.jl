@@ -1,6 +1,4 @@
-using PDMP, GR
-# Uncomment below if using IJulia
-# GR.inline()
+using PDMP, Plots
 
 function F_eva(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -75,4 +73,5 @@ result = @time PDMP.chv(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,p
 
 println(size(result.time))
 ind = find(result.time.<134)
-GR.plot(result.time[ind],result.xc[1,ind],"b" ,title = string("#Jumps = ",length(dummy_f.time)))
+Plots.pyplot()
+Plots.plot(result.time[ind],result.xc[1,ind]',title = string("#Jumps = ",length(dummy_f.time)))

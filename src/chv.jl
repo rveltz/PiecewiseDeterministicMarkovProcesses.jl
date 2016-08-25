@@ -46,9 +46,9 @@ It takes the following arguments:
 """ ->
 function chv{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},::Type{F},::Type{R},::Type{DX},nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
   # it is faster to pre-allocate arrays and fill it at run time
-  n_max += 1 #to hold initial vector
+  n_max += 1 # to hold initial vector
   nsteps = 1
-  npoints = 2 # number of points for ODE integration
+  npoints = 2 # number of points for ODE integration in each time interval
 
   # Args
   args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
@@ -270,8 +270,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
   # Main loop
   termination_status = "finaltime"
 
-  # save Sundials solver
-
+  # save Sundials solver, reduces allocation
   mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
   #   prgs = Progress(n_max, 1)
   while (t < tf) && (nsteps<n_max)
@@ -303,6 +302,7 @@ function chv_optim{F,R,DX,T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,
 
       # save state
       t_hist[nsteps] = t
+	  
       # copy cols: faster, cf. performance tips in JuliaLang
       xc_hist[:,nsteps] = X0[1:end-1]
       xd_hist[:,nsteps] = Xd

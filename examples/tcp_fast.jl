@@ -1,6 +1,5 @@
-using PDMP, GR
-# Uncomment below if using IJulia
-# GR.inline()
+using PDMP, Plots
+
 
 function F_tcpf(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector)
   # vector field used for the continuous variable
@@ -67,6 +66,9 @@ parms[1] = 1.0
 result = @time PDMP.chv_optim(20000,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximum(result.time)," == ",tf)
 println("#jumps = ", length(result.time))
+
 ind = find(result.time.<2249)
-GR.plot(result.time[ind],result.xc[1,:][ind],"k",result.time[ind],0*result.xd[1,:][ind],"r",title = string("#Jumps = ",length(result.time)))
+Plots.pyplot()
+Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
+Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP_fast #Jumps = ",length(result.time)))
 

@@ -1,6 +1,5 @@
-using PDMP, JSON, GR
-# Uncomment below if using IJulia
-# GR.inline()
+using PDMP, JSON, Plots
+
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
 const p1  = ( JSON.parsefile("../examples/ml.json"))
 include("morris_lecar_variables.jl")
@@ -63,6 +62,10 @@ try
   println("--> xc_f-xc_t = ",norm(dummy_t.xc-result.xc))
   println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
 end
-GR.plot(result.time,result.xc[1,:],"y",result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))
+
+# plot of the results
+pyplot()
+Plots.plot(result.time,result.xc[1,:]')
+Plots.plot!(result.time, 0*result.xd[3,:]',title = string("#Jumps = ",length(result.time)))
 
 
