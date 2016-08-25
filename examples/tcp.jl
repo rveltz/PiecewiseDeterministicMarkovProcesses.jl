@@ -32,6 +32,7 @@ const nu_tcp = [[1 0];[0 -1]]
 parms = [0.]
 tf = 200.
 
+srand(1234)
 result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)

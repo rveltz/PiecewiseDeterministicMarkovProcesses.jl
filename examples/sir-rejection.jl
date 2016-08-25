@@ -26,10 +26,11 @@ xc0 = vec([0.0])
 xd0 = vec([99,10,0,0])
 nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
-tf = 1000.0
+tf = 150.0
 
 reload("PDMP")
 
+srand(1234)
 dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
 result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
 
