@@ -1,7 +1,7 @@
 using PDMP
 using Base.Test
 
-# cd(Pkg.dir("PDMP")*"/examples")
+cd(Pkg.dir("PDMP")*"/examples")
 
 println("== start pdmp examples")
 
