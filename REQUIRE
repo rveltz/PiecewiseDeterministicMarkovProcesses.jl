@@ -4,4 +4,4 @@ StatsBase
 DataArrays
 Sundials
 Plots
-PyPlot
+PlotlyJS

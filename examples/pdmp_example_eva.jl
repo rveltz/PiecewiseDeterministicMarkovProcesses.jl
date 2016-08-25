@@ -73,5 +73,5 @@ result = @time PDMP.chv(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,p
 
 println(size(result.time))
 ind = find(result.time.<134)
-Plots.pyplot()
+Plots.plotlyjs()
 Plots.plot(result.time[ind],result.xc[1,ind]',title = string("#Jumps = ",length(dummy_f.time)))

@@ -68,7 +68,7 @@ println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximu
 println("#jumps = ", length(result.time))
 
 ind = find(result.time.<2249)
-Plots.pyplot()
+Plots.plotlyjs()
 Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
 Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP_fast #Jumps = ",length(result.time)))
 
