@@ -1,21 +1,21 @@
 using PDMP
 using Base.Test
 
-cd(Pkg.dir("PDMP")*"/examples")
+# cd(Pkg.dir("PDMP")*"/examples")
 
 println("== start pdmp examples")
 
 println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
 @test isequal(result.time[end],200.)
-@test isequal(result.xd[1,end],24)
+@test isequal(result.xd[1,end],30)
 
 
 println("\n\n==== Example tcp fast with types ")
 println("----> To make it interesting, this mathematical example can explode in finite time, hence the warning")
 include("../examples/tcp_fast.jl")
-@test isequal(length(result.time),20)
-@test isequal(result.xd[1,end],3)
+@test isequal(length(result.time),12)
+@test isequal(result.xd[1,end],2)
 
 println("\n\n==== Simple example of neuron model, would be better handled with rejection method")
 include("../examples/pdmp_example_eva.jl")
@@ -26,8 +26,8 @@ include("../examples/pdmp_example_eva.jl")
 println("\n\n==== Example sir ")
 include("../examples/sir.jl")
 @test isequal(result.xd[1,end],0)
-@test isequal(result.xd[2,end],34)
-@test isequal(result.xd[3,end],75)
+@test isequal(result.xd[2,end],36)
+@test isequal(result.xd[3,end],73)
 
 include("../examples/sir-rejection.jl")
 @test isequal(result.xd[1,end],0)
