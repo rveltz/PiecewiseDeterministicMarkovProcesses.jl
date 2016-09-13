@@ -50,6 +50,8 @@ nu_ml = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 
 tf = p1["t_end"];tf=350.
+
+srand(123)
 dummy_t = PDMP.chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,0.01,false)
 
 srand(123)
@@ -70,5 +72,3 @@ end
 plotlyjs()
 Plots.plot(result.time,result.xc[1,:]')
 Plots.plot!(result.time, 0*result.xd[3,:]',title = string("#Jumps = ",length(result.time)))
-
-
