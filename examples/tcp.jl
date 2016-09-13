@@ -29,7 +29,7 @@ xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
 const nu_tcp = [[1 0];[0 -1]]
-parms = [0.]
+parms = [0.1]
 tf = 200.
 
 srand(1234)
