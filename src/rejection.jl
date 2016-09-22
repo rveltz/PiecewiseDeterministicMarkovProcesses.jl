@@ -77,7 +77,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
   return(result)
 end
 
-@doc doc"""
+"""
 This function performs a pdmp simulation using the rejection method when the flow is known analytically.
 It takes the following arguments:
 
@@ -91,7 +91,7 @@ It takes the following arguments:
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
-""" ->
+"""
 function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},Phi::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true)
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
@@ -136,10 +136,8 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   xc_hist[:,njumps] = copy(X0[1:end])
   xd_hist[:,njumps] = copy(Xd)
 
-  p_bar = ProgressMeter.Progress(n_max, 1)
 
   while (t < tf) && (njumps < n_max)
-    ProgressMeter.update!(p_bar, njumps)
     if verbose println("--> step : ",njumps," / ",n_max ) end
     reject = true
     nsteps = 1

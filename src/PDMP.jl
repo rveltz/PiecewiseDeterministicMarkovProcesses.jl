@@ -1,21 +1,21 @@
 module PDMP
 
-using Distributions,
-  StatsBase,
-  DataFrames,
-  DataArrays,
-  Sundials,
-  ProgressMeter
+	using Distributions
+	using StatsBase
+	using DataFrames
+	using DataArrays
+	using Sundials
+	# using ProgressMeter
 
-export chv,
-  rejection,
-  pdmpArgs,
-  pdmpResult,
-  pdmp_data
+	export chv,
+		rejection,
+		pdmpArgs,
+		pdmpResult,
+		pdmp_data
 
-include("utils.jl")
-include("cvode.jl")
-include("chv.jl")
-include("rejection.jl")
+	include("utils.jl")
+	include("cvode.jl")
+	include("chv.jl")
+	include("rejection.jl")
 
 end # module

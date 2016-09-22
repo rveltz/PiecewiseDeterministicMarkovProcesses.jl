@@ -1,4 +1,4 @@
-using PDMP, Plots
+# using PDMP, Plots
 
 function F_tcp(xcdot, xc, xd, t, parms )
   # vector field used for the continuous variable
@@ -38,7 +38,7 @@ result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,t
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
 
-ind = find(result.time.<210)
-Plots.plotlyjs()
-Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
-Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP #Jumps = ",length(result.time)))
+# ind = find(result.time.<210)
+# Plots.plotlyjs()
+# Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
+# Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP #Jumps = ",length(result.time)))
