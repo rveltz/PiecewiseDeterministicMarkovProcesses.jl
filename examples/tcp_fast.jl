@@ -2,9 +2,9 @@
 
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 # workspace()
-# using PDMP
+using PDMP
 
-function F_tcpf(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
+function F_tcpf(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
     xcdot[1] = xc[1]
@@ -14,7 +14,7 @@ function F_tcpf(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t
   nothing
 end
 
-function R_tcpf(xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, sum_rate::Bool)
+function R_tcpf(xc::Vector, xd::Array, t::Float64, parms::Vector, sum_rate::Bool)
   # fonction de tau
   if sum_rate==false
     return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
@@ -40,7 +40,7 @@ xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
 const nu_tcpf = [[1 0];[0 -1]]
-parms = vec([1.]) # sampling rate
+parms = vec([0.]) # sampling rate
 tf = 5.
 
 println("--> Case with functions:")
@@ -65,13 +65,14 @@ println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
 println("For simulations:")
 srand(1234)
-tf = 5.
+tf = 250.
 parms[1] = 10.0
 result = @time PDMP.chv_optim(2000,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
 # println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximum(result.time)," == ",tf)
 println("#jumps = ", length(result.time))
 
 # ind = find(result.time.<2249)
-# Plots.plotlyjs()
+# # Plots.plotlyjs()
 # Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
 # Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP_fast #Jumps = ",length(result.time)))
+#
