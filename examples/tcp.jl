@@ -1,4 +1,4 @@
-# using PDMP, Plots
+using PDMP
 
 function F_tcp(xcdot, xc, xd, t, parms )
   # vector field used for the continuous variable

@@ -1,4 +1,4 @@
-# using PDMP, Plots
+using PDMP
 
 function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
   (S,I,R,~) = xd

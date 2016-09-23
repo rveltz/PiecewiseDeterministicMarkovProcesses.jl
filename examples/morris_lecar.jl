@@ -1,4 +1,4 @@
-using JSON
+using JSON, PDMP
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
 const p1  = ( JSON.parsefile("../examples/ml.json"))

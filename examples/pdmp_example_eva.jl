@@ -1,7 +1,7 @@
 # using PDMP, Plots
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 # workspace()
-# using PDMP
+using PDMP
 
 function F_eva(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
