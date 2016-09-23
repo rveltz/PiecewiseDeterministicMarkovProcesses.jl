@@ -44,19 +44,19 @@ parms = vec([0.]) # sampling rate
 tf = 5.
 
 println("--> Case with functions:")
-dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
-srand(1234)
-dummy_f =  @time PDMP.chv(2000,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
-#
-println("--> Case with types:")
-dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-srand(1234)
-dummy_t =  @time PDMP.chv(2000,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
+  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  srand(1234)
+  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  #
+  println("--> Case with types:")
+  dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
+  srand(1234)
+  dummy_t =  @time PDMP.chv(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
 
-println("--> Case optimised:")
-dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
-srand(1234)
-dummy_t =  @time PDMP.chv_optim(2000,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  println("--> Case optimised:")
+  dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  srand(1234)
+  dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
 
 println("--> #jumps = ", length(dummy_f.time))
 println(norm(dummy_f.time-dummy_t.time))
@@ -67,7 +67,7 @@ println("For simulations:")
 srand(1234)
 tf = 250.
 parms[1] = 10.0
-result = @time PDMP.chv_optim(2000,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+result = @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
 # println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximum(result.time)," == ",tf)
 println("#jumps = ", length(result.time))
 
