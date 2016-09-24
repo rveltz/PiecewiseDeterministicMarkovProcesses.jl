@@ -26,10 +26,10 @@ end
 function cvode_optim{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8)
   neq = length(y0)
   mem = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
-  flag = Sundials.CVodeInit(mem, cfunction(cvode_ode_wrapper, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Array{Any,1})), t[1], Sundials.nvector(y0))
-  flag = Sundials.CVodeSetUserData(mem, [f,r,d,p])
-  flag = Sundials.CVodeSStolerances(mem, reltol, abstol)
-  flag = Sundials.CVDense(mem, neq)
+  Sundials.@checkflag Sundials.CVodeInit(mem, cfunction(cvode_ode_wrapper, Int32, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Array{Any,1})), t[1], Sundials.nvector(y0))
+  Sundials.@checkflag Sundials.CVodeSetUserData(mem, [f,r,d,p])
+  Sundials.@checkflag Sundials.CVodeSStolerances(mem, reltol, abstol)
+  Sundials.@checkflag Sundials.CVDense(mem, neq)
   return mem
 end
 
