@@ -3,6 +3,7 @@
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 # workspace()
 using PDMP
+using Compat
 
 function F_tcpf(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -28,13 +29,13 @@ function Delta_xc_tcpf(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms
 end
 
 immutable F_type; end
-call(::Type{F_type},xcd, xc, xd, t, parms) = F_tcpf(xcd, xc, xd, t, parms)
+@compat (::Type{F_type})(xcd, xc, xd, t, parms) = F_tcpf(xcd, xc, xd, t, parms)
 
 immutable R_type; end
-call(::Type{R_type},xc, xd, t, parms, sr) = R_tcpf(xc, xd, t, parms, sr)
+@compat (::Type{R_type})(xc, xd, t, parms, sr) = R_tcpf(xc, xd, t, parms, sr)
 
 immutable DX_type; end
-call(::Type{DX_type},xc, xd, t, parms, ind_reaction) = Delta_xc_tcpf(xc, xd, t, parms, ind_reaction)
+@compat (::Type{DX_type})(xc, xd, t, parms, ind_reaction) = Delta_xc_tcpf(xc, xd, t, parms, ind_reaction)
 
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
@@ -57,6 +58,12 @@ println("--> Case with functions:")
   dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
   srand(1234)
   dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  
+  println("--> Case optimised with types:")
+  dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
+  srand(1234)
+  dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
+  dummy_t2 =  @time PDMP.chv_optim(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
 
 println("--> #jumps = ", length(dummy_f.time))
 println(norm(dummy_f.time-dummy_t.time))
