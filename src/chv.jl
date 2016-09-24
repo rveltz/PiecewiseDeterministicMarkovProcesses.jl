@@ -13,7 +13,7 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
     xdot[i] = xdot[i] * isr
   end
   xdot[end] = isr
-  return Sundials.CV_SUCCESS
+  return Int32(0)#Sundials.CV_SUCCESS
 end
 
 function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
