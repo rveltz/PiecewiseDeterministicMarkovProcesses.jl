@@ -2,6 +2,7 @@
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 # workspace()
 using PDMP
+using Compat
 
 function F_eva(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -36,13 +37,13 @@ function Delta_xc_eva(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms:
 end
 
 immutable F_type_eva; end
-call(::Type{F_type_eva},xcd, xc, xd, t, parms) = F_eva(xcd, xc, xd, t, parms)
+@compat (::Type{F_type_eva})(xcd, xc, xd, t, parms) = F_eva(xcd, xc, xd, t, parms)
 
 immutable R_type_eva; end
-call(::Type{R_type_eva},xc, xd, t, parms, sr) = R_eva(xc, xd, t, parms, sr)
+@compat (::Type{R_type_eva})(xc, xd, t, parms, sr) = R_eva(xc, xd, t, parms, sr)
 
 immutable DX_type_eva; end
-call(::Type{DX_type_eva},xc, xd, t, parms, ind_reaction) = Delta_xc_eva(xc, xd, t, parms, ind_reaction)
+@compat (::Type{DX_type_eva})(xc, xd, t, parms, ind_reaction) = Delta_xc_eva(xc, xd, t, parms, ind_reaction)
 
 xc0 = vec([0.0])
 xd0 = vec([0, 1])
@@ -65,6 +66,7 @@ println("--> Case with types optimised:")
 dummy_t =  PDMP.chv_optim(20,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
 srand(1234)
 dummy_t =  @time PDMP.chv_optim(200000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
+dummy_t2 =  @time PDMP.chv_optim(200000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
 
 println("--> Case with functions:")
 dummy_f =  PDMP.chv(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
