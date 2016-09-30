@@ -19,6 +19,6 @@ before_script:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd());nclude(\"test\\ci_setup.jl\"); Pkg.build("PDMP"); Pkg.test("PDMP"; coverage=true)'
+  - julia -e 'Pkg.clone(pwd());include(\"test\\ci_setup.jl\"); Pkg.build("PDMP"); Pkg.test("PDMP"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("PDMP")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
