@@ -4,6 +4,6 @@ Distributions
 DataFrames
 StatsBase
 DataArrays
-Sundials 0.2.2+
+Sundials
 Plots
 PlotlyJS
