@@ -1,4 +1,3 @@
-# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 using Base.Test
 
