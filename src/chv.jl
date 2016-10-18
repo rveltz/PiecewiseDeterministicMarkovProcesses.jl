@@ -19,7 +19,7 @@ end
 function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
   # used for the exact method
   const sr = R(x,xd,t,parms,true)::Float64
-  assert(sr > 0.0)
+  @assert sr > 0.0 "Total rate must be positive"
   const ir = min(1.0e9,1.0 / sr)
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
