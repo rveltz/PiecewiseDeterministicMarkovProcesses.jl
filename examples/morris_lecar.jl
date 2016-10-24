@@ -70,5 +70,5 @@ end
 
 # plot of the results
 # plotlyjs()
-# Plots.plot(result.time,result.xc[1,:]')
-# Plots.plot!(result.time, 0*result.xd[3,:]',title = string("#Jumps = ",length(result.time)))
+# Plots.plot(result.time,result.xc[1,:])
+# Plots.plot!(result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))
