@@ -1,3 +1,32 @@
+
+"""
+This is a wrapper implementing the change of variable method to simulate the PDMP.
+This wrapper is meant to be called by LSODA
+see https://arxiv.org/abs/1504.06873
+"""
+function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
+  # Reminder: user_data = [F R Xd params]
+  x = convert(Vector, x_nv)
+  xdot = convert(Vector, xdot_nv)
+
+  const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
+  @assert sr > 0.0 "Total rate must be positive"
+
+  const isr = min(1.0e9,1.0 / sr)
+  user_data[1](xdot, x, user_data[3], t, user_data[4])
+  const ly = length(xdot)
+  for i in 1:ly
+    xdot[i] = xdot[i] * isr
+  end
+  xdot[end] = isr
+  return Int32(0)#Sundials.CV_SUCCESS
+end
+
+"""
+This is a wrapper implementing the change of variable method to simulate the PDMP.
+This wrapper is meant to be called by Sundials.CVode
+see https://arxiv.org/abs/1504.06873
+"""
 function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
   # Reminder: user_data = [F R Xd params]
   x = convert(Vector, x_nv)
@@ -171,15 +200,15 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   # Main loop
   termination_status = "finaltime"
 
-  # save Sundials solver, reduces allocation
-  mem = cvode_optim(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
+  # save Sundials context, reduces allocation
+  mem = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
   #   prgs = Progress(n_max, 1)
   while (t < tf) && (nsteps<n_max)
     #     update!(prgs, nsteps)
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 
-    evolve(res_ode, mem,F,R,Xd,parms, X0, [0.0, dt])
+    cvode_evolve(res_ode, mem,F,R,Xd,parms, X0, [0.0, dt])
     if verbose println("--> Sundials done!") end
 
     X0 = vec(res_ode[end,:])

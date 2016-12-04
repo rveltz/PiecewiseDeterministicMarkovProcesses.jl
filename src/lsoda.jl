@@ -1,6 +1,3 @@
-"""
-Simple function to call Sundials.CVode 
-"""
 function cvode{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-4, abstol::Float64=1e-6)
   neq = length(y0)
   mem = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
@@ -26,10 +23,7 @@ function cvode{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}
   return yres
 end
 
-"""
-Declare memory variable that contains the context to call Sundials.cvode
-"""
-function cvode_ctx{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8)
+function cvode_optim{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8)
   neq = length(y0)
   mem = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
   Sundials.@checkflag Sundials.CVodeInit(mem, cfunction(cvode_ode_wrapper, Cint, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Array{Any,1})), t[1], Sundials.nvector(y0))
@@ -39,10 +33,8 @@ function cvode_ctx{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vecto
   return mem
 end
 
-"""
-This functions allows to save re-allocating internal variables to call Sundials.CVode unlike cvode() above.
-"""
-function cvode_evolve!{T}(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},y0::Vector{Float64}, t::Vector{Float64})
+
+function evolve{T}(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},y0::Vector{Float64}, t::Vector{Float64})
   # How do I update the parameter d in mem??
   Sundials.CVodeReInit(mem,t[1],y0)
   Sundials.CVodeSetUserData(mem, [f,r,d,p])

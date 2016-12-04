@@ -5,6 +5,7 @@ module PDMP
 	using DataFrames
 	using DataArrays
 	using Sundials
+	using LSODA
 	# using ProgressMeter
 
 	export chv,
@@ -15,6 +16,7 @@ module PDMP
 
 	include("utils.jl")
 	include("cvode.jl")
+	include("lsoda.jl")
 	include("chv.jl")
 	include("rejection.jl")
 
