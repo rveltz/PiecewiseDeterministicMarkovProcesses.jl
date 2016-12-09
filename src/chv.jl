@@ -72,7 +72,8 @@ It takes the following arguments:
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo=:cvode)
+  @assert algo in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -108,9 +109,11 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
-
-    res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-
+	if algo==:cvode
+		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+	elseif algo==:lsoda
+		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+	end
     if verbose println("--> Sundials done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
@@ -135,7 +138,11 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
       xc_hist[:,nsteps] = copy(X0[1:end-1])
       xd_hist[:,nsteps] = copy(Xd)
     else
-      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+		if algo==:cvode
+			res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+		elseif algo==:lsoda
+			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+		end	
       t = tf
 
       # save state
@@ -167,7 +174,8 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
+function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo=:cvode)
+  @assert algo in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -201,14 +209,21 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   termination_status = "finaltime"
 
   # save Sundials context, reduces allocation
-  mem = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
+  if algo==:cvode
+  	ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
+  else
+	error("This is where I am now. I need to simplify the declaration of ctx in LSODA.jl. Penser a regarder PDMP/lsoda.jl!!!")  
+	ctx, _ = lsoda(rhs!, y0, tspan[1:2], reltol= 1e-4,abstol = Vector([1.e-6,1.e-10,1.e-6]))
+  end
   #   prgs = Progress(n_max, 1)
   while (t < tf) && (nsteps<n_max)
     #     update!(prgs, nsteps)
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 
-    cvode_evolve(res_ode, mem,F,R,Xd,parms, X0, [0.0, dt])
+    if algo==:cvode
+		cvode_evolve!(res_ode, ctx,F,R,Xd,parms, X0, [0.0, dt])
+	end
     if verbose println("--> Sundials done!") end
 
     X0 = vec(res_ode[end,:])
@@ -237,7 +252,9 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
       xc_hist[:,nsteps] = X0[1:end-1]
       xd_hist[:,nsteps] = Xd
     else
-      res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
+      if algo==:cvode
+		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
+	  end
       t = tf
 
       # save state
@@ -248,7 +265,9 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
     nsteps += 1
   end
 
-  Sundials.CVodeFree(Ref([mem]))
+  if algo==:cvode
+	  Sundials.CVodeFree(Ref([ctx]))
+  end
   # collect the data
   if verbose println("-->Done") end
   stats = pdmpStats(termination_status,nsteps)

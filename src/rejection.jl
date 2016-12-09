@@ -1,4 +1,4 @@
-function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false)
+function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo = :cvode)
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1

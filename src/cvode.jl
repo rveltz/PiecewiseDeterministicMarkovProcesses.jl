@@ -1,5 +1,5 @@
 """
-Simple function to call Sundials.CVode 
+Simple function call to Sundials.CVode 
 """
 function cvode{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-4, abstol::Float64=1e-6)
   neq = length(y0)
@@ -27,7 +27,7 @@ function cvode{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}
 end
 
 """
-Declare memory variable that contains the context to call Sundials.cvode
+Allocate memory variable that contains the context to call Sundials.cvode
 """
 function cvode_ctx{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T}, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8)
   neq = length(y0)
