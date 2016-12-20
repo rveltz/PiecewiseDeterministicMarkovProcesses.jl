@@ -1,25 +1,25 @@
 
-"""
-This is a wrapper implementing the change of variable method to simulate the PDMP.
-This wrapper is meant to be called by LSODA
-see https://arxiv.org/abs/1504.06873
-"""
-function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
-  # Reminder: user_data = [F R Xd params]
-  x = convert(Vector, x_nv)
-  xdot = convert(Vector, xdot_nv)
-
-  const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
-  @assert sr > 0.0 "Total rate must be positive"
-
-  const isr = min(1.0e9,1.0 / sr)
-  user_data[1](xdot, x, user_data[3], t, user_data[4])
-  const ly = length(xdot)
-  for i in 1:ly
-    xdot[i] = xdot[i] * isr
-  end
-  xdot[end] = isr
-end
+# """
+# This is a wrapper implementing the change of variable method to simulate the PDMP.
+# This wrapper is meant to be called by LSODA
+# see https://arxiv.org/abs/1504.06873
+# """
+# function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
+#   # Reminder: user_data = [F R Xd params]
+#   x = convert(Vector, x_nv)
+#   xdot = convert(Vector, xdot_nv)
+#
+#   const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
+#   @assert sr > 0.0 "Total rate must be positive"
+#
+#   const isr = min(1.0e9,1.0 / sr)
+#   user_data[1](xdot, x, user_data[3], t, user_data[4])
+#   const ly = length(xdot)
+#   for i in 1:ly
+#     xdot[i] = xdot[i] * isr
+#   end
+#   xdot[end] = isr
+# end
 
 """
 This is a wrapper implementing the change of variable method to simulate the PDMP.

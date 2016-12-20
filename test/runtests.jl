@@ -35,6 +35,10 @@ include("../examples/sir-rejection.jl")
 @test isequal(result.xd[1,end],0)
 @test isequal(result.xd[2,end],73)
 @test isequal(result.xd[3,end],36)
+
+println("\n\n==== Example neural network ")
+include("../examples/neuron_rejection_exact.jl")
+
 #
 # println("\n\n==== Simple example of neuron model, Morris-Leccar")
 # include("../examples/morris_lecar.jl")
