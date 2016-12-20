@@ -1,7 +1,4 @@
-# using PDMP, Plots
-
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
-# workspace()
 using PDMP
 using Compat
 
@@ -41,13 +38,13 @@ xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
 const nu_tcpf = [[1 0];[0 -1]]
-parms = vec([0.]) # sampling rate
-tf = 5.
+parms = vec([0.1]) # sampling rate
+tf = 250.
 
 println("--> Case with functions:")
-  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,algo=:cvode)
   srand(1234)
-  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,algo=:cvode)
   #
   println("--> Case with types:")
   dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)

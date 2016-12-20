@@ -20,7 +20,7 @@ include("../examples/tcp_fast.jl")
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
 @test isequal(result.time[end],100.)
-@test isequal(result.xd[2,end],1025)
+@test isequal(result.xd[2,end],93)
 #
 #
 println("\n\n==== Example sir ")

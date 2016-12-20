@@ -19,7 +19,6 @@ function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
     xdot[i] = xdot[i] * isr
   end
   xdot[end] = isr
-  return Int32(0)
 end
 
 """
@@ -53,7 +52,7 @@ function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float6
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
   scale!(xdot, ir)
-  return Sundials.CV_SUCCESS
+  # return Sundials.CV_SUCCESS
 end
 
 
@@ -108,12 +107,12 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
   while (t < tf) && (nsteps < n_max)
 
     dt = -log(rand())
-    if verbose println("--> t = ",t," - dt = ",dt) end
-	if algo==:cvode
-		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-	elseif algo==:lsoda
-		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-	end
+    if verbose println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps) end
+  	if algo==:cvode
+  		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  	elseif algo==:lsoda
+  		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  	end
     if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
@@ -138,11 +137,11 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
       xc_hist[:,nsteps] = copy(X0[1:end-1])
       xd_hist[:,nsteps] = copy(Xd)
     else
-		if algo==:cvode
-			res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
-		elseif algo==:lsoda
-			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
-		end	
+  		if algo==:cvode
+  			res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+  		elseif algo==:lsoda
+  			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+  		end
       t = tf
 
       # save state
