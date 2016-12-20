@@ -20,6 +20,7 @@ include("../examples/tcp_fast.jl")
 
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
+PDMP.lsoda_ctx(F_eva,R_eva,nu_eva,parms,vec([xc0 0.]),[0.0,0.1])
 @test isequal(result.time[end],100.)
 @test isequal(result.xd[2,end],93)
 #

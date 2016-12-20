@@ -211,7 +211,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   if algo==:cvode
   	ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
   else
-	ctx = LSODA.lsoda_context_t()
+	# ctx = LSODA.lsoda_context_t()
 	dt_lsoda = 0.
   end
   #   prgs = Progress(n_max, 1)
