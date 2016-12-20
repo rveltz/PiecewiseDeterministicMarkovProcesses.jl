@@ -42,6 +42,6 @@ end
 """
 function pdmp_data(s::pdmpResult)
 	println("--> Entry in pdmp_data_list")
-	df = hcat(DataFrame(time=s.time),convert(DataFrame,s.data))
+	df = hcat(DataFrame(time=s.time),convert(DataFrame,s.xd'))
 	df
 end
