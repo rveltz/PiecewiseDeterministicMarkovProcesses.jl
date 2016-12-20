@@ -2,7 +2,7 @@
   A type storing the status at the end of a call.
 """
 type pdmpStats
-  termination_status::ASCIIString
+  termination_status::String
   nsteps::Int64
 end
 

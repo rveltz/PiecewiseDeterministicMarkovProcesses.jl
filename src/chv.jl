@@ -19,7 +19,7 @@ function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
     xdot[i] = xdot[i] * isr
   end
   xdot[end] = isr
-  return Int32(0)#Sundials.CV_SUCCESS
+  return Int32(0)
 end
 
 """
@@ -114,7 +114,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
 	elseif algo==:lsoda
 		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 	end
-    if verbose println("--> Sundials done!") end
+    if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
     pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
@@ -175,7 +175,7 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **verbose** : a `Bool` for printing verbose.
 """
 function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo=:cvode)
-  @assert algo in [:cvode,:lsoda]
+  @assert algo in [:cvode] string("Sorry, ",algo," is not available for chv_optim yet")
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -208,12 +208,12 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   # Main loop
   termination_status = "finaltime"
 
-  # save Sundials context, reduces allocation
+  # save ODE context, reduces allocation of memory
   if algo==:cvode
-  	ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-8, reltol = 1e-7)
+  	ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
   else
-	error("This is where I am now. I need to simplify the declaration of ctx in LSODA.jl. Penser a regarder PDMP/lsoda.jl!!!")  
-	ctx, _ = lsoda(rhs!, y0, tspan[1:2], reltol= 1e-4,abstol = Vector([1.e-6,1.e-10,1.e-6]))
+	ctx = LSODA.lsoda_context_t()
+	dt_lsoda = 0.
   end
   #   prgs = Progress(n_max, 1)
   while (t < tf) && (nsteps<n_max)
@@ -222,16 +222,31 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
     if verbose println("--> t = ",t," - dt = ",dt) end
 
     if algo==:cvode
+		# println(" --> CVODE solve #",nsteps,", X0 = ", X0)
 		cvode_evolve!(res_ode, ctx,F,R,Xd,parms, X0, [0.0, dt])
+		# println(" ----> res_ode = ", res_ode)
+		X0 = vec(res_ode[end,:])
+	else
+		if nsteps == 2
+			println(" --> LSODA solve #",nsteps,", X0 = ", X0)
+			ctx, res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+			X0 = vec(res_ode[end,:])
+			dt_lsoda += dt
+			println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
+		else
+			println(" --> lsoda_evolve #",nsteps,", X0 = ",X0,", res_ode = ",res_ode,",dt = ", [dt_lsoda, dt_lsoda + dt])
+			LSODA.lsoda_evolve!(ctx, X0, [dt_lsoda, dt_lsoda + dt])
+			dt_lsoda += dt
+		end
 	end
-    if verbose println("--> Sundials done!") end
+    if verbose println(" --> ode solver is done!") end
 
-    X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
     pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
 
     # Update time
-    t = res_ode[end,end]
+    t = X0[end] #t = res_ode[end,end]
+	# @assert t == X0[end]
     # Update event
     if (t < tf)
       ev = sample(pf)
@@ -243,7 +258,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
       # Xc = Xc .+ deltaxc
       DX(X0,Xd,X0[end],parms,ev)
 
-      if verbose println("--> Which reaction? ",ev) end
+      if verbose println(" --> Which reaction? ",ev) end
 
       # save state
       t_hist[nsteps] = t

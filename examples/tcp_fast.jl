@@ -77,9 +77,3 @@ parms[1] = 10.0
 result = @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
 # println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximum(result.time)," == ",tf)
 println("#jumps = ", length(result.time))
-
-# ind = find(result.time.<2249)
-# # Plots.plotlyjs()
-# Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
-# Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP_fast #Jumps = ",length(result.time)))
-#

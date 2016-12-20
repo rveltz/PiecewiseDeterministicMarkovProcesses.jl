@@ -1,3 +1,4 @@
+# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function F_tcp(xcdot, xc, xd, t, parms )
@@ -33,12 +34,8 @@ parms = [0.1]
 tf = 200.
 
 srand(1234)
-result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:cvode)
+result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:cvode)
+result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:lsoda)
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
-
-# ind = find(result.time.<210)
-# Plots.plotlyjs()
-# Plots.plot(result.time[ind],result.xc[1,:][ind],color=:black)
-# Plots.plot!(result.time[ind],0*result.xd[1,:][ind],color=:red,title = string("TCP #Jumps = ",length(result.time)))

@@ -12,7 +12,7 @@ end
 
 function R_eva(xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, sum_rate::Bool)
   # rate function
-  rate_print = 10.
+  rate_print = 1.
   if sum_rate == false
     if xd[1] == 0
       return vec([1.0,0.0,rate_print]) #transition 0->1

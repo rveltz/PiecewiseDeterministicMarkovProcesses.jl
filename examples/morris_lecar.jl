@@ -1,3 +1,4 @@
+# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using JSON, PDMP
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
@@ -53,14 +54,15 @@ tf = p1["t_end"];tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t = PDMP.chv(6,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,0.01,false)
-dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->vec([0.]), nu_ml , parms,0.0,tf,false)
+dummy_t =       PDMP.chv(6,   xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:cvode)
+dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:cvode)
+dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")
-result  =    PDMP.chv_optim(2,xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false)
+result =        PDMP.chv_optim(2,   xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false)
 result =  @time PDMP.chv_optim(4500,xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false) #cpp= 100ms/2200 jumps
-println("#jumps = ", length(dummy_t.time)," ", length(result.time))
+println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try
   println(norm(dummy_t.time-result.time))
