@@ -43,7 +43,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
       if algo==:cvode
 		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
       elseif algo==:lsoda
-          _,res_ode = LSODA.lsoda((t,x,xdot,data)->F(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+          _,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
 	  end
       X0 = vec(res_ode[end,:])
       t = tp[end]

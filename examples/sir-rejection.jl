@@ -1,3 +1,4 @@
+# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
 using PDMP
 
 function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
@@ -28,8 +29,11 @@ tf = 150.0
 reload("PDMP")
 
 srand(1234)
-dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
+dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:cvode)
+result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:cvode)
+srand(1234)
+dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:lsoda)
+result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:lsoda)
 
 # plotlyjs()
 # Plots.plot(result.time,result.xd[1,:],color=:red)

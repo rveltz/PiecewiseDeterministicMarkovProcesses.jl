@@ -36,6 +36,10 @@ tf = 200.
 srand(1234)
 result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:cvode)
 result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:cvode)
+
+srand(1234)
+result =  PDMP.chv(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:lsoda)
 result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false,algo=:lsoda)
+
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))
