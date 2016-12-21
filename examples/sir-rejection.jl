@@ -29,9 +29,9 @@ tf = 150.0
 reload("PDMP")
 
 srand(1234)
-dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,ode=:cvode)
-result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,ode=:cvode)
+dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
 srand(1234)
-dummy = PDMP.rejection(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,ode=:lsoda)
-result = @time PDMP.rejection(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,ode=:lsoda)
+dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
 

@@ -26,8 +26,8 @@ parms = [0.1/100.0,0.01]
 tf = 150.0
 
 srand(1234)
-dummy = PDMP.chv(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-result = @time PDMP.chv(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
+dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
 
 # Plots.plotlyjs()
 # Plots.plot(result.time,result.xd[1,:],color=:red)
