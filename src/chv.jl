@@ -122,7 +122,7 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
     t = res_ode[end,end]
     if (t < tf)
       # Update event
-      ev = sample(pf)
+      ev = Distributions.sample(pf)
       deltaxd = nu[ev,:]
 
       # Xd = Xd .+ deltaxd
@@ -248,7 +248,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
 	# @assert t == X0[end]
     # Update event
     if (t < tf)
-      ev = sample(pf)
+      ev = Distributions.sample(pf)
       deltaxd = nu[ev,:]
 
       # Xd = Xd .+ deltaxd

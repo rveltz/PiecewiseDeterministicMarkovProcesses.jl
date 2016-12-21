@@ -65,7 +65,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
 
     if (t < tf)
       # make a jump
-      ev = sample(pf)
+      ev = Distributions.sample(pf)
       deltaxd = nu[ev,:]
 
       # Xd = Xd .+ deltaxd
@@ -171,7 +171,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
 
     if (t < tf)
       # make a jump
-      ev = sample(pf)
+      ev = Distributions.sample(pf)
 
       if xd_jump
         deltaxd = nu[ev,:]

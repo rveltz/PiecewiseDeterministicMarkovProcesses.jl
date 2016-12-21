@@ -8,14 +8,14 @@ module PDMP
 	using LSODA
 	# using ProgressMeter
 
-	export chv,
+	export sample,
+		chv,
 		rejection,
 		rejection_exact,
 		chv_optim,
 		pdmpArgs,
 		pdmpResult,
-		pdmp_data,
-		sample
+		pdmp_data
 
 	include("utils.jl")
 	include("cvode.jl")
@@ -31,7 +31,7 @@ module PDMP
 			return chv_optim(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 		elseif algo==:rejection
 			rejection(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
-		elseif algo==:
+		elseif algo==:rejection_exact
 			return rejection_exact(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 		end
 	end
