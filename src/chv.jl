@@ -71,8 +71,8 @@ It takes the following arguments:
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo=:cvode)
-  @assert algo in [:cvode,:lsoda]
+function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+  @assert ode in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -108,9 +108,9 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
 
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps) end
-  	if algo==:cvode
+  	if ode==:cvode
   		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-  	elseif algo==:lsoda
+  	elseif ode==:lsoda
   		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
   	end
     if verbose println("--> ode solver is done!") end
@@ -137,9 +137,9 @@ function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Ca
       xc_hist[:,nsteps] = copy(X0[1:end-1])
       xd_hist[:,nsteps] = copy(Xd)
     else
-  		if algo==:cvode
+  		if ode==:cvode
   			res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
-  		elseif algo==:lsoda
+  		elseif ode==:lsoda
   			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
   		end
       t = tf
@@ -173,8 +173,8 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo=:cvode)
-  @assert algo in [:cvode] string("Sorry, ",algo," is not available for chv_optim yet")
+function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+  @assert ode in [:cvode] string("Sorry, ",ode," is not available for chv_optim yet")
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -208,7 +208,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   termination_status = "finaltime"
 
   # save ODE context, reduces allocation of memory
-  if algo==:cvode
+  if ode==:cvode
   	ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
   else
 	# ctx = LSODA.lsoda_context_t()
@@ -220,7 +220,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
     dt = -log(rand())
     if verbose println("--> t = ",t," - dt = ",dt) end
 
-    if algo==:cvode
+    if ode==:cvode
 		# println(" --> CVODE solve #",nsteps,", X0 = ", X0)
 		cvode_evolve!(res_ode, ctx,F,R,Xd,parms, X0, [0.0, dt])
 		# println(" ----> res_ode = ", res_ode)
@@ -266,7 +266,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
       xc_hist[:,nsteps] = X0[1:end-1]
       xd_hist[:,nsteps] = Xd
     else
-      if algo==:cvode
+      if ode==:cvode
 		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
 	  end
       t = tf
@@ -279,7 +279,7 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
     nsteps += 1
   end
 
-  if algo==:cvode
+  if ode==:cvode
 	  Sundials.CVodeFree(Ref([ctx]))
   end
   # collect the data

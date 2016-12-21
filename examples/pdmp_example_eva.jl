@@ -79,7 +79,7 @@ println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
 
 println("For simulations (lsoda):")
 srand(1234)
-result = @time PDMP.chv(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,algo=:lsoda)
+result = @time PDMP.chv(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 
 # println(size(result.time))
 # ind = find(result.time.<134)

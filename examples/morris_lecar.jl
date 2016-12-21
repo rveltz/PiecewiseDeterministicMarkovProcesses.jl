@@ -54,9 +54,9 @@ tf = p1["t_end"];tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t =       PDMP.chv(6,   xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:cvode)
-dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:cvode)
-dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,algo=:lsoda)
+dummy_t =       PDMP.chv(6,   xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")

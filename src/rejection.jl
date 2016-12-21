@@ -1,5 +1,5 @@
-function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;algo = :cvode)
-  @assert algo in [:cvode,:lsoda]
+function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode)
+  @assert ode in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
@@ -40,9 +40,9 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
     reject = true
     while (reject) && (nsteps < n_max)
       tp = [t, min(tf, t - log(rand())/ppf[2]) ] #mettre un lambda_star?
-      if algo==:cvode
+      if ode==:cvode
 		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
-      elseif algo==:lsoda
+      elseif ode==:lsoda
           _,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
 	  end
       X0 = vec(res_ode[end,:])

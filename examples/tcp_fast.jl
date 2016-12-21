@@ -42,9 +42,9 @@ parms = vec([0.1]) # sampling rate
 tf = 250.
 
 println("--> Case with functions:")
-  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,algo=:cvode)
+  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   srand(1234)
-  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,algo=:cvode)
+  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   #
   println("--> Case with types:")
   dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
