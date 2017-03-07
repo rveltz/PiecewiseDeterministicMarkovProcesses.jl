@@ -55,7 +55,8 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
     reject = true
     while (reject) && (nsteps < n_max)
       tp = [t, min(tf, t - log(rand())/ppf[2]) ] #mettre un lambda_star?
-      if ode==:cvode
+      if verbose println("----> tspan : ",tp ) end
+	  if ode==:cvode
 		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
       elseif ode==:lsoda
           _,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
@@ -135,7 +136,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   xc_hist = Array(Float64, length(xc0), n_max)
   xd_hist = Array(Int64,   length(xd0), n_max)
   res_ode = Array(Float64,2,length(xc0))
-  rate_vector = zeros(length(nu[1,:]))
+  rate_vector = zeros(length(nu[:,1]))
 
 
   # initialise arrays
@@ -158,16 +159,15 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
 
 
   while (t < tf) && (njumps < n_max)
-    if verbose println("--> step : ",njumps," / ",n_max ) end
+    if verbose println("--> step : $njumps, / $n_max, #reject = $nsteps" ) end
     reject = true
     nsteps = 1
     while (reject) && (nsteps < 10^6) && (t < tf)
-
-      tp = [t, t - log(rand())/lambda_star ] #mettre un lambda_star?
-      Phi(res_ode,X0,Xd,tp,parms) # we evolve the flow
+      tp = [t, t - log(rand())/lambda_star ]		# mettre un lambda_star?
+      Phi(res_ode, X0, Xd, tp, parms) 				# we evolve the flow inplace
       X0 = vec(res_ode[end,:])
       t = tp[end]
-      ppf = R(rate_vector,X0,Xd,t,parms,true) #we don't want the full rate vector, just the sum of rates
+      ppf = R(rate_vector, X0, Xd, t, parms, true) 	# we don't want the full rate vector, just the sum of rates
       @assert(ppf[1] <= ppf[2])
       reject = rand() <  (1. - ppf[1] / ppf[2])
       nsteps += 1
