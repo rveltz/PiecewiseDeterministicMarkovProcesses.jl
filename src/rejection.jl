@@ -105,8 +105,8 @@ It takes the following arguments:
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **Phi** : a `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
-- **R** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. The returned vector has components. If sum_rate is `False`, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is `True`, one must return total_rate,bound_ where total_rate is a `Float64` that is the sum of the rates.
+- **Phi!** : a `Function` or a callable type, which itself takes 6 arguments to represent the vector field; rate a `Vector` of `Float64` representing the vector which needs to be filled with values of the rates, xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system, sum_of_rate a `Bool` stating if the function must return the total rate. 
+- **R!** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. The returned vector has components. If sum_rate is `False`, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is `True`, one must return total_rate,bound_ where total_rate is a `Float64` that is the sum of the rates. In any case, the function must return a couple (total_rates, bound) where bound is a bound for the total rate.
 - **Delta** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
 - **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
@@ -182,14 +182,17 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
     xd_hist[:,njumps] = copy(Xd)
     # there is a jump!
     lambda_star = R(rate_vector,X0,Xd,t,parms,false)[2]
+	if verbose println("----> rate = $rate_vector" ) end
     pf = WeightVec(convert(Array{Float64,1},rate_vector)) #this is to ease sampling
 
     if (t < tf)
       # make a jump
       ev = Distributions.sample(pf)
+	  if verbose println("----> reaction = $ev" ) end
 
       if xd_jump
         deltaxd = nu[ev,:]
+		if verbose println("----> delta = $deltaxd" ) end
         # Xd = Xd .+ deltaxd
         Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
       end
