@@ -8,13 +8,13 @@ module PDMP
 	using LSODA
 	# using ProgressMeter
 
-	# export sample, ssa, chv,
-	# 	rejection,
-	# 	rejection_exact,
-	# 	chv_optim,
-	# 	pdmpArgs,
-	# 	pdmpResult,
-	# 	pdmp_data,
+	export sample, ssa, chv,
+		rejection,
+		rejection_exact,
+		chv_optim,
+		pdmpArgs,
+		pdmpResult,
+		pdmp_data,
 
 	include("utils.jl")
 	include("cvode.jl")
