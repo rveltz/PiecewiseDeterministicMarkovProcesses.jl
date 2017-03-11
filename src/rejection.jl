@@ -1,5 +1,5 @@
 """
-This function performs a pdmp simulation using the rejection method when the flow is known analytically.
+This function performs a simulation using the rejection method.
 It takes the following arguments:
 
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
@@ -12,6 +12,7 @@ It takes the following arguments:
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
+- **ode**: ode time stepper :cvode or :lsoda
 """
 function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode)
   @assert ode in [:cvode,:lsoda]
@@ -99,7 +100,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
 end
 
 """
-This function performs a pdmp simulation using the rejection method when the flow is known analytically.
+This function performs a simulation using the rejection method when the flow **is known analytically**.
 It takes the following arguments:
 
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.

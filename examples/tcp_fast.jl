@@ -25,14 +25,6 @@ function Delta_xc_tcpf(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms
   return true
 end
 
-immutable F_type; end
-@compat (::Type{F_type})(xcd, xc, xd, t, parms) = F_tcpf(xcd, xc, xd, t, parms)
-
-immutable R_type; end
-@compat (::Type{R_type})(xc, xd, t, parms, sr) = R_tcpf(xc, xd, t, parms, sr)
-
-immutable DX_type; end
-@compat (::Type{DX_type})(xc, xd, t, parms, ind_reaction) = Delta_xc_tcpf(xc, xd, t, parms, ind_reaction)
 
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
@@ -41,32 +33,16 @@ const nu_tcpf = [[1 0];[0 -1]]
 parms = vec([0.1]) # sampling rate
 tf = 250.
 
-println("--> Case with functions:")
+println("--> Case chv:")
   dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   srand(1234)
   dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   #
-  println("--> Case with types:")
-  dummy_t =  PDMP.chv(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-  srand(1234)
-  dummy_t =  @time PDMP.chv(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-
   println("--> Case optimised:")
   dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
   srand(1234)
   dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
   
-  println("--> Case optimised with types:")
-  dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-  srand(1234)
-  dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-  dummy_t2 =  @time PDMP.chv_optim(200,xc0,xd0,F_type,R_type,DX_type,nu_tcpf,parms,0.0,tf,false)
-
-println("--> #jumps = ", length(dummy_f.time))
-println(norm(dummy_f.time-dummy_t.time))
-println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
-println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
-
 println("For simulations:")
 srand(1234)
 tf = 250.

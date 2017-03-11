@@ -1,25 +1,8 @@
 
 # """
 # This is a wrapper implementing the change of variable method to simulate the PDMP.
-# This wrapper is meant to be called by LSODA
 # see https://arxiv.org/abs/1504.06873
 # """
-# function lsoda_ode_wrapper(t, x_nv, xdot_nv, user_data)
-#   # Reminder: user_data = [F R Xd params]
-#   x = convert(Vector, x_nv)
-#   xdot = convert(Vector, xdot_nv)
-#
-#   const sr = user_data[2](x, user_data[3], t, user_data[4], true)::Float64
-#   @assert sr > 0.0 "Total rate must be positive"
-#
-#   const isr = min(1.0e9,1.0 / sr)
-#   user_data[1](xdot, x, user_data[3], t, user_data[4])
-#   const ly = length(xdot)
-#   for i in 1:ly
-#     xdot[i] = xdot[i] * isr
-#   end
-#   xdot[end] = isr
-# end
 
 """
 This is a wrapper implementing the change of variable method to simulate the PDMP.
@@ -52,12 +35,11 @@ function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float6
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
   scale!(xdot, ir)
-  # return Sundials.CV_SUCCESS
 end
 
 
 """
-This function performs a pdmp simulation using the Change of Variable (CHV) method.
+This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
 It takes the following arguments:
 
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
@@ -70,6 +52,7 @@ It takes the following arguments:
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
+- **ode**: ode time stepper :cvode or :lsoda
 """
 function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
   @assert ode in [:cvode,:lsoda]
@@ -160,7 +143,7 @@ end
 
 
 """
-This function performs a pdmp simulation using the Change of Variable (CHV) method. Its use of Sundials solver is optimized in term of memory consumption. It takes the following arguments:
+This function performs a pdmp simulation using the Change of Variable (CHV) method, see https://arxiv.org/abs/1504.06873. Its use of Sundials solver is optimized in term of memory consumption. It takes the following arguments:
 
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
@@ -172,6 +155,7 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **parms** : a `Vector` of `Float64` representing the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
+- **ode**: ode time stepper :cvode or :lsoda
 """
 function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
   @assert ode in [:cvode] string("Sorry, ",ode," is not available for chv_optim yet")

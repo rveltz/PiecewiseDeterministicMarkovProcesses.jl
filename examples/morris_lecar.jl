@@ -32,14 +32,6 @@ function Delta_ml(xc::Array{Float64},xd::Array{Int64},t::Float64,parms::Vector,i
   return true
 end
 
-immutable F_type_ml; end
-call(::Type{F_type_ml},xcd, xc, xd, t, parms) = F_ml(xcd, xc, xd, t, parms)
-
-immutable R_type_ml; end
-call(::Type{R_type_ml},xc, xd, t, parms, sr) = R_ml(xc, xd, t, parms, sr)
-
-immutable DX_type_ml; end
-call(::Type{DX_type_ml},xc, xd, t, parms, ind_reaction) = Delta_ml(xc, xd, t, parms, ind_reaction)
 
 xc0 = vec([p1["v(0)"]])
 xd0 = vec([Int(p0["N"]),    #Na closed
@@ -60,8 +52,8 @@ dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , p
 
 srand(123)
 println("--> chv_optim - call")
-result =        PDMP.chv_optim(2,   xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false)
-result =  @time PDMP.chv_optim(4500,xc0,xd0,F_type_ml,R_type_ml,DX_type_ml,nu_ml,parms,0.0,tf,false) #cpp= 100ms/2200 jumps
+result =        PDMP.chv_optim(2,   xc0,xd0,F_ml,R_ml,Delta_ml,nu_ml,parms,0.0,tf,false)
+result =  @time PDMP.chv_optim(4500,xc0,xd0,F_ml,R_ml,Delta_ml,nu_ml,parms,0.0,tf,false) #cpp= 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try

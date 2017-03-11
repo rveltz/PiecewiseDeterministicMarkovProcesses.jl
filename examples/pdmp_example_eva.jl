@@ -36,15 +36,6 @@ function Delta_xc_eva(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms:
   return true
 end
 
-immutable F_type_eva; end
-@compat (::Type{F_type_eva})(xcd, xc, xd, t, parms) = F_eva(xcd, xc, xd, t, parms)
-
-immutable R_type_eva; end
-@compat (::Type{R_type_eva})(xc, xd, t, parms, sr) = R_eva(xc, xd, t, parms, sr)
-
-immutable DX_type_eva; end
-@compat (::Type{DX_type_eva})(xc, xd, t, parms, ind_reaction) = Delta_xc_eva(xc, xd, t, parms, ind_reaction)
-
 xc0 = vec([0.0])
 xd0 = vec([0, 1])
 
@@ -52,34 +43,27 @@ const nu_eva = [[1 0];[-1 0];[0 1]]
 parms = [0.1,0.01]
 tf = 100.
 
-println("--> Case with types:")
-dummy_t =  PDMP.sample(2,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
+println("--> Case simple chv:")
+dummy_t =  PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
 srand(1234)
-dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false)
+dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
 
-println("--> Case optimised:")
+println("--> Case chv optimised:")
 dummy_t =  PDMP.sample(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 srand(1234)
 dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 
 println("--> Case with types optimised:")
-dummy_t =  PDMP.sample(20,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  PDMP.sample(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 srand(1234)
-dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
-dummy_t2 =  @time PDMP.sample(200000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 
-println("--> Case with functions:")
-dummy_f =  PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
-srand(1234)
-dummy_f =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
-
-println("--> #jumps = ", length(dummy_f.time))
-println("--> xc_f-xc_t = ",norm(dummy_f.xc-dummy_t.xc))
-println("--> xd_f-xd_t = ",norm(dummy_f.xd-dummy_t.xd))
+println("--> #jumps = ", length(dummy_t.time))
 
 println("For simulations (lsoda):")
+result = PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 srand(1234)
-result = @time PDMP.sample(10000,xc0,xd0,F_type_eva,R_type_eva,DX_type_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
+result = @time PDMP.sample(10000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 
 # println(size(result.time))
 # ind = find(result.time.<134)
