@@ -20,7 +20,6 @@ include("../examples/tcp_fast.jl")
 
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
-PDMP.lsoda_ctx(F_eva,R_eva,nu_eva,parms,vec([xc0 0.]),[0.0,0.1])
 @test isequal(result.time[end],100.)
 @test isequal(result.xd[2,end],93)
 #
@@ -38,11 +37,3 @@ include("../examples/sir-rejection.jl")
 
 println("\n\n==== Example neural network ")
 include("../examples/neuron_rejection_exact.jl")
-
-#
-# println("\n\n==== Simple example of neuron model, Morris-Leccar")
-# include("../examples/morris_lecar.jl")
-# @test isequal(result.xd[1,end],25)
-# @test isequal(result.xd[2,end],0)
-# @test isequal(result.xd[3,end],53)
-# @test isequal(result.xd[4,end],9)
