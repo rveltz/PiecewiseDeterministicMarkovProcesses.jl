@@ -1,6 +1,4 @@
-# using PDMP, Plots
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
-# workspace()
 using PDMP
 using Compat
 
@@ -64,8 +62,3 @@ println("For simulations (lsoda):")
 result = PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 srand(1234)
 result = @time PDMP.sample(10000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
-
-# println(size(result.time))
-# ind = find(result.time.<134)
-# Plots.plotlyjs()
-# Plots.plot(result.time[ind],result.xc[1,ind],title = string("#Jumps = ",length(dummy_f.time)))

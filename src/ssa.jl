@@ -1,14 +1,14 @@
-function F_ssa(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
+function F_dummy(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
   xcdot[1] = 0.
   nothing
 end
 
-function Delta_ssa(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
+function Delta_dummy(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
   return true
 end
 
-function Phi_ssa(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Array{Float64},parms::Vector{Float64})
+function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Array{Float64},parms::Vector{Float64})
   # vector field used for the continuous variable
   # trivial dynamics
   out[1,:] .= xc
@@ -30,12 +30,12 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **algo** : `[:chv,:rejection]` for selecting the algorithm
 """
-function ssa{T}(n_max::Int64,xd0::Array{Int64,1},R::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda,algo=:chv)
+function ssa{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda,algo=:chv)
   @assert algo in [:chv,:chv_optim,:rejection,:rejection_exact]
   if algo==:chv
-    return ssa_chv(n_max,xd0,R,nu,parms,ti, tf,verbose,ode=ode)
+    return ssa_chv(n_max,xd0,R!,nu,parms,ti, tf,verbose,ode=ode)
   elseif algo==:rejection
-    return ssa_rejection(n_max,xd0,R,nu,parms,ti, tf,verbose,ode=ode)
+    return ssa_rejection(n_max,xd0,R!,nu,parms,ti, tf,verbose,ode=ode)
   end
 end
 
@@ -54,7 +54,7 @@ function ssa_chv{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int
   end
   
   xc0 = [0.]
-  return PDMP.chv(n_max,xc0,xd0,F_ssa,rate_ssa,Delta_ssa,nu,parms,ti,tf,verbose,ode=ode)
+  return PDMP.chv(n_max,xc0,xd0,F_dummy,rate_ssa,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode)
 end
 
 function ssa_rejection{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda)
@@ -65,5 +65,5 @@ function ssa_rejection{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matr
 	 return R!(rate,xd,t,parms,sum_rate) 
   end
   
-  return PDMP.rejection_exact(n_max,xc0,xd0,Phi_ssa,Rate_ssa!,Delta_ssa,nu,parms,ti,tf,verbose)
+  return PDMP.rejection_exact(n_max,xc0,xd0,Phi_dummy,Rate_ssa!,Delta_dummy,nu,parms,ti,tf,verbose)
 end

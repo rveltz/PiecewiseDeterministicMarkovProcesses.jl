@@ -1,3 +1,4 @@
+# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
@@ -26,10 +27,5 @@ parms = [0.1/100.0,0.01]
 tf = 150.0
 
 srand(1234)
-dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false)
-
-# Plots.plotlyjs()
-# Plots.plot(result.time,result.xd[1,:],color=:red)
-# Plots.plot!(result.time, result.xd[2,:],color=:green)
-# Plots.plot!(result.time, result.xd[3,:],color=:blue,title = string("SIR - #Jumps = ",length(result.xd[1,:])))
+dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)

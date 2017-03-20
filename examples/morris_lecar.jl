@@ -27,11 +27,6 @@ function R_ml(xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector, su
   end
 end
 
-function Delta_ml(xc::Array{Float64},xd::Array{Int64},t::Float64,parms::Vector,ind_reaction::Int64)
-  # this function return the jump in the continuous component
-  return true
-end
-
 
 xc0 = vec([p1["v(0)"]])
 xd0 = vec([Int(p0["N"]),    #Na closed
@@ -46,14 +41,14 @@ tf = p1["t_end"];tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t =       PDMP.chv(6,   xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.chv(4500,xc0,xd0, F_ml, R_ml,(x,y,t,pr,id)->true, nu_ml , parms,0.0,tf,false,ode=:lsoda)
+dummy_t =       PDMP.sample(6,   xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.sample(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.sample(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")
-result =        PDMP.chv_optim(2,   xc0,xd0,F_ml,R_ml,Delta_ml,nu_ml,parms,0.0,tf,false)
-result =  @time PDMP.chv_optim(4500,xc0,xd0,F_ml,R_ml,Delta_ml,nu_ml,parms,0.0,tf,false) #cpp= 100ms/2200 jumps
+result =        PDMP.sample(2,   xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
+result =  @time PDMP.sample(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp= 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try

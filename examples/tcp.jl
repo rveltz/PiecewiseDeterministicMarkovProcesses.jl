@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function F_tcp(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
@@ -20,12 +20,6 @@ function R_tcp(xc::Vector, xd::Array, t::Float64, parms::Vector, sum_rate::Bool)
   end
 end
 
-function Delta_xc_tcp(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
-  # inplace implementation of the jump of the continuous variable xc
-  return true
-end
-
-
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
@@ -34,8 +28,8 @@ parms = vec([0.1]) # sampling rate
 tf = 200.
 
 srand(1234)
-result =  PDMP.chv(2,        xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.chv(200,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
+result =  PDMP.sample(2,        xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.sample(200,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
 
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))

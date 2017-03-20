@@ -6,7 +6,7 @@ module PDMP
 	using DataArrays
 	using Sundials
 	using LSODA
-	# using ProgressMeter
+
 
 	export sample,
 		ssa,
@@ -37,5 +37,9 @@ module PDMP
 			return rejection_exact(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 		end
 	end
+	
+sample{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) = sample(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose;ode=ode,algo=algo)
+
+sample{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) = ssa(n_max,xd0,R,nu,parms,ti, tf,verbose;ode = ode,algo=algo)
 
 end # module

@@ -67,11 +67,6 @@ function R_tcp(xc, xd, t, parms, sum_rate::Bool)
   end
 end
 
-function Delta_xc_tcp(xc, xd, t, parms, ind_reaction::Int64)
-	# jump on the continuous variable
-  return true #in this example, no jump
-end
-
 # initial conditions for the continuous/discrete variables
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
@@ -83,9 +78,8 @@ const nu_tcp = [[1 0];[0 -1]]
 parms = [0.]
 tf = 2000.
 
-dummy =  PDMP.sample(2,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.sample(2000,xc0,xd0,F_tcp,R_tcp,Delta_xc_tcp,nu_tcp,parms,0.0,tf,false)
-println("#jumps = ", length(result.time))
+dummy =  PDMP.sample(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.sample(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
 
 # plotting
 using Plots

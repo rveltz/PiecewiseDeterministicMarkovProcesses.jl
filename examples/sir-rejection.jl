@@ -1,7 +1,7 @@
-# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia/")
+push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
-function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
+function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
   (S,I,R,~) = xd
   (beta,mu) = parms
   infection = beta*S*I
@@ -14,7 +14,7 @@ function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
   end
 end
 
-function F_sir(xdot,xc,xd,t::Float64,parms)
+function F_sir_rej(xdot,xc,xd,t,parms)
   # vector field used for the continuous variable
   xdot[1] = 0.0
   nothing
@@ -29,9 +29,9 @@ tf = 150.0
 reload("PDMP")
 
 srand(1234)
-dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
-result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+dummy = PDMP.sample(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
 srand(1234)
-dummy = PDMP.sample(1,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
-result = @time PDMP.sample(1000,xc0,xd0,F_sir,R_sir,(x,y,t,p,id)->vec([0.]),nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+dummy = PDMP.sample(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+result = @time PDMP.sample(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
 

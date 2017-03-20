@@ -5,6 +5,4 @@ DataFrames
 StatsBase
 DataArrays
 Sundials
-Plots
-PlotlyJS
 LSODA

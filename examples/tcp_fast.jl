@@ -1,6 +1,5 @@
 # push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
-using PDMP
-using Compat
+using PDMP, Compat
 
 function F_tcpf(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -21,11 +20,6 @@ function R_tcpf(xc::Vector, xd::Array, t::Float64, parms::Vector, sum_rate::Bool
   end
 end
 
-function Delta_xc_tcpf(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
-  return true
-end
-
-
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
@@ -34,19 +28,17 @@ parms = vec([0.1]) # sampling rate
 tf = 250.
 
 println("--> Case chv:")
-  dummy_f =  PDMP.chv(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
+  dummy_f =  PDMP.sample(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   srand(1234)
-  dummy_f =  @time PDMP.chv(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
-  #
+  dummy_f =  @time PDMP.sample(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false,ode=:cvode)
   println("--> Case optimised:")
-  dummy_t =  PDMP.chv_optim(2,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  dummy_t =  PDMP.sample(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false, algo=:chv_optim)
   srand(1234)
-  dummy_t =  @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
+  dummy_t =  @time PDMP.sample(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false, algo=:chv_optim)
   
 println("For simulations:")
 srand(1234)
 tf = 250.
 parms[1] = 10.0
-result = @time PDMP.chv_optim(200,xc0,xd0,F_tcpf,R_tcpf,Delta_xc_tcpf,nu_tcpf,parms,0.0,tf,false)
-# println("--> stopping time == tf? (not more) ",maximum(result.time) == tf,maximum(result.time)," == ",tf)
+result = @time PDMP.sample(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false, algo=:chv_optim)
 println("#jumps = ", length(result.time))
