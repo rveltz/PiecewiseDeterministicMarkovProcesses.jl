@@ -1,8 +1,4 @@
 # Example of neural network 
-
-using Plots, ProgressMeter
-gr()
-
 using PDMP
 
 const N = 100
