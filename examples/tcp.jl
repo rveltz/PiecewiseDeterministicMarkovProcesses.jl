@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
+# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function F_tcp!(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})

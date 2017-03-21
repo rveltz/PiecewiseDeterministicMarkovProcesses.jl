@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
+# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using JSON, PDMP
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
@@ -6,7 +6,7 @@ const p1  = ( JSON.parsefile("../examples/ml.json"))
 include("morris_lecar_variables.jl")
 const p_ml = ml(p0)
 
-function F_ml(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector)
+function F_ml!(xcdot::Vector{Float64}, xc::Vector{Float64},xd::Array{Int64},t::Float64, parms::Vector)
   # vector field used for the continuous variable
   #compute the current, v = xc[1]
   xcdot[1] = xd[2] / p_ml.N * (p_ml.g_Na * (p_ml.v_Na - xc[1])) + xd[4] / p_ml.M * (p_ml.g_K  * (p_ml.v_K  - xc[1]))  + (p_ml.g_L  * (p_ml.v_L  - xc[1])) + p_ml.I_app
@@ -42,14 +42,14 @@ tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")
-result =        PDMP.pdmp(2,   xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
-result =  @time PDMP.pdmp(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
+result =        PDMP.pdmp(2,   xc0,xd0,F_ml!,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
+result =  @time PDMP.pdmp(4500,xc0,xd0,F_ml!,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try

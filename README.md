@@ -52,7 +52,6 @@ function F_tcp(xc, xd, t, parms)
   else
     return vec([-xc[1]])
   end
-    nothing
 end
 
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)

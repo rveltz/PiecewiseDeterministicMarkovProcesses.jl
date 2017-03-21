@@ -1,4 +1,4 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
+# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
@@ -26,12 +26,10 @@ nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
 tf = 150.0
 
-reload("PDMP")
-
 srand(1234)
-dummy = PDMP.pdmp(1,xc0,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
-result = @time PDMP.pdmp(1000,xc0,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+dummy = PDMP.pdmp(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+result = @time PDMP.pdmp(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
 srand(1234)
-dummy = PDMP.pdmp(1,xc0,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
-result = @time PDMP.pdmp(1000,xc0,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+dummy = PDMP.pdmp(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+result = @time PDMP.pdmp(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
 
