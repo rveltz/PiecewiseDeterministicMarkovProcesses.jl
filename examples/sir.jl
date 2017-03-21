@@ -1,4 +1,4 @@
-# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir(xc,xd,t::Float64,parms,sum_rate::Bool)
@@ -27,5 +27,5 @@ parms = [0.1/100.0,0.01]
 tf = 150.0
 
 srand(1234)
-dummy = PDMP.pdmp!(1,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
-result = @time PDMP.pdmp!(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
+dummy = PDMP.pdmp(1,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
+result = @time PDMP.pdmp(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)

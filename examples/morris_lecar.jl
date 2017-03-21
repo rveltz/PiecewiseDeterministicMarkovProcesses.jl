@@ -42,14 +42,14 @@ tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t =       PDMP.sample(6,   xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.sample(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.sample(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")
-result =        PDMP.sample(2,   xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
-result =  @time PDMP.sample(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
+result =        PDMP.pdmp(2,   xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
+result =  @time PDMP.pdmp(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try
@@ -57,8 +57,3 @@ try
   println("--> xc_f-xc_t = ",norm(dummy_t.xc-result.xc))
   println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
 end
-
-# plot of the results
-# plotlyjs()
-# Plots.plot(result.time,result.xc[1,:])
-# Plots.plot!(result.time, 0*result.xd[3,:],title = string("#Jumps = ",length(result.time)))

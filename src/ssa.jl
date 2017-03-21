@@ -40,12 +40,12 @@ function ssa{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int64},
 end
 
 
-function ssa_chv{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda)
+function ssa_chv{T}(n_max::Int64,xd0::Array{Int64,1},R::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda)
   @assert ode in [:cvode,:lsoda]
   
   function rate_ssa(xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64}, sum_rate::Bool)
 	rate = zeros(Float64,length(nu[:,1]))
-	sr,bd = R!(rate,xd,t,parms,sum_rate)
+	sr,bd = R(rate,xd,t,parms,sum_rate)
 	if sum_rate == false
 	    return rate
 	  else
@@ -54,7 +54,7 @@ function ssa_chv{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int
   end
   
   xc0 = [0.]
-  return PDMP.chv(n_max,xc0,xd0,F_dummy,rate_ssa,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode)
+  return PDMP.chv!(n_max,xc0,xd0,F_dummy,rate_ssa,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode)
 end
 
 function ssa_rejection{T}(n_max::Int64,xd0::Array{Int64,1},R!::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :lsoda)

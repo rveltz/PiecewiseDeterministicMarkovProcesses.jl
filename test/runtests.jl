@@ -9,6 +9,7 @@ println("== start pdmp examples")
 println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
 pdmp_data(result)
+println(result.time[end],", ",result.xd[1,end])
 @test isequal(result.time[end],200.)
 @test isequal(result.xd[1,end],30)
 

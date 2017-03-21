@@ -45,14 +45,14 @@ A simple example of a TCP process is given below:
 ```julia
 using PDMP
 
-function F_tcp(xcdot, xc, xd, t, parms )
+function F_tcp(xc, xd, t, parms)
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
-    xcdot[1] = xc[1]
+    return vec([xc[1]])
   else
-    xcdot[1] = -xc[1]
+    return vec([-xc[1]])
   end
-  nothing
+    nothing
 end
 
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)
@@ -78,8 +78,8 @@ const nu_tcp = [[1 0];[0 -1]]
 parms = [0.]
 tf = 2000.
 
-dummy =  PDMP.sample(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.sample(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.pdmp(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
 
 # plotting
 using Plots
