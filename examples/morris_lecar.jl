@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using JSON, PDMP
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
@@ -37,7 +37,8 @@ xd0 = vec([Int(p0["N"]),    #Na closed
 nu_ml = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 
-tf = p1["t_end"];tf=350.
+tf = p1["t_end"]
+tf=350.
 
 srand(123)
 println("--> chv")
@@ -48,7 +49,7 @@ dummy_t = @time PDMP.sample(4500,xc0,xd0, F_ml, R_ml, nu_ml, parms,0.0,tf,false,
 srand(123)
 println("--> chv_optim - call")
 result =        PDMP.sample(2,   xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
-result =  @time PDMP.sample(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp= 100ms/2200 jumps
+result =  @time PDMP.sample(4500,xc0,xd0,F_ml,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try

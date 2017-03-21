@@ -12,13 +12,6 @@ pdmp_data(result)
 @test isequal(result.time[end],200.)
 @test isequal(result.xd[1,end],30)
 
-
-println("\n\n==== Example tcp fast with types ")
-println("----> To make it interesting, this mathematical example can explode in finite time, hence the warning")
-include("../examples/tcp_fast.jl")
-@test isequal(length(result.time),200)
-@test isequal(result.xd[1,end],4)
-
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
 @test isequal(result.time[end],100.)

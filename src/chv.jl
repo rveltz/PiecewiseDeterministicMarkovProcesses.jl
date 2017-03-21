@@ -1,4 +1,3 @@
-
 # """
 # This is a wrapper implementing the change of variable method to simulate the PDMP.
 # see https://arxiv.org/abs/1504.06873
@@ -37,6 +36,18 @@ function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float6
   scale!(xdot, ir)
 end
 
+function f_CHV2{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64}, parms::Vector{T})
+  # used for the exact method
+  const sr = R(x,xd,t,parms,true)::Float64
+  @assert sr > 0.0 "Total rate must be positive"
+  const ir = min(1.0e9,1.0 / sr)
+  x_tmp = F(x,xd,t,parms)
+  for ii=1:length(x_tmp)
+  	xdot[ii] = x_tmp[ii]
+  end
+  xdot[end] = 1.0
+  scale!(xdot, ir)
+end
 
 """
 This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
@@ -45,7 +56,7 @@ It takes the following arguments:
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **F** : a `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
+- **F!** : a `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
 - **R** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise.
 - **Delta** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
 - **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
@@ -54,7 +65,7 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-function chv{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
   @assert ode in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
@@ -157,7 +168,7 @@ This function performs a pdmp simulation using the Change of Variable (CHV) meth
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64}, parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
   @assert ode in [:cvode] string("Sorry, ",ode," is not available for chv_optim yet")
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
@@ -272,6 +283,96 @@ function chv_optim{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F::
   if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
   if verbose println("--> time = ",t_hist[1:nsteps-1]) end
   if verbose println("--> chv_optim, #jumps = ",length(t_hist[1:nsteps-1])) end
+  result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
+  return(result)
+end
+
+
+
+
+
+function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+  # @assert ode in [:cvode,:lsoda]
+  nsteps = 1
+
+  args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
+  if verbose println("--> Args saved!") end
+
+  # Set up initial variables
+  t_hist = Vector{Float64}(0)
+  push!(t_hist,ti)
+  xc_hist = copy(xc0)
+  xd_hist = copy(xd0)
+
+  X0 = vec([xc0 ti])
+  Xd = copy(xd0)
+  t = ti
+
+  deltaxc = copy(nu[1,:]) #declare this variable
+
+  res_ode = Array{Float64,2}
+
+  function F_wrap(xcdot, xc, xd, t, parms )
+	  xcdot .= F(xc,xd,t,parms)
+	  nothing
+  end
+
+  # Main loop
+  termination_status = "finaltime"
+  while t < tf
+
+    dt = -log(rand())
+    if verbose println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps) end
+  	if ode==:cvode
+  		res_ode = Sundials.cvode((t,x,xdot)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  	elseif ode==:lsoda
+  		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  	end
+    if verbose println("--> ode solver is done!") end
+    X0 = vec(res_ode[end,:])
+    pf = R(X0[1:end-1],Xd,X0[end],parms, false)
+    pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
+
+    # jump time:
+    t = res_ode[end,end]
+    if (t < tf)
+      # Update event
+      ev = Distributions.sample(pf)
+      deltaxd = nu[ev,:]
+
+      # Xd = Xd .+ deltaxd
+      Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+
+      # Xc = Xc .+ deltaxc
+      DX(X0,Xd,X0[end],parms,ev)
+
+      if verbose println("--> Which reaction? ",ev) end
+      # save state
+      push!(t_hist, t)
+      append!(xc_hist, X0[1:end-1])
+      append!(xd_hist, Xd)
+    else
+		println("--> last one! $t_hist")
+  		if ode==:cvode
+  			res_ode = Sundials.cvode((t,x,xdot)->F_wrap(xdot,x,Xd,t,parms), X0[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
+  		elseif ode==:lsoda
+  			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F_wrap(xdot,x,Xd,t,parms), X0[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
+  		end
+      t = tf
+
+      # save state
+      push!(t_hist, t)
+	  append!(xc_hist, res_ode[end,:])
+      append!(xd_hist, Xd)
+    end
+    nsteps += 1
+  end
+  if verbose println("-->Done") end
+  stats = pdmpStats(termination_status,nsteps)
+  xc_hist = (reshape(xc_hist,length(xc0),nsteps))
+  xd_hist = (reshape(xd_hist,length(xd0),nsteps))
+
+  if verbose println("--> xc = $(length(xd_hist))") end
   result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
   return(result)
 end

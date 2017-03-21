@@ -42,23 +42,23 @@ parms = [0.1,0.01]
 tf = 100.
 
 println("--> Case simple chv:")
-dummy_t =  PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
+dummy_t =  PDMP.pdmp!(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
 srand(1234)
-dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
+dummy_t =  @time PDMP.pdmp!(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false)
 
 println("--> Case chv optimised:")
-dummy_t =  PDMP.sample(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  PDMP.pdmp!(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 srand(1234)
-dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  @time PDMP.pdmp!(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 
 println("--> Case with types optimised:")
-dummy_t =  PDMP.sample(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  PDMP.pdmp!(20,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 srand(1234)
-dummy_t =  @time PDMP.sample(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
+dummy_t =  @time PDMP.pdmp!(200000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,algo=:chv_optim)
 
 println("--> #jumps = ", length(dummy_t.time))
 
 println("For simulations (lsoda):")
-result = PDMP.sample(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
+result = PDMP.pdmp!(2,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 srand(1234)
-result = @time PDMP.sample(10000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
+result = @time PDMP.pdmp!(10000,xc0,xd0,F_eva,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)

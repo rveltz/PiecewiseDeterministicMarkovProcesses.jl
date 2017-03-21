@@ -29,9 +29,9 @@ tf = 150.0
 reload("PDMP")
 
 srand(1234)
-dummy = PDMP.sample(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
-result = @time PDMP.sample(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+dummy = PDMP.pdmp!(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
+result = @time PDMP.pdmp!(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
 srand(1234)
-dummy = PDMP.sample(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
-result = @time PDMP.sample(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+dummy = PDMP.pdmp!(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+result = @time PDMP.pdmp!(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
 

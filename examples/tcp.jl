@@ -28,8 +28,12 @@ parms = vec([0.1]) # sampling rate
 tf = 200.
 
 srand(1234)
-result =  PDMP.sample(2,        xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.sample(200,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  PDMP.pdmp!(2,        xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.pdmp!(200,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+println("--> Case optimised:")
+srand(1234)
+dummy_t =  PDMP.pdmp!(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false, algo=:chv_optim)
+dummy_t =  @time PDMP.pdmp!(200,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false, algo=:chv_optim)
 
 println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
 println("#jumps = ", length(result.time))

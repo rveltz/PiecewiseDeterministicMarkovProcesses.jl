@@ -48,11 +48,11 @@ end
 xc0 = rand(N)*0.2 + 0.5
 xd0 = Vector{Int64}(zeros(N))
 
-const nu_tcp = Array{Int64}(N,N)*0
+const nu_neur = Array{Int64}(N,N)*0
 parms = [0.1]
 tf = 1_0050.
 
 println("--> Computing... (",string(now())[end-7:end],")")
-result = @time PDMP.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_tcp,parms,0.0,tf,false,false)
+result = @time PDMP.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
 result = @time PDMP.rejection_exact(40000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,
-  nu_tcp,parms,0.0,tf,false,false)
+  nu_neur,parms,0.0,tf,false,false)
