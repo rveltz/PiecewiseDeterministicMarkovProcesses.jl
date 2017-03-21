@@ -54,5 +54,4 @@ tf = 1_0050.
 
 println("--> Computing... (",string(now())[end-7:end],")")
 result = @time PDMP.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
-result = @time PDMP.rejection_exact(40000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,
-  nu_neur,parms,0.0,tf,false,false)
+result = @time PDMP.rejection_exact(40000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
