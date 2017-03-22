@@ -41,7 +41,6 @@ end
   This takes a single argument of type `pdmpResult` and returns a `DataFrame`.
 """
 function pdmp_data(s::pdmpResult)
-    println("--> Entry in pdmp_data_list")
     xd=convert(DataFrame,s.xd')
     xdn=names(xd)
     xdl=length(xdn)
