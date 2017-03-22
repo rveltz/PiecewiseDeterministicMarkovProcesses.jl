@@ -1,4 +1,4 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
+# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)

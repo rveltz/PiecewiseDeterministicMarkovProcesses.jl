@@ -14,7 +14,7 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode)
+function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false)
   @assert ode in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
@@ -65,16 +65,26 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
       X0 = vec(res_ode[end,:])
       t = tp[end]
       ppf = R(X0,Xd,t,parms,true)
+	  @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong"
       if t == tf
         reject = false
       else
         reject = rand() < (1. - ppf[1] / ppf[2])
       end
-      nsteps += 1
+	  if save_rejected
+		  nsteps += 1
+	      t_hist[nsteps] = t
+	      xc_hist[:,nsteps] = copy(X0[1:end])
+	      xd_hist[:,nsteps] = copy(Xd)
+	  end
+
+    end
+	
+	if save_rejected==false
+	  nsteps += 1
       t_hist[nsteps] = t
       xc_hist[:,nsteps] = copy(X0[1:end])
       xd_hist[:,nsteps] = copy(Xd)
-
     end
     # there is a jump!
     ppf = R(X0,Xd,t,parms,false)
@@ -169,7 +179,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
       X0 = vec(res_ode[end,:])
       t = tp[end]
       ppf = R(rate_vector, X0, Xd, t, parms, true) 	# we don't want the full rate vector, just the sum of rates
-      @assert(ppf[1] <= ppf[2])
+      @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong"
       reject = rand() <  (1. - ppf[1] / ppf[2])
       nsteps += 1
     end
