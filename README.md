@@ -34,7 +34,7 @@ We briefly recall facts about a simple class of PDMPs. They are described by a c
 
 <!--We briefly recall facts about a simple class of PDMPs. They are decribed by a couple ![equation](http://www.sciweavers.org/tex2img.php?eq=(x_c,x_d)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) where ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is solution of the differential equation ![equation](http://www.sciweavers.org/tex2img.php?eq= dx_c/dt = F(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). The second component ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) is a jump process with rates ![equation](http://www.sciweavers.org/tex2img.php?eq= R(x_c,x_d,t)&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=). At each jump of ![equation](http://www.sciweavers.org/tex2img.php?eq=x_d&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=), a jump can be added to the continuous variable ![equation](http://www.sciweavers.org/tex2img.php?eq=x_c&bc=White&fc=Black&im=svg&fs=11&ff=arev&edit=) too..-->
 
-##Installation
+## Installation
 
 To install this (unregistered) package, run the command 
 
@@ -42,7 +42,7 @@ To install this (unregistered) package, run the command
 Pkg.clone("https://github.com/sdwfrost/PDMP.jl.git")
 ```
 
-##Examples
+## Examples
 
 See the [examples directory](https://github.com/sdwfrost/PDMP.jl/tree/master/examples).
 
