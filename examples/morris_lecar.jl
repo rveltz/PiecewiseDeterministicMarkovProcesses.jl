@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH, "/Users/rveltz/work/prog_gd/julia")
 using JSON, PDMP
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])

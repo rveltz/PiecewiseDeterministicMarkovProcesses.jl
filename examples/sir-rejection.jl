@@ -1,4 +1,4 @@
-# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
@@ -6,18 +6,12 @@ function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
   (beta,mu) = parms
   infection = beta*S*I
   recovery = mu*I
-  const rate_display = 0.000
+  rate_display = parms[1]
   if sum_rate == false
     return [infection,recovery,rate_display], rate_display + 1.
   else
     return infection+recovery + rate_display, rate_display + 1.
   end
-end
-
-function F_sir_rej(xdot,xc,xd,t,parms)
-  # vector field used for the continuous variable
-  xdot[1] = 0.0
-  nothing
 end
 
 xc0 = vec([0.0])
@@ -27,9 +21,21 @@ parms = [0.1/100.0,0.01]
 tf = 150.0
 
 srand(1234)
-dummy = PDMP.pdmp(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
-result = @time PDMP.pdmp(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:cvode)
-srand(1234)
-dummy = PDMP.pdmp(1,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
-result = @time PDMP.pdmp(1000,xc0,xd0,F_sir_rej,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection,ode=:lsoda)
+println("--> rejection algorithm for SSA")
+dummy = PDMP.pdmp(1,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection)
+result = @time PDMP.pdmp(1000,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection)
 
+
+srand(1234)
+println("--> CHV algorithm for SSA")
+dummy = PDMP.pdmp(1,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
+result_chv = @time PDMP.pdmp(1000,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
+
+# using Plots
+# gr()
+# plot(result.time,result.xd[1,:])
+#   plot!(result.time,result.xd[2,:])
+#   plot!(result.time,result.xd[3,:])
+#   plot!(result_chv.time,result_chv.xd[1,:],marker=:d,color=:blue)
+#   plot!(result_chv.time,result_chv.xd[2,:],marker=:d,color=:red)
+#   plot!(result_chv.time,result_chv.xd[3,:],marker=:d,color=:green,line=:step)

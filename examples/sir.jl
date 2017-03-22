@@ -26,6 +26,13 @@ nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
 tf = 150.0
 
+
+
 srand(1234)
 dummy = PDMP.pdmp(1,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
 result = @time PDMP.pdmp(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,false)
+
+srand(1234)
+# automatic determination of algorithm, here CHV for SSA
+result = PDMP.pdmp(2,xd0,R_sir,nu,parms,0.0,tf,false)
+result = @time PDMP.pdmp(1000,xd0,R_sir,nu,parms,0.0,tf,false)
