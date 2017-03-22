@@ -65,7 +65,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
       X0 = vec(res_ode[end,:])
       t = tp[end]
       ppf = R(X0,Xd,t,parms,true)
-	  @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong"
+	  @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
       if t == tf
         reject = false
       else

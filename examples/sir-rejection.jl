@@ -1,4 +1,4 @@
-# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
+push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
@@ -8,9 +8,9 @@ function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
   recovery = mu*I
   rate_display = parms[1]
   if sum_rate == false
-    return [infection,recovery,rate_display], rate_display + 1.
+    return [infection,recovery,rate_display], rate_display + 3.5
   else
-    return infection+recovery + rate_display, rate_display + 1.
+    return infection+recovery + rate_display, rate_display + 3.5
   end
 end
 
@@ -24,7 +24,6 @@ srand(1234)
 println("--> rejection algorithm for SSA")
 dummy = PDMP.pdmp(1,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection)
 result = @time PDMP.pdmp(1000,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:rejection)
-
 
 srand(1234)
 println("--> CHV algorithm for SSA")
