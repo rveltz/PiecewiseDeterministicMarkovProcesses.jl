@@ -1,3 +1,12 @@
+function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms)
+  # vector field used for the continuous variable
+  # trivial dynamics
+  out[1,:] .= xc
+  out[2,:] .= xc
+  nothing
+end
+
+
 """
 This function performs a simulation using the rejection method.
 It takes the following arguments:
@@ -60,7 +69,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
 	  if ode==:cvode
 		  res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
       elseif ode==:lsoda
-          _,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
+          res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
 	  end
       X0 = vec(res_ode[end,:])
       t = tp[end]
@@ -79,7 +88,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
 	  end
 
     end
-	
+
 	if save_rejected==false
 	  nsteps += 1
       t_hist[nsteps] = t
@@ -116,7 +125,7 @@ It takes the following arguments:
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **Phi!** : a `Function` or a callable type, which itself takes 6 arguments to represent the vector field; rate a `Vector` of `Float64` representing the **flow** of the vector which needs to be filled with values of the rates, xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system, sum_of_rate a `Bool` stating if the function must return the total rate. 
+- **Phi!** : a `Function` or a callable type, which itself takes 6 arguments to represent the vector field; rate a `Vector` of `Float64` representing the **flow** of the vector which needs to be filled with values of the rates, xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system, sum_of_rate a `Bool` stating if the function must return the total rate.
 - **R!** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. The returned vector has components. If sum_rate is `False`, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is `True`, one must return total_rate,bound_ where total_rate is a `Float64` that is the sum of the rates. In any case, the function must return a couple (total_rates, bound) where bound is a bound for the total rate.
 - **Delta** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
 - **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
@@ -124,7 +133,7 @@ It takes the following arguments:
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},Phi::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true)
+function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},Phi::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true)
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   const nsteps = 1
@@ -195,7 +204,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
     lambda_star = R(rate_vector,X0,Xd,t,parms,false)[2]
 	if verbose println("----> rate = $rate_vector" ) end
     pf = WeightVec(convert(Array{Float64,1},rate_vector)) #this is to ease sampling
-
+	@assert(pf.sum>0,"Error, rate vector is null for some reason")
     if (t < tf)
       # make a jump
       ev = Distributions.sample(pf)
@@ -218,3 +227,6 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   result = pdmpResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps],stats,args)
   return(result)
 end
+
+
+rejection_exact{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true) = PDMP.rejection_exact(n_max,[0.],xd0,Phi_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose, xd_jump)

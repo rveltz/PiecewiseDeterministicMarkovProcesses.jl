@@ -31,15 +31,15 @@ module PDMP
 		# the first argument
 		res = R(xc0,xd0,0.,parms,false)
 		R_wrap = R
-		
+
 		if length(res[1]) == size(nu)[1] # we have a rate function suited to the rejection algorithm, one could also have tested typeof(res[1]) == Vector
-			if algo==:rejection	
-				@assert length(res) == 2 "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true.\n\n\n"
+			if algo==:rejection
+				@assert (length(res) == 2) "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true. [algo = $algo]\n\n\n"
 			else
 				R_wrap(xc,xd,t,parms,verbose) = R(xc,xd,t,parms,verbose)[1]
 			end
 		else # we have a rate function suited to the CVH algorithm
-			@assert algo!=:rejection "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true.\n\n\n"
+			@assert (algo!=:rejection) "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true. [algo = $algo]\n\n\n"
 		end
 		if algo==:chv
 			return PDMP.chv!(n_max,xc0,xd0,F,R_wrap,DX,nu,parms,ti, tf,verbose,ode=ode)
@@ -51,7 +51,7 @@ module PDMP
 # 			return PDMP.rejection_exact(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 		end
 	end
-	
+
 pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) = PDMP.pdmp!(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo)
 
 pdmp!{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) =

@@ -34,6 +34,7 @@ function f_CHV{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float6
   F(xdot,x,xd,t,parms)
   xdot[end] = 1.0
   scale!(xdot, ir)
+  nothing
 end
 
 function f_CHV2{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64}, parms::Vector{T})
@@ -47,6 +48,7 @@ function f_CHV2{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float
   end
   xdot[end] = 1.0
   scale!(xdot, ir)
+  nothing
 end
 
 """
@@ -71,6 +73,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
   n_max += 1 #to hold initial vector
   nsteps = 1
   npoints = 2 # number of points for ODE integration
+
 
   # Args
   args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
@@ -105,7 +108,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
   	if ode==:cvode
   		res_ode = Sundials.cvode((t,x,xdot)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
   	elseif ode==:lsoda
-  		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  		res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
   	end
     if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
@@ -134,7 +137,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
   		if ode==:cvode
   			res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
   		elseif ode==:lsoda
-  			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+  			res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
   		end
       t = tf
 
@@ -221,9 +224,10 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 		# println(" ----> res_ode = ", res_ode)
 		X0 = vec(res_ode[end,:])
 	else
+		@assert 1==0
 		if nsteps == 2
 			println(" --> LSODA solve #",nsteps,", X0 = ", X0)
-			ctx, res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+			res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 			X0 = vec(res_ode[end,:])
 			dt_lsoda += dt
 			println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
@@ -326,7 +330,7 @@ function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Cal
   	if ode==:cvode
   		res_ode = Sundials.cvode((t,x,xdot)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
   	elseif ode==:lsoda
-  		_,res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+  		res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
   	end
     if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
@@ -356,7 +360,7 @@ function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Cal
   		if ode==:cvode
   			res_ode = Sundials.cvode((t,x,xdot)->F_wrap(xdot,x,Xd,t,parms), X0[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
   		elseif ode==:lsoda
-  			_,res_ode = LSODA.lsoda((t,x,xdot,data)->F_wrap(xdot,x,Xd,t,parms), X0[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
+  			res_ode = LSODA.lsoda((t,x,xdot,data)->F_wrap(xdot,x,Xd,t,parms), X0[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
   		end
       t = tf
 
