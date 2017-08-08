@@ -43,13 +43,13 @@ tf=350.
 srand(123)
 println("--> chv")
 dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
 
 srand(123)
 println("--> chv_optim - call")
 result =        PDMP.pdmp(2,   xc0,xd0,F_ml!,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim)
-result =  @time PDMP.pdmp(4500,xc0,xd0,F_ml!,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
+result =  @time PDMP.pdmp(450,xc0,xd0,F_ml!,R_ml,nu_ml,parms,0.0,tf,false, algo=:chv_optim) #cpp = 100ms/2200 jumps
 println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
 
 try
