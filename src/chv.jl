@@ -88,9 +88,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
   deltaxc = copy(nu[1,:]) #declare this variable
 
   # arrays for storing history, pre-allocate storage
-  t_hist  = Array(Float64, n_max)
-  xc_hist = Array(Float64, length(xc0), n_max)
-  xd_hist = Array(Int64,   length(xd0), n_max)
+  t_hist  = Array{Float64}(n_max)
+  xc_hist = Array{Float64}(length(xc0), n_max)
+  xd_hist = Array{Int64}(length(xd0), n_max)
   res_ode = Array{Float64,2}
 
   # initialise arrays
@@ -113,7 +113,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
     if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
-    pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
+    pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
 
     # jump time:
     t = res_ode[end,end]
@@ -191,9 +191,9 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
   deltaxc = copy(nu[1,:]) #declare this variable
 
   # arrays for storing history, pre-allocate storage
-  t_hist  = Array(Float64, n_max)
-  xc_hist = Array(Float64, length(xc0), n_max)
-  xd_hist = Array(Int64,   length(xd0), n_max)
+  t_hist  = Array{Float64}( n_max)
+  xc_hist = Array{Float64}(length(xc0), n_max)
+  xd_hist = Array{Int64}(   length(xd0), n_max)
   res_ode = zeros(2, length(X0))
 
   # initialise arrays
@@ -240,7 +240,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
     if verbose println(" --> ode solver is done!") end
 
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
-    pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
+    pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
 
     # Update time
     t = X0[end] #t = res_ode[end,end]
@@ -335,7 +335,7 @@ function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Cal
     if verbose println("--> ode solver is done!") end
     X0 = vec(res_ode[end,:])
     pf = R(X0[1:end-1],Xd,X0[end],parms, false)
-    pf = WeightVec(convert(Array{Float64,1},pf)) #this is to ease sampling
+    pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
 
     # jump time:
     t = res_ode[end,end]

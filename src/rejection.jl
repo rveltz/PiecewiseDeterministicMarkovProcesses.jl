@@ -43,9 +43,9 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
   deltaxc = copy(nu[1,:]) #declare this variable
 
   # arrays for storing history, pre-allocate storage
-  t_hist  = Array(Float64, n_max)
-  xc_hist = Array(Float64, length(xc0), n_max)
-  xd_hist = Array(Int64,   length(xd0), n_max)
+  t_hist  = Array{Float64}(n_max)
+  xc_hist = Array{Float64}(length(xc0), n_max)
+  xd_hist = Array{Int64}(length(xd0), n_max)
   res_ode = Array{Float64,2}
 
   # initialise arrays
@@ -97,7 +97,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
     end
     # there is a jump!
     ppf = R(X0,Xd,t,parms,false)
-    pf = WeightVec(convert(Array{Float64,1},ppf[1])) #this is to ease sampling
+    pf = StatsBase.Weights(convert(Array{Float64,1},ppf[1])) #this is to ease sampling
 
     if (t < tf)
       # make a jump
@@ -152,10 +152,10 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
   deltaxc = copy(nu[1,:]) #declare this variable
 
   # arrays for storing history, pre-allocate storage
-  t_hist  = Array(Float64, n_max)
-  xc_hist = Array(Float64, length(xc0), n_max)
-  xd_hist = Array(Int64,   length(xd0), n_max)
-  res_ode = Array(Float64,2,length(xc0))
+  t_hist  = Array{Float64}( n_max)
+  xc_hist = Array{Float64}(length(xc0), n_max)
+  xd_hist = Array{Int64}(length(xd0), n_max)
+  res_ode = Array{Float64}(2,length(xc0))
   rate_vector = zeros(length(nu[:,1]))
 
 
@@ -203,7 +203,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
     # there is a jump!
     lambda_star = R(rate_vector,X0,Xd,t,parms,false)[2]
 	if verbose println("----> rate = $rate_vector" ) end
-    pf = WeightVec(convert(Array{Float64,1},rate_vector)) #this is to ease sampling
+    pf = StatsBase.Weights(convert(Array{Float64,1},rate_vector)) #this is to ease sampling
 	@assert(pf.sum>0,"Error, rate vector is null for some reason")
     if (t < tf)
       # make a jump

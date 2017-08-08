@@ -6,8 +6,8 @@ function lsoda_ctx{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vecto
 	userdata = nothing # no data passed by the function, we expected const type for now
 	userfun = LSODA.UserFunctionAndData(f, userdata, neq)
 
-	atol = ones(Float64,neq)
-	rtol = ones(Float64,neq)
+	atol = ones{Float64}(neq)
+	rtol = ones{Float64}(neq)
 
 	yres = zeros(length(tspan), length(y0))
 
