@@ -1,0 +1,24 @@
+site_name:        LSODA.jl
+repo_url:         https://github.com/rveltz/LSODA.jl
+site_description: LSODA in Julia
+site_author:      rveltz
+theme: readthedocs
+
+extra_css:
+  - assets/Documenter.css
+
+extra_javascript:
+  - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - assets/mathjaxhelper.js
+
+markdown_extensions:
+  - codehilite
+  - extra
+  - tables
+  - fenced_code
+  - mdx_math
+
+docs_dir: 'build'
+
+pages:
+  - Home: index.md
