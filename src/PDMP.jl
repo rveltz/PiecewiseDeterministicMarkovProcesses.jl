@@ -16,7 +16,8 @@ module PDMP
 		chv_optim!,
 		pdmpArgs,
 		pdmpResult,
-		pdmp_data
+		pdmp_data,
+		tauleap
 
 	include("utils.jl")
 	include("cvode.jl")
@@ -24,9 +25,10 @@ module PDMP
 	include("chv.jl")
 	include("rejection.jl")
 	include("ssa.jl")
+	include("tau-leap.jl")
 
-	function pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv)
-		@assert algo in [:chv,:chv_optim,:rejection] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
+	function pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1)
+		@assert algo in [:chv,:chv_optim,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 		# determine if the Rate function is suited to rejection algorithms in which case we might want to take only
 		# the first argument
 		res = R(xc0,xd0,0.,parms,false)
@@ -49,6 +51,8 @@ module PDMP
 			PDMP.rejection(n_max,xc0,xd0,F,R_wrap,DX,nu,parms,ti, tf,verbose,ode=ode)
 		# elseif algo==:rejection_exact
 # 			return PDMP.rejection_exact(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
+		elseif contains(string(algo),"tauleap")
+			PDMP.tauleap(n_max,xc0,xd0,F,R_wrap,nu,parms,ti, tf,verbose,ode=ode,dt=dt,algo=algo)
 		end
 	end
 
@@ -57,7 +61,7 @@ pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,
 pdmp!{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) =
 PDMP.pdmp!(n_max,[0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode,algo=algo)
 
-function pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv)
+function pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt=0.1)
 	try
 		# try to see if we have inplace vector field
 		F(xc0,xd0,0.,parms)
@@ -65,16 +69,16 @@ function pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 	  	  xcdot .= F(xc,xd,t,parms)
 	  	  nothing
 	    end
-		return PDMP.pdmp!(n_max,xc0,xd0,F_wrap,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo)
+		return PDMP.pdmp!(n_max,xc0,xd0,F_wrap,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo,dt=dt)
 	catch e
-		return PDMP.pdmp!(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo)
+		return PDMP.pdmp!(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo,dt=dt)
 	end
 end
 
-pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) = PDMP.pdmp(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo)
+pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1) = PDMP.pdmp(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,dt=dt)
 
-function pdmp{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv)
-	PDMP.pdmp(n_max,[0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode,algo=algo)
+function pdmp{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1)
+	PDMP.pdmp(n_max,[0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode,algo=algo,dt=dt)
 end
 
 end # module

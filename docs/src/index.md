@@ -1,68 +1,79 @@
-# LSODA.jl: the LSODA algorithm for solving ordinary differential equations
+# PDMP.jl 
 
-```@contents
-```
 
-## Introduction
+PDMP.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.
 
-**LSODA.jl** is a Julia package that interfaces to the [liblsoda](https://github.com/sdwfrost/liblsoda) library, developped by [Simon Frost](http://www.vet.cam.ac.uk/directory/sdf22@cam.ac.uk) ([@sdwfrost](http://github.com/sdwfrost)), thereby providing a way to use the LSODA algorithm from Linda Petzold and Alan Hindmarsh from [Julia](http://julialang.org/). **[Clang.jl](https://github.com/ihnorton/Clang.jl)** has been used to write the library and **[Sundials.jl](https://github.com/JuliaDiffEq/Sundials.jl)** was a inspiring source.
+We provide several methods for the simulation:
+
+- a recent trick, called **CHV**, explained in [paper-2015](http://arxiv.org/abs/1504.06873) which allows to implement the **True Jump Method** without the need to use event detection schemes for the ODE integrator. These event detections can be quite unstable as explained in [paper-2015](http://arxiv.org/abs/1504.06873) and CHV provide a solution to this problem.
+- **rejection methods** for which the user is asked to provide a bound on the reaction rates. These last methods are the most "exact" but not the fastest if the reaction rate bound is not tight. In case the flow is known analytically, a method is also provided.
+
+
+These methods require solving stiff ODEs (for CHV ) in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) and [```LSODA.jl```](https://github.com/rveltz/LSODA.jl) are used, but other solvers could be easily added. (See [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml)).
+
+We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.
+
 
 ## Installation
 
-To install this package, run the command `Pkg.clone("https://github.com/rveltz/LSODA.jl.git")`
+To install this (unregistered) package, run the command 
 
-## Example
-
-We first need to load the library.
-
-```example 1
-using LSODA
+```julia
+Pkg.clone("https://github.com/sdwfrost/PDMP.jl.git")
 ```
 
-We next need to define a function that provides the derivatives `ydot` given the time, `t`, initial conditions, `y`, and optionally some additional data, `data`. Note that this function modifies `ydot` in-place and returns `nothing`.
+## Examples
 
-```example 1
-function rhs!(t, y, ydot, data)
-	ydot[1]=1.0E4 * y[2] * y[3] - .04E0 * y[1]
-	ydot[3]=3.0E7 * y[2] * y[2]
-	ydot[2]=-ydot[1] - ydot[3]
-  nothing
+See the [examples directory](https://github.com/sdwfrost/PDMP.jl/tree/master/examples).
+
+A simple example of a TCP process is given below:
+
+```julia
+using PDMP
+
+function F_tcp(xc, xd, t, parms)
+  # vector field used for the continuous variable
+  if mod(xd[1],2)==0
+    return vec([xc[1]])
+  else
+    return vec([-xc[1]])
+  end
 end
-```
 
-The model can be solved by providing an initial condition for the state variables, and a time span over which to simulate.
+function R_tcp(xc, xd, t, parms, sum_rate::Bool)
+  # rate function for each transition
+  # in this case,  the transitions are xd1->xd1+1 or xd2->xd2-1
+  # sum_rate is a boolean which tells R_tcp the type which must be returned:
+  # i.e. the sum of the rates or the vector of the rates
+  if sum_rate==false
+    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
+  else
+    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
+  end
+end
 
-```example 1
-y0 = [1.,0.,0.]
-tspan = [0., 0.4]
-res =  lsoda(rhs!, y0, tspan, reltol= 1e-4, abstol = Vector([1.e-6,1.e-10,1.e-6]))
-```
+# initial conditions for the continuous/discrete variables
+xc0 = vec([0.05])
+xd0 = vec([0, 1])
 
-This should give the following.
+# matrix of jumps for the discrete variables, analogous to chemical reactions
+const nu_tcp = [[1 0];[0 -1]]
 
-```example 1
-at t =   4.0000e-01 y=   9.851712e-01   3.386380e-05   1.479493e-02
-at t =   4.0000e+00 y=   9.055333e-01   2.240655e-05   9.444430e-02
-at t =   4.0000e+01 y=   7.158403e-01   9.186334e-06   2.841505e-01
-at t =   4.0000e+02 y=   4.505250e-01   3.222964e-06   5.494717e-01
-at t =   4.0000e+03 y=   1.831976e-01   8.941774e-07   8.168016e-01
-at t =   4.0000e+04 y=   3.898729e-02   1.621940e-07   9.610125e-01
-at t =   4.0000e+05 y=   4.936362e-03   1.984221e-08   9.950636e-01
-at t =   4.0000e+06 y=   5.161832e-04   2.065786e-09   9.994838e-01
-at t =   4.0000e+07 y=   5.179811e-05   2.072030e-10   9.999482e-01
-at t =   4.0000e+08 y=   5.283524e-06   2.113420e-11   9.999947e-01
-at t =   4.0000e+09 y=   4.658945e-07   1.863579e-12   9.999995e-01
-at t =   4.0000e+10 y=   1.423392e-08   5.693574e-14   1.000000e+00
-```
+# parameters  
+parms = [0.]
+tf = 2000.
 
-## Application programming interface
+dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+result =  @time PDMP.pdmp(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
 
-### Functions
-
-```@docs
-lsoda
+# plotting
+using Plots
+gr()
+Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string("#Jumps = ",length(result.time)))
 ```
 
 ```@docs
-lsoda_evolve!
+rejection_exact
 ```
+
+![TCP](examples/tcp.png)

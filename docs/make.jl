@@ -1,12 +1,11 @@
-using Documenter, LSODA
+using Documenter, PDMP
 
-makedocs(
-    modules=[LSODA],
-    doctest = false
-)
+makedocs()
 
 deploydocs(
-    deps = Deps.pip("mkdocs","python-markdown-math"),
-    repo   = "github.com/rveltz/LSODA.jl.git",
-    julia  = "release"
+    repo   = "github.com/sdwfrost/PDMP.jl.git",
+    target = "build",
+    deps   = nothing,
+    make   = nothing
 )
+
