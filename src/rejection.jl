@@ -74,7 +74,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
             X0 = vec(res_ode[end,:])
             t = tp[end]
             ppf = R(X0,Xd,t,parms,true)
-            @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
+            @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf, t=$t"
             if t == tf
                 reject = false
             else
@@ -111,6 +111,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
             DX(X0,Xd,X0[end],parms,ev)
         end
     end
+    println("njumps = ",njumps," / rejections = ", nb_rejet, ", lambda_star = ",lambda_star)
     if verbose println("-->Done") end
     stats = pdmpStats(termination_status,nsteps)
     if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
@@ -193,7 +194,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
             ppf = R(rate_vector, X0, Xd, t, parms, true) 	# we don't want the full rate vector, just the sum of rates
             # @show ppf[1]
 			verbose && @show X0, tp,ppf
-            @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong"
+            @assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong at t = $t"
             reject = rand() <  (1. - ppf[1] / ppf[2])
             nsteps += 1
         end

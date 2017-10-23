@@ -18,7 +18,7 @@ It takes the following arguments:
 - **ode**: ode time stepper :cvode or :lsoda
 - **dt**: stepsize for the tau-leap method
 """
-function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false,dt = 0.1,algo=:tauleap)
+function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,dt = 0.1,algo=:tauleap)
   # it is faster to pre-allocate arrays and fill it at run time
   @assert algo in [:tauleap,:binomial_tauleap]
   n_max += 1 #to hold initial vector
@@ -62,7 +62,7 @@ function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Fun
   tp = [0.,0.]
   ppf = R(X0,Xd,t,parms,false)
   while (t < tf) && (nsteps < n_max) 
-	println("#################\nX  = $X0\nXd = $Xd\n,$nsteps,t=$t")
+	# println("#################\nX  = $X0\nXd = $Xd\n,$nsteps,t=$t")
 	@assert sum(Xd.<0)==0 "You have negative discrete component, $Xd, $t, $nsteps"
 	  
     verbose && println("--> step : ",nsteps," / ",n_max )
