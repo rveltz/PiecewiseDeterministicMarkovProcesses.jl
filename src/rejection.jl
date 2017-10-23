@@ -29,6 +29,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
     n_max += 1 #to hold initial vector
     nsteps = 1
     npoints = 2 # number of points for ODE integration
+	njumps = 1
 
     # Args
     args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
@@ -86,6 +87,7 @@ function rejection{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::F
                 xc_hist[:,nsteps] = copy(X0[1:end])
                 xd_hist[:,nsteps] = copy(Xd)
             end
+			njumps += 1
 
         end
 
@@ -142,7 +144,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
     n_max += 1 #to hold initial vector
     const nsteps = 1
     const npoints = 2 # number of points for ODE integration
-    const njumps = 1
+
 
     # Args
     args = pdmpArgs(xc0,xd0,Phi,R,DX,nu,parms,tf)
@@ -226,7 +228,7 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
             DX(X0,Xd,t,parms,ev)
         end
     end
-    println("njumps = ",njumps," / rejections = ", nb_rejet, ", lambda_star = ",lambda_star)
+    println("njumps = ",nb_rejet," / rejections = ", nb_rejet, ", lambda_star = ",lambda_star)
     verbose && println("-->Done")
     stats = pdmpStats(termination_status,nsteps)
     # if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
