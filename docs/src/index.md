@@ -76,4 +76,4 @@ Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string("#Jumps = 
 rejection_exact
 ```
 
-![TCP](examples/tcp.png)
+![TCP](../../examples/tcp.png)
