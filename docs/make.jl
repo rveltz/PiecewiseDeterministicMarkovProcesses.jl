@@ -1,6 +1,6 @@
 using Documenter, PDMP
 
-makedocs()
+makedocs(format = :html)
 
 deploydocs(
 	deps   = Deps.pip("mkdocs", "python-markdown-math"),

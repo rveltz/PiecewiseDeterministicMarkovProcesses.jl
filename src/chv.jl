@@ -52,6 +52,9 @@ function f_CHV2{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float
 end
 
 """
+
+chv!
+
 This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
 It takes the following arguments:
 
@@ -157,6 +160,9 @@ end
 
 
 """
+
+chv_optim!
+
 This function performs a pdmp simulation using the Change of Variable (CHV) method, see https://arxiv.org/abs/1504.06873. Its use of Sundials solver is optimized in term of memory consumption. It takes the following arguments:
 
 - **n_max**: an `Int64` representing the maximum number of jumps to be computed.

@@ -1,7 +1,8 @@
-
-
-
 """
+
+tauleap
+
+
 This function performs a simulation using the midpoint tau-leap method.
 It takes the following arguments:
 
