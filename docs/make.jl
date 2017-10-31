@@ -3,9 +3,9 @@ using Documenter, PDMP
 makedocs()
 
 deploydocs(
+	deps   = Deps.pip("mkdocs", "python-markdown-math"),
     repo   = "github.com/rveltz/PDMP.jl.git",
-    target = "build",
-    deps   = nothing,
-    make   = nothing
+	julia  = "0.6",
+	osname = "osx"
 )
 
