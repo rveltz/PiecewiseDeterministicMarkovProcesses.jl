@@ -72,8 +72,20 @@ gr()
 Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string("#Jumps = ",length(result.time)))
 ```
 
+This gives the following trajectory:
+
+![TCP](../../examples/tcp.png)
+
+# Application programming interface
+
+## Functions
+
+
+```@docs
+chv!
+```
+
+
 ```@docs
 rejection_exact
 ```
-
-![TCP](../../examples/tcp.png)
