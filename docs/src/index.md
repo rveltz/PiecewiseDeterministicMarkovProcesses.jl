@@ -22,15 +22,19 @@ To install this (unregistered) package, run the command
 Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 ```
 
-## Examples
+## Basic example
 
-See the [examples directory](https://github.com/sdwfrost/PDMP.jl/tree/master/examples).
+See the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples).
 
-A simple example of a TCP process is given below:
+A simple example of a TCP process is given below.More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\{-1,1\}$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. 
 
+We first need to load the library.
 ```julia
 using PDMP
+```
+We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable `parms`.
 
+```julia
 function F_tcp(xc, xd, t, parms)
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
@@ -39,7 +43,9 @@ function F_tcp(xc, xd, t, parms)
     return vec([-xc[1]])
   end
 end
+```
 
+```julia
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)
   # rate function for each transition
   # in this case,  the transitions are xd1->xd1+1 or xd2->xd2-1
@@ -74,7 +80,7 @@ Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string("#Jumps = 
 
 This gives the following trajectory:
 
-![TCP](../../examples/tcp.png)
+![TCP](ttps://github.com/rveltz/PDMP.jl/tree/master/examples/tcp.png)
 
 # Application programming interface
 
