@@ -26,7 +26,7 @@ Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 
 See the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples).
 
-A simple example of a TCP process is given below.More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\{-1,1\}$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. 
+A simple example of a TCP process is given below.More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)$. 
 
 We first need to load the library.
 ```julia
@@ -37,50 +37,62 @@ We then define a function that encodes the dynamics in between jumps. We need to
 ```julia
 function F_tcp(xc, xd, t, parms)
   # vector field used for the continuous variable
-  if mod(xd[1],2)==0
-    return vec([xc[1]])
-  else
-    return vec([-xc[1]])
-  end
+  return xd[1]
 end
 ```
+
+Let's consider a stochastic process with following transitions.
+
+
+| Transition | Rate |
+|---|---|---|
+|$x_d\to x_d-2$ if $x_d>0$ | 1 |
+|$x_d\to x_d+2$ if $x_d<0$ | 1 |
+
+This is encoded in the following function
+
 
 ```julia
 function R_tcp(xc, xd, t, parms, sum_rate::Bool)
   # rate function for each transition
-  # in this case,  the transitions are xd1->xd1+1 or xd2->xd2-1
+  # in this case,  the transitions are xd->xd+2 or xd->xd-2
   # sum_rate is a boolean which tells R_tcp the type which must be returned:
   # i.e. the sum of the rates or the vector of the rates
   if sum_rate==false
-    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
+      if xd[1] > 0
+          return [0,1]
+      else
+          return [1,0]
+      end
   else
-    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
+    return 1
   end
 end
 
 # initial conditions for the continuous/discrete variables
+# initial conditions for the continuous/discrete variables
 xc0 = vec([0.05])
-xd0 = vec([0, 1])
+xd0 = vec([1])
 
 # matrix of jumps for the discrete variables, analogous to chemical reactions
-const nu_tcp = [[1 0];[0 -1]]
+const nu = reshape([[2];[-2]],2,1)
 
-# parameters  
+
+# parameters
 parms = [0.]
 tf = 2000.
 
-dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.pdmp(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+# compile the program:
+dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
+
+# compute a trajectory
+result =  @time PDMP.pdmp(100,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
 
 # plotting
 using Plots
-gr()
-Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string("#Jumps = ",length(result.time)))
+Plots.plot(result.time, result.xd[1,:],line=:step,title = string("#Jumps = ",length(result.time)),label="Xd")
+Plots.plot(result.time, result.xc',title = string("#Jumps = ",length(result.time)),label="Xc")
 ```
-
-This gives the following trajectory:
-
-![TCP](ttps://github.com/rveltz/PDMP.jl/tree/master/examples/tcp.png)
 
 # Application programming interface
 
