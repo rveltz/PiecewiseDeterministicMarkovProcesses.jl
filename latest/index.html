@@ -130,7 +130,7 @@
 <p><a id='Basic-example-1'></a></p>
 <h2 id="basic-example">Basic example</h2>
 <p>See the <a href="https://github.com/rveltz/PDMP.jl/tree/master/examples">examples directory</a>.</p>
-<p>A simple example of a TCP process is given below.More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times{-1,1}$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. </p>
+<p>A simple example of a TCP process is given below.More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)$. </p>
 <p>We first need to load the library.</p>
 <pre><code class="julia">using PDMP
 </code></pre>
@@ -138,48 +138,54 @@
 <p>We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable <code>parms</code>.</p>
 <pre><code class="julia">function F_tcp(xc, xd, t, parms)
   # vector field used for the continuous variable
-  if mod(xd[1],2)==0
-    return vec([xc[1]])
-  else
-    return vec([-xc[1]])
-  end
+  return xd[1]
 end
 </code></pre>
 
+<p>Let's consider a stochastic process with following transitions.</p>
+<p>| Transition | Rate | |–-|–-|–-| |$x_d\to x_d-2$ if $x_d&gt;0$ | 1 | |$x_d\to x_d+2$ if $x_d&lt;0$ | 1 |</p>
+<p>This is encoded in the following function</p>
 <pre><code class="julia">function R_tcp(xc, xd, t, parms, sum_rate::Bool)
   # rate function for each transition
-  # in this case,  the transitions are xd1-&gt;xd1+1 or xd2-&gt;xd2-1
+  # in this case,  the transitions are xd-&gt;xd+2 or xd-&gt;xd-2
   # sum_rate is a boolean which tells R_tcp the type which must be returned:
   # i.e. the sum of the rates or the vector of the rates
   if sum_rate==false
-    return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
+      if xd[1] &gt; 0
+          return [0,1]
+      else
+          return [1,0]
+      end
   else
-    return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
+    return 1
   end
 end
 
 # initial conditions for the continuous/discrete variables
+# initial conditions for the continuous/discrete variables
 xc0 = vec([0.05])
-xd0 = vec([0, 1])
+xd0 = vec([1])
 
 # matrix of jumps for the discrete variables, analogous to chemical reactions
-const nu_tcp = [[1 0];[0 -1]]
+const nu = reshape([[2];[-2]],2,1)
 
-# parameters  
+
+# parameters
 parms = [0.]
 tf = 2000.
 
-dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.pdmp(2000,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
+# compile the program:
+dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
+
+# compute a trajectory
+result =  @time PDMP.pdmp(100,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
 
 # plotting
 using Plots
-gr()
-Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string(&quot;#Jumps = &quot;,length(result.time)))
+Plots.plot(result.time, result.xd[1,:],line=:step,title = string(&quot;#Jumps = &quot;,length(result.time)),label=&quot;Xd&quot;)
+Plots.plot(result.time, result.xc',title = string(&quot;#Jumps = &quot;,length(result.time)),label=&quot;Xc&quot;)
 </code></pre>
 
-<p>This gives the following trajectory:</p>
-<p><img alt="TCP" src="ttps://github.com/rveltz/PDMP.jl/tree/master/examples/tcp.png" /></p>
 <p><a id='Application-programming-interface-1'></a></p>
 <h1 id="application-programming-interface">Application programming interface</h1>
 <p><a id='Functions-1'></a></p>
@@ -201,7 +207,7 @@ Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string(&quot;#Jum
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/96084b39ba5cf9224bbf66ab29ef4fa1fc6271d4/src/chv.jl#L54-L72' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/0fba1c4ec88295909bc43477861dd6fafdf4599d/src/chv.jl#L54-L72' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
 <strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
 <p>rejection_exact</p>
@@ -218,7 +224,7 @@ Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string(&quot;#Jum
 <li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/96084b39ba5cf9224bbf66ab29ef4fa1fc6271d4/src/rejection.jl#L124-L141' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/0fba1c4ec88295909bc43477861dd6fafdf4599d/src/rejection.jl#L124-L141' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -263,5 +269,5 @@ Plots.plot(result.time, result.xc[1,:],xlims=[0.,100.],title = string(&quot;#Jum
 
 <!--
 MkDocs version : 0.17.1
-Build Date UTC : 2017-11-01 10:04:52
+Build Date UTC : 2017-11-05 20:09:05
 -->
