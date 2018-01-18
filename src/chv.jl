@@ -70,13 +70,35 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode)
+function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
   @assert ode in [:cvode,:lsoda]
   # it is faster to pre-allocate arrays and fill it at run time
   n_max += 1 #to hold initial vector
   nsteps = 1
   npoints = 2 # number of points for ODE integration
 
+	# booleans to know if we save data
+	save_c = true
+	save_d = true
+	  # permutation to choose randomly a given number of data
+	x = collect(1:N)
+	perm = x[randperm(N)]
+
+	if ind_save_d[1]==0
+		save_d = false
+	elseif ind_save_d[1]==-1
+		ind_save_d = 1:length(xd0)
+	else
+		ind_save_d = perm[1:ind_save_d[end]]
+	end
+
+	if ind_save_c[1]==0
+		save_c = false
+	elseif ind_save_c[1]==-1
+		ind_save_c = 1:length(xc0)
+	else
+		ind_save_c = perm[1:ind_save_c[end]]
+	end
 
   # Args
   args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
@@ -146,8 +168,10 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 
       # save state
       t_hist[nsteps] = t
-      xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
-      xd_hist[:,nsteps] = copy(Xd)
+      # xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
+      # xd_hist[:,nsteps] = copy(Xd)
+      save_c && (xc_hist[:,njumps] .= X0[ind_save_c])
+      save_d && (xd_hist[:,njumps] .= Xd[ind_save_d])
     end
     nsteps += 1
   end

@@ -70,7 +70,6 @@ function R_tcp(xc, xd, t, parms, sum_rate::Bool)
 end
 
 # initial conditions for the continuous/discrete variables
-# initial conditions for the continuous/discrete variables
 xc0 = vec([0.05])
 xd0 = vec([1])
 

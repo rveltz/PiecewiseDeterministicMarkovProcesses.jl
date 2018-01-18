@@ -24,7 +24,7 @@ function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Fun
   @assert algo in [:tauleap,:binomial_tauleap]
   n_max += 1 #to hold initial vector
   nsteps = 1
-  warn("Jump on the continuous variable not considered!")
+  warn("-->Jump on the continuous variable not considered!")
   
   step! = tau_leap_step!
   if algo==:binomial_tauleap
