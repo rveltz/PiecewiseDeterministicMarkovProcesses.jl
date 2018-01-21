@@ -1,11 +1,11 @@
 using PDMP
 
-function F_tcp!(xcdot, xc, xd, t, parms)
+function F_tcp!(ẋ, xc, xd, t, parms)
     # vector field used for the continuous variable
     if mod(xd[1],2)==0
-        xcdot[1] = xc[1]
+         ẋ[1] = xc[1]
     else
-        xcdot[1] = -xc[1]
+         ẋ[1] = -xc[1]
     end
     nothing
 end

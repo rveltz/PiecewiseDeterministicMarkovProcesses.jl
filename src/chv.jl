@@ -250,7 +250,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 
 		if ode==:cvode
 			# println(" --> CVODE solve #",nsteps,", X0 = ", X0)
-			cvode_evolve!(res_ode, ctx,F,R,Xd,parms, X0, [0.0, dt])
+			cvode_evolve!(res_ode, ctx[1],F,R,Xd,parms, X0, [0.0, dt])
 			# println(" ----> res_ode = ", res_ode)
 			X0 = vec(res_ode[end,:])
 		else
@@ -263,7 +263,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 				println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
 			else
 				println(" --> lsoda_evolve #",nsteps,", X0 = ",X0,", res_ode = ",res_ode,",dt = ", [dt_lsoda, dt_lsoda + dt])
-				LSODA.lsoda_evolve!(ctx, X0, [dt_lsoda, dt_lsoda + dt])
+				LSODA.lsoda_evolve!(ctx[1], X0, [dt_lsoda, dt_lsoda + dt])
 				dt_lsoda += dt
 			end
 		end
@@ -309,7 +309,10 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 	end
 
 	if ode==:cvode
-		Sundials.CVodeFree(Ref([ctx]))
+		# Sundials.CVodeFree(Ref([ctx]))
+		Sundials.empty!(ctx[1])
+		Sundials.empty!(ctx[2])
+		Sundials.empty!(ctx[3])
 	end
 	# collect the data
 	if verbose println("-->Done") end

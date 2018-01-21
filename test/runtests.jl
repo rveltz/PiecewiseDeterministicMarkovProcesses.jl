@@ -1,14 +1,12 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 using Base.Test
 
-# cd(Pkg.dir("PDMP")*"/examples")
-
+cd(Pkg.dir("PDMP")*"/examples")
 println("== start pdmp examples")
 
 println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
-pdmp_data(result)
+PDMP.pdmp_data(result)
 println(result.time[end],", ",result.xd[1,end])
 @test isequal(result.time[end],200.)
 @test isequal(result.xd[1,end],30)
