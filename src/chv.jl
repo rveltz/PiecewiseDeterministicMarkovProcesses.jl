@@ -133,7 +133,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 		elseif ode==:lsoda
 			res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 		end
-		if verbose println("--> ode solver is done!") end
+		if verbose println("--> ode solver has been performed!") end
 		X0 = vec(res_ode[end,:])
 		pf = R(X0[1:end-1],Xd,X0[end],parms, false)
 		pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
@@ -151,7 +151,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,X0[end],parms,ev)
 
-			if verbose println("--> Which reaction? ",ev) end
+			if verbose println("--> Which reaction? => ",ev) end
 			# save state
 			t_hist[nsteps] = t
 			# xc_hist[:,nsteps] = copy(X0[1:end-1])
@@ -267,7 +267,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 				dt_lsoda += dt
 			end
 		end
-		if verbose println(" --> ode solver is done!") end
+		if verbose println(" --> ode solve is done!") end
 
 		pf = R(X0[1:end-1],Xd,X0[end],parms, false)
 		pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
@@ -286,7 +286,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,X0[end],parms,ev)
 
-			if verbose println(" --> Which reaction? ",ev) end
+			if verbose println(" --> Which reaction? => ",ev) end
 
 			# save state
 			t_hist[nsteps] = t
@@ -365,7 +365,7 @@ function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Cal
 		elseif ode==:lsoda
 			res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV2(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 		end
-		if verbose println("--> ode solver is done!") end
+		if verbose println("--> ode solve is done!") end
 		X0 = vec(res_ode[end,:])
 		pf = R(X0[1:end-1],Xd,X0[end],parms, false)
 		pf = StatsBase.Weights(convert(Array{Float64,1},pf)) #this is to ease sampling
@@ -383,7 +383,7 @@ function chv{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Base.Cal
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,X0[end],parms,ev)
 
-			if verbose println("--> Which reaction? ",ev) end
+			if verbose println("--> Which reaction? => ",ev) end
 			# save state
 			push!(t_hist, t)
 			append!(xc_hist, X0[1:end-1])
