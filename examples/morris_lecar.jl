@@ -41,9 +41,9 @@ tf=350.
 
 srand(123)
 println("--> chv")
-dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t =       PDMP.pdmp(6,  xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
 dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
-dummy_t = @time PDMP.pdmp(1450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
 # dummy_a = @time PDMP.pdmp(Int(dummy_t.time[end]/0.5),xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda,algo=:tauleap,dt=0.5)
 
 

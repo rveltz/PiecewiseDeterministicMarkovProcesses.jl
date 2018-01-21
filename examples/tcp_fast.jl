@@ -1,7 +1,6 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
-using PDMP, Compat
+using PDMP
 
-function F_tcpf(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
+function F_tcpf(xcdot, xc, xd, t, parms::Vector{Float64})
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
     xcdot[1] = xc[1]
@@ -11,7 +10,7 @@ function F_tcpf(xcdot::Vector, xc::Vector, xd::Array{Int64}, t::Float64, parms::
   nothing
 end
 
-function R_tcpf(xc::Vector, xd::Array, t::Float64, parms::Vector, sum_rate::Bool)
+function R_tcpf(xc, xd, t::Float64, parms, sum_rate::Bool)
   # fonction de tau
   if sum_rate==false
     return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])

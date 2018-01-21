@@ -1,4 +1,3 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej(xc,xd,t,parms,sum_rate::Bool)
@@ -29,12 +28,3 @@ srand(1234)
 println("--> CHV algorithm for SSA")
 dummy = PDMP.pdmp(1,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
 result_chv = @time PDMP.pdmp(1000,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
-
-# using Plots
-# gr()
-# plot(result.time,result.xd[1,:])
-#   plot!(result.time,result.xd[2,:])
-#   plot!(result.time,result.xd[3,:])
-#   plot!(result_chv.time,result_chv.xd[1,:],marker=:d,color=:blue)
-#   plot!(result_chv.time,result_chv.xd[2,:],marker=:d,color=:red)
-#   plot!(result_chv.time,result_chv.xd[3,:],marker=:d,color=:green,line=:step)

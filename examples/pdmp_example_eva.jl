@@ -1,14 +1,12 @@
-# push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
-using Compat
 
-function F_eva!(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
+function F_eva!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
-  xcdot[1] = -xc[1]+1.
+  xcdot[1] = -xc[1]+1
   nothing
 end
 
-function R_eva(xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, sum_rate::Bool)
+function R_eva(xc, xd, t, parms, sum_rate::Bool)
   # rate function
   rate_print = 1.
   if sum_rate == false
@@ -26,7 +24,7 @@ function R_eva(xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{
   end
 end
 
-function Delta_xc_eva(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
+function Delta_xc_eva(xc, xd, t, parms, ind_reaction)
   # this function return the jump in the continuous component
   if ind_reaction==2
     xc[1] = 0.0
