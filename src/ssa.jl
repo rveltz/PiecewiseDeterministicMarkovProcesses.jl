@@ -7,4 +7,3 @@ end
 function Delta_dummy(xc::Array{Float64,1}, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
   return true
 end
-

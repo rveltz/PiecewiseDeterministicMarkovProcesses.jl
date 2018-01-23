@@ -42,9 +42,16 @@ tf=350.
 
 srand(123)
 println("--> chv")
+<<<<<<< Updated upstream
 dummy_t =       PDMP.pdmp(6,   xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
 dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
 dummy_t = @time PDMP.pdmp(4500,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+=======
+dummy_t =       PDMP.pdmp(6,  xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:cvode)
+dummy_t = @time PDMP.pdmp(450,xc0,xd0, F_ml!, R_ml, nu_ml, parms,0.0,tf,false,ode=:lsoda)
+
+>>>>>>> Stashed changes
 
 srand(123)
 println("--> chv_optim - call")

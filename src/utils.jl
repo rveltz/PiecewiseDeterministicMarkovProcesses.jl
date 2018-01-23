@@ -37,22 +37,3 @@ type pdmpResult
 	args::pdmpArgs
 end
 
-"""
-  This takes a single argument of type `pdmpResult` and returns a `DataFrame`.
-"""
-function pdmp_data(s::pdmpResult)
-    xd=convert(DataFrame,s.xd')
-    xdn=names(xd)
-    xdl=length(xdn)
-    xdnn=[Symbol("xd",i) for i in 1:(xdl-1)]
-    rename!(xd,xdn,xdnn)
-    # Delete last column
-    delete!(xd,xdn[end])
-    xc=convert(DataFrame,s.xc')
-    xcn=names(xc)
-    xcl=length(xcn)  
-    xcnn=[Symbol("xc",i) for i in 1:xcl]
-    rename!(xc,xcn,xcnn)
-    df = hcat(DataFrame(time=s.time),xd,xc)
-    df
-end
