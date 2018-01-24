@@ -40,16 +40,16 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	const isr = min(1.0e9,1.0 / sr)
 	user_data[1](xdot, x, user_data[3], t, user_data[4])
 	const ly = length(xdot)
-	for i in 1:ly
+	@inbounds for i = 1:ly
 		xdot[i] = xdot[i] * isr
 	end
 	xdot[end] = isr
 	return Sundials.CV_SUCCESS
 end
 
-function f_CHV!{T}(F::Base.Callable,R::Base.Callable,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Array{Int64,2}, parms::Vector{T})
+function f_CHV!{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms::Vector{T})
 	# used for the exact method
-	const sr = R(x,x,xd,t,parms,true)
+	const sr = R(xdot,x,xd,t,parms,true)
 	@assert sr > 0.0 "Total rate must be positive"
 	const isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,t,parms)
@@ -76,7 +76,7 @@ It takes the following arguments:
 - **ode**: ode time stepper :cvode or :lsoda
 """
 
-function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
+function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda]
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
@@ -108,8 +108,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 	t::Float64 = ti
 	xc0     = reshape(xc0,1,length(xc0))
 	X0      = vec([xc0 t])
+	Xc      = @view X0[1:end-1]
 	xd0     = reshape(xd0,1,length(xd0))
-	Xd      = deepcopy(xd0)
+	Xd      = copy(vec(xd0))
 	deltaxc = copy(nu[1,:]) # declare this variable
 	numpf   = size(nu,1)    # number of reactions
 	rate    = zeros(numpf)#vector of rates
@@ -126,23 +127,31 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
     xc_hist[:,nsteps] = copy(xc0)
     xd_hist[:,nsteps] = copy(Xd)
 	nsteps += 1
+	
+	# define the ODE flow
+	if ode==:cvode
+		Flow=(X0_,Xd_,dt_)->Sundials.cvode((tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+	elseif ode==:lsoda	
+		Flow=(X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+	end
 
 	# Main loop
 	termination_status = "finaltime"
 	while (t < tf) && (nsteps < n_max)
 
 		dt = -log(rand())
-		if verbose println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps) end
-		if ode==:cvode
-			res_ode = Sundials.cvode((tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-		elseif ode==:lsoda
-			res_ode = LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
+		
+		res_ode = Flow(X0,Xd,dt)
+		verbose && println("--> ode solve is done!")
+
+		@inbounds for ii in eachindex(X0)
+			X0[ii] = res_ode[end,ii]
 		end
-		if verbose println("--> ode solve is done!") end
-		X0 .= res_ode[end,:]
-		R(rate,X0[1:end-1],Xd,X0[end],parms, false)
-		# jump time:
 		t = res_ode[end,end]
+
+		R(rate,Xc,Xd,t,parms, false)
+		# jump time:
 		if (t < tf)
 			# Update event
 			ev = pfsample(rate,sum(rate),numpf)
@@ -151,9 +160,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
-			DX(X0,Xd,X0[end],parms,ev)
+			DX(Xc,Xd,t,parms,ev) #requires allocation!!
 
-			if verbose println("--> Which reaction? => ",ev) end
+			verbose && println("--> Which reaction? => ",ev)
 			# save state
 			t_hist[nsteps] = t
 
@@ -163,8 +172,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
             @inbounds for ii in eachindex(Xd)
 				xd_hist[ii,nsteps] = Xd[ii]
             end
-			# save_c && (xc_hist[:,nsteps] .= X0[ind_save_c])
-			# save_d && (xd_hist[:,nsteps] .= Xd[ind_save_d])
+
 		else
 			if ode==:cvode
 				res_ode = Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
@@ -188,9 +196,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.C
 		end
 		nsteps += 1
 	end
-	if verbose println("-->Done") end
+	verbose && println("-->Done")
 	stats = pdmpStats(termination_status,nsteps)
-	if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
+	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
 	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
 end
 
@@ -250,7 +258,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 	if ode==:cvode
 		ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
 	else
-		
+
 		if nsteps == 2
 			println(" --> LSODA solve #",nsteps,", X0 = ", X0)
 			ctx, res_ode = LSODA.lsoda((tt,x,xdot,data)->f_CHV(F,R,tt,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
