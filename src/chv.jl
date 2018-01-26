@@ -87,19 +87,6 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 	save_c = true
 	save_d = true
 	# permutation to choose randomly a given number of data
-
-	# if ind_save_d[1]==0
-# 		save_d = false
-# 	elseif ind_save_d[1]==-1
-# 		ind_save_d = 1:length(xd0)
-# 	end
-#
-# 	if ind_save_c[1]==0
-# 		save_c = false
-# 	elseif ind_save_c[1]==-1
-# 		ind_save_c = 1:length(xc0)
-# 	end
-
 	# Args
 	args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
 	if verbose println("--> Args saved!") end
@@ -107,19 +94,21 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 	# Set up initial variables
 	t::Float64 = ti
 	xc0     = reshape(xc0,1,length(xc0))
+	xd0     = reshape(xd0,1,length(xd0))
+	
 	X0      = vec([xc0 t])
 	Xc      = @view X0[1:end-1]
-	xd0     = reshape(xd0,1,length(xd0))
 	Xd      = copy(vec(xd0))
-	deltaxc = copy(nu[1,:]) # declare this variable
+	
+	deltaxd = copy(nu[1,:]) # declare this variable
 	numpf   = size(nu,1)    # number of reactions
 	rate    = zeros(numpf)#vector of rates
 
 	# arrays for storing history, pre-allocate storage
-	t_hist  = Array{Float64}(n_max)
-	xc_hist = Array{Float64}(length(xc0), n_max)
-	xd_hist = Array{Int64}(length(xd0), n_max)
-	res_ode = Array{Float64,2}
+	t_hist  = zeros(n_max)
+	xc_hist = zeros(length(xc0), n_max)
+	xd_hist = zeros(length(xd0), n_max)
+	res_ode = zeros(length(X0),2)
 
 
 	# initialise arrays
@@ -130,7 +119,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 	
 	# define the ODE flow
 	if ode==:cvode
-		Flow=(X0_,Xd_,dt_)->Sundials.cvode((tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow=(X0_,Xd_,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda	
 		Flow=(X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
 	end
@@ -142,7 +131,8 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 		dt = -log(rand())
 		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
 		
-		res_ode = Flow(X0,Xd,dt)
+		res_ode .= Flow(X0,Xd,dt)
+
 		verbose && println("--> ode solve is done!")
 
 		@inbounds for ii in eachindex(X0)
@@ -155,7 +145,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 		if (t < tf)
 			# Update event
 			ev = pfsample(rate,sum(rate),numpf)
-			deltaxd = nu[ev,:]
+			deltaxd .= nu[ev,:]
 			# Xd = Xd .+ deltaxd
 			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
@@ -174,8 +164,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
             end
 
 		else
+			error("--> on est dans la derniere boucle")
 			if ode==:cvode
-				res_ode = Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
 				res_ode = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			end
