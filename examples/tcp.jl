@@ -36,8 +36,8 @@ result2=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,n_jum
 result2=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,n_jumps = 100)
 srand(1234)
 println(" ----> lsoda")
-result2=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,ode=:lsoda,n_jumps = 2)
-result2=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,ode=:lsoda,n_jumps = 100)
+result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,ode=:lsoda,n_jumps = 2)
+result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,false,ode=:lsoda,n_jumps = 100)
 
 println("--> Case optimised:")
 srand(1234)

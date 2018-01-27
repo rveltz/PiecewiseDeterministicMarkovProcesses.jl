@@ -49,12 +49,12 @@ end
 
 function f_CHV!{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms::Vector{T})
 	# used for the exact method
-	const sr = R(xdot,x,xd,t,parms,true)
+	sr = R(xdot,x,xd,t,parms,true)
 	@assert sr > 0.0 "Total rate must be positive"
-	const isr = min(1.0e9,1.0 / sr)
+	isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,t,parms)
 	xdot[end] = 1.0
-	const ly = length(xdot)
+	ly = length(xdot)
 	scale!(xdot, isr)
 	nothing
 end
@@ -164,11 +164,10 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
             end
 
 		else
-			error("--> on est dans la derniere boucle")
 			if ode==:cvode
-				res_ode =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode .=   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
-				res_ode = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode .= LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 
@@ -224,9 +223,10 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 	t::Float64 = ti
 	xc0     = reshape(xc0,1,length(xc0))
 	X0      = vec([xc0 t])
+	Xc = @view X0[1:end-1]
 	xd0     = reshape(xd0,1,length(xd0))
 	Xd      = deepcopy(xd0)
-	deltaxc = copy(nu[1,:]) #declare this variable
+	deltaxd = copy(nu[1,:]) #declare this variable
 	numpf   = size(nu,1) #number of reactions
 	rate    = zeros(numpf)#vector of rates
 
@@ -249,18 +249,27 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 	if ode==:cvode
 		ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
 	else
+		# ctx = LSODA.lsoda_context_t()
+		dt_lsoda = 0.
+	end
+	#   prgs = Progress(n_max, 1)
+	while (t < tf) && (nsteps<n_max)
+		#     update!(prgs, nsteps)
+		dt = -log(rand())
+		if verbose println("--> t = ",t," - dt = ",dt) end
 
-		if nsteps == 2
-			println(" --> LSODA solve #",nsteps,", X0 = ", X0)
-			ctx, res_ode = LSODA.lsoda((tt,x,xdot,data)->f_CHV(F,R,tt,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
-			X0 = vec(res_ode[end,:])
-			dt_lsoda += dt
-			println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
+		if ode==:cvode
+			# println(" --> CVODE solve #",nsteps,", X0 = ", X0)
+			cvode_evolve!(res_ode, ctx[1],F,R,Xd,parms, X0, [0.0, dt])
+			# println(" ----> res_ode = ", res_ode)
+			@inbounds for ii in eachindex(X0)
+				X0[ii] = res_ode[end,ii]
+			end
 		else
 			@assert 1==0
 			if nsteps == 2
 				println(" --> LSODA solve #",nsteps,", X0 = ", X0)
-				res_ode = LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+				res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 				X0 = vec(res_ode[end,:])
 				dt_lsoda += dt
 				println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
@@ -272,7 +281,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 		end
 		if verbose println(" --> ode solve is done!") end
 
-		R(rate,X0[1:end-1],Xd,X0[end],parms, false)
+		R(rate,Xc,Xd,t,parms, false)
 
 		# Update time
 		t = X0[end] #t = res_ode[end,end]
@@ -280,13 +289,12 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 		# Update event
 		if (t < tf)
 			ev = pfsample(rate,sum(rate),numpf)
-			deltaxd = nu[ev,:]
-
+			deltaxd .= nu[ev,:]
 			# Xd = Xd .+ deltaxd
 			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
-			DX(X0,Xd,X0[end],parms,ev)
+			DX(Xc,Xd,t,parms,ev) #requires allocation!!
 
 			if verbose println(" --> Which reaction? => ",ev) end
 
@@ -294,11 +302,15 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 			t_hist[nsteps] = t
 
 			# copy cols: faster, cf. performance tips in JuliaLang
-			xc_hist[:,nsteps] = X0[1:end-1]
-			xd_hist[:,nsteps] = Xd
+			@inbounds for ii in eachindex(xc0)
+				xc_hist[ii,nsteps] = X0[ii]
+			end
+			@inbounds for ii in eachindex(Xd)
+				xd_hist[ii,nsteps] = Xd[ii]
+			end
 		else
 			if ode==:cvode
-				res_ode = Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd ,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
+				res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
 			end
 			t = tf
 
@@ -307,6 +319,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 			xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
 			xd_hist[:,nsteps] = copy(Xd)
 		end
+		nsteps += 1
 	end
 
 	if ode==:cvode
@@ -321,5 +334,6 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps-1]) end
 	if verbose println("--> time = ",t_hist[1:nsteps-1]) end
 	if verbose println("--> chv_optim, #jumps = ",length(t_hist[1:nsteps-1])) end
-	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
+	result = pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
+	return(result)
 end
