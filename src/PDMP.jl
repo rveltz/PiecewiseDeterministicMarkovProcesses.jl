@@ -21,7 +21,7 @@ include("cvode.jl")
 include("lsoda.jl")
 include("chv.jl")
 include("rejection.jl")
-include("ssa.jl")
+
 
 
 function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv, n_jumps = 1000)
@@ -52,8 +52,8 @@ function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::B
 	end
 end
 
-pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv, n_jumps = 1000) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo, n_jumps = n_jumps)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf,verbose = false;ode=:cvode,algo=:chv, n_jumps = 1000) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo, n_jumps = n_jumps)
 
-pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,n_jumps=1000) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,n_jumps = n_jumps)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf,verbose = false;ode=:cvode,algo=:chv,n_jumps=1000) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,n_jumps = n_jumps)
 
 end # module

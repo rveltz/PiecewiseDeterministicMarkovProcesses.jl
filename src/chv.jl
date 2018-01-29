@@ -93,34 +93,17 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 	# Set up initial variables
 	t::Float64 = ti
-	xc0     = reshape(xc0,1,length(xc0))
-	xd0     = reshape(xd0,1,length(xd0))
-	
-	X0      = vec([xc0 t])
-	Xc      = @view X0[1:end-1]
-	Xd      = copy(vec(xd0))
+	X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max)
+	nsteps += 1
 	
 	deltaxd = copy(nu[1,:]) # declare this variable
 	numpf   = size(nu,1)    # number of reactions
-	rate    = zeros(numpf)#vector of rates
+	rate    = zeros(numpf)#vector of rates	
 
-	# arrays for storing history, pre-allocate storage
-	t_hist  = zeros(n_max)
-	xc_hist = zeros(length(xc0), n_max)
-	xd_hist = zeros(length(xd0), n_max)
-	res_ode = zeros(length(X0),2)
-
-
-	# initialise arrays
-	t_hist[nsteps] = t
-    xc_hist[:,nsteps] = copy(xc0)
-    xd_hist[:,nsteps] = copy(Xd)
-	nsteps += 1
-	
 	# define the ODE flow
 	if ode==:cvode
 		Flow=(X0_,Xd_,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
-	elseif ode==:lsoda	
+	elseif ode==:lsoda
 		Flow=(X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
 	end
 
@@ -130,7 +113,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 		dt = -log(rand())
 		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
-		
+
 		res_ode .= Flow(X0,Xd,dt)
 
 		verbose && println("--> ode solve is done!")
@@ -221,25 +204,12 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 
 	# Set up initial variables
 	t::Float64 = ti
-	xc0     = reshape(xc0,1,length(xc0))
-	X0      = vec([xc0 t])
-	Xc = @view X0[1:end-1]
-	xd0     = reshape(xd0,1,length(xd0))
-	Xd      = deepcopy(xd0)
-	deltaxd = copy(nu[1,:]) #declare this variable
-	numpf   = size(nu,1) #number of reactions
-	rate    = zeros(numpf)#vector of rates
-
-	# arrays for storing history, pre-allocate storage
-	t_hist  = Array{Float64}( n_max)
-	xc_hist = Array{Float64}(length(xc0), n_max)
-	xd_hist = Array{Int64}(   length(xd0), n_max)
-	res_ode = zeros(2, length(X0))
-
-	# initialise arrays
-	t_hist[nsteps]    = t
-	xc_hist[:,nsteps] = copy(xc0)
-	xd_hist[:,nsteps] = copy(xd0)
+	X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max)
+	nsteps += 1
+	
+	deltaxd = copy(nu[1,:]) # declare this variable
+	numpf   = size(nu,1)    # number of reactions
+	rate    = zeros(numpf)#vector of rates	
 	nsteps += 1
 
 	# Main loop
