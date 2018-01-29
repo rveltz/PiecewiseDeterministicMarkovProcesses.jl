@@ -49,7 +49,8 @@ end
 
 function f_CHV!{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms::Vector{T})
 	# used for the exact method
-	sr = R(xdot,x,xd,t,parms,true)
+	# we put [1] to use it in the case of the rejection method as well
+	sr = R(xdot,x,xd,t,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,t,parms)

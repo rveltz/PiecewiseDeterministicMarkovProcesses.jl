@@ -67,7 +67,7 @@ function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::
 			end
 			
 			t = tp[end]
-			ppf .= R(rate,X0,Xd,t,parms,true)
+			ppf = R(rate,X0,Xd,t,parms,true)
 			@assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
 			if t == tf
 				reject = false
@@ -99,7 +99,6 @@ function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::
 		end
 		# there is a jump!
 		ppf = R(rate,X0,Xd,t,parms,false)
-		pf = WeightVec(convert(Array{Float64,1},ppf[1])) #this is to ease sampling
 
 		if (t < tf)
 			# make a jump

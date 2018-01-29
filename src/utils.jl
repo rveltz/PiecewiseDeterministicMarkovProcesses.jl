@@ -63,7 +63,7 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;bla=1:10)
 
 	if rejection
 		X0  = vec(xc0)
-		Xc  = @view X0
+		Xc  = copy(X0)
 	else
 		# for the CVH method, needs to enlarge the state space
 		X0 = vec([xc0 ti])

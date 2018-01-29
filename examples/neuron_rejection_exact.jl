@@ -1,4 +1,4 @@
-# Example of neural network 
+# Example of neural network
 using PDMP
 
 const N = 100

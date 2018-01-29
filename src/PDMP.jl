@@ -6,15 +6,15 @@ using LSODA
 
 
 export pdmp,
-ssa,
-chv!,chv,
-rejection,
-rejection_exact,
-chv_optim!,
-pdmpArgs,
-pdmpResult,
-pdmp_data,
-tauleap
+	ssa,
+	chv!,chv,
+	rejection!,
+	rejection_exact,
+	chv_optim!,
+	pdmpArgs,
+	pdmpResult,
+	pdmp_data,
+	tauleap
 
 include("utils.jl")
 include("cvode.jl")
@@ -43,12 +43,11 @@ function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::B
 	if algo==:chv
 		return PDMP.chv!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 	elseif algo==:chv_optim
-		println("--> chv_optim!!")
 		return PDMP.chv_optim!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 	elseif algo==:rejection
-		PDMP.rejection(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
-		# elseif algo==:rejection_exact
-		# 			return PDMP.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
+		return PDMP.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
+	elseif algo==:rejection_exact
+		return PDMP.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
 	end
 end
 
@@ -56,4 +55,5 @@ pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf,verbose = false;ode=:cvode,algo=:
 
 pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf,verbose = false;ode=:cvode,algo=:chv,n_jumps=1000) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,n_jumps = n_jumps)
 
+pdmp!{T}(xd0,R,nu,parms::Vector{T},ti,tf,verbose = false;ode=:cvode,algo=:chv,n_jumps=1000) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,n_jumps = n_jumps)
 end # module

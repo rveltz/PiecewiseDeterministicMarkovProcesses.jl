@@ -35,7 +35,7 @@ println("--> Case chv:")
   dummy_t =  PDMP.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false, algo=:chv_optim)
   srand(1234)
   dummy_t =  @time PDMP.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,false, algo=:chv_optim)
-  
+
 println("For simulations:")
 srand(1234)
 tf = 250.

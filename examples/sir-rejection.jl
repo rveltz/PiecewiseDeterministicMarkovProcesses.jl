@@ -1,4 +1,3 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir_rej!(rate,xc,xd,t,parms,sum_rate::Bool)
@@ -25,14 +24,13 @@ tf = 150.0
 
 srand(1234)
 println("--> rejection algorithm for SSA")
-dummy = PDMP.pdmp!(1,xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:rejection)
-result = @time PDMP.pdmp(1000,xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:rejection)
+dummy = PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:rejection, n_jumps = 1)
+result = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:rejection, n_jumps = 1000)
 
 srand(1234)
 println("--> CHV algorithm for SSA")
-dummy = PDMP.pdmp!(1,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
-result_chv = @time PDMP.pdmp(1000,xd0,R_sir_rej,nu,parms,0.0,tf,false,algo=:chv)
-
+dummy =PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:chv, n_jumps = 1)
+result_chv = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,false,algo=:chv, n_jumps = 1000)
 # using Plots
 # gr()
 # plot(result.time,result.xd[1,:])
