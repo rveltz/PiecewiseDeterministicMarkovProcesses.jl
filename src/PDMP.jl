@@ -1,84 +1,76 @@
 module PDMP
 
-using Distributions
-using StatsBase
-using DataFrames
-using DataArrays
 using Sundials
 using LSODA
 
 
+
 export pdmp,
-ssa,
-chv!,chv,
-rejection,
-rejection_exact,
-chv_optim!,
-pdmpArgs,
-pdmpResult,
-pdmp_data,
-tauleap
+	ssa,
+	chv!,chv,
+	rejection!,
+	rejection_exact,
+	chv_optim!,
+	pdmpArgs,
+	pdmpResult,
+	pdmp_data,
+	tauleap
 
 include("utils.jl")
 include("cvode.jl")
 include("lsoda.jl")
 include("chv.jl")
 include("rejection.jl")
-include("ssa.jl")
-include("tau-leap.jl")
 
-function pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1)
-	@assert algo in [:chv,:chv_optim,:rejection,:tauleap] "algo $algo not implemented!! Maybe call $algo() directly, i.e. without passing by pdmp()."
-	# determine if the Rate function is suited to rejection algorithms in which
-	# case we might want to take only the first argument
-	res = R(xc0,xd0,0.,parms,false)
-	R_wrap = R
 
-	if length(res[1]) == size(nu)[1] # we have a rate function suited to the rejection algorithm, one could also have tested typeof(res[1]) == Vector
-		if algo==:rejection
-			@assert (length(res) == 2) "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true. [algo = $algo]\n\n\n"
-		else
-			R_wrap(xc,xd,t,parms,verbose) = R(xc,xd,t,parms,verbose)[1]
-		end
-	else # we have a rate function suited to the CVH algorithm
-		@assert (algo!=:rejection) "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true. [algo = $algo]\n\n\n"
-	end
+"""
+This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
+It takes the following arguments:
+
+- **xc0**: a `Vector` of `Float64`, representing the initial states of the continuous variable.
+- **xd0**: a `Vector` of `Int64`, representing the initial states of the discrete variable.
+- **F!**: an inplace `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
+- **R**: an inplace `Function` or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate `Vector` of `Float64` holding the different reaction rates, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise.
+- **DX**: a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
+- **nu**: a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
+- **parms** : a `Vector` of `Float64` representing the parameters of the system.
+- **tf**: the final simulation time (`Float64`)
+- **verbose**: a `Bool` for printing verbose.
+- **ode**: ode time stepper :cvode or :lsoda.
+- **n_jumps**: an `Int64` representing the maximum number of jumps to be computed.
+- **ind_save_d**: a range to hold the indices of the discrete variable to be saved
+- **ind_save_c**: a range to hold the indices of the continuous variable to be saved
+"""
+function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1)
+	@assert algo in [:chv,:chv_optim,:rejection] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
+	# determine if the Rate function is suited to rejection algorithms in which case we might want to take only
+	# the first argument
+	# res = R(xc0,xd0,0.,parms,false)
+	# R_wrap = R
+
+	# if length(res[1]) == size(nu)[1] # we have a rate function suited to the rejection algorithm, one could also have tested typeof(res[1]) == Vector
+	# 	if algo==:rejection
+	# 		@assert length(res) == 2 "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true.\n\n\n"
+	# 	else
+	# 		R_wrap(xc,xd,t,parms,verbose) = R(xc,xd,t,parms,verbose)[1]
+	# 	end
+	# else # we have a rate function suited to the CVH algorithm
+	# 	@assert algo!=:rejection "You need the rate function to provide a global bound on the total rates to call a rejection algorithm, e.g. R(xc,xd,t,parms,sum_of_rates) must return [vector_of_rates,bound] or [sum(vector_of_rates),bound] depending on whether sum_of_rates == true.\n\n\n"
+	# end
 	if algo==:chv
-		return PDMP.chv!(n_max,xc0,xd0,F,R_wrap,DX,nu,parms,ti, tf,verbose,ode=ode)
+		return PDMP.chv!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	elseif algo==:chv_optim
-		return PDMP.chv_optim!(n_max,xc0,xd0,F,R_wrap,DX,nu,parms,ti, tf,verbose,ode=ode)
+		return PDMP.chv_optim!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	elseif algo==:rejection
-		PDMP.rejection(n_max,xc0,xd0,F,R_wrap,DX,nu,parms,ti, tf,verbose,ode=ode)
-		# elseif algo==:rejection_exact
-		# 			return PDMP.rejection_exact(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode)
-	elseif contains(string(algo),"tauleap")
-		PDMP.tauleap(n_max,xc0,xd0,F,R_wrap,nu,parms,ti, tf,verbose,ode=ode,dt=dt,algo=algo)
+		return PDMP.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+	elseif algo==:rejection_exact
+		return PDMP.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	end
 end
 
-pdmp!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) = PDMP.pdmp!(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo, n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-pdmp!{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv) =
-PDMP.pdmp!(n_max,[0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode,algo=algo)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-function pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt=0.1)
-	try
-		# try to see if we have inplace vector field
-		F(xc0,xd0,0.,parms)
-		function F_wrap(xcdot, xc, xd, t, parms )
-			xcdot .= F(xc,xd,t,parms)
-			nothing
-		end
-		return PDMP.pdmp!(n_max,xc0,xd0,F_wrap,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo,dt=dt)
-	catch e
-		return PDMP.pdmp!(n_max,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose;ode=ode,algo=algo,dt=dt)
-	end
-end
-
-pdmp{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1) = PDMP.pdmp(n_max,xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose,ode=ode,algo=algo,dt=dt)
-
-function pdmp{T}(n_max::Int64,xd0::Array{Int64,1},R::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,algo=:chv,dt = 0.1)
-	PDMP.pdmp(n_max,[0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti,tf,verbose,ode=ode,algo=algo,dt=dt)
-end
-
+pdmp!{T}(xd0,R,nu,parms::Vector{T},ti,tf;verbose =  false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 end # module

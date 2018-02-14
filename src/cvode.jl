@@ -26,7 +26,7 @@ function cvode_evolve!{T}(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.
     Sundials.CVodeReInit(mem,t[1],y0)
     Sundials.CVodeSetUserData(mem, [f,r,d,p])
 
-    yres[1,:] = y0
+    yres[1,:] .= y0
     y = copy(y0)
     tout = [0.0]
     for k in 2:length(t)
@@ -35,7 +35,7 @@ function cvode_evolve!{T}(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.
             throw(KeyError("SUNDIALS_ERROR: CVODE failed with flag = ", flag))
         end
         # BAD!! should be copy cols, much faster
-        yres[k,:] = y
+        yres[k,:] .= y
     end
     nothing
 end

@@ -35,9 +35,10 @@ using PDMP
 We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable `parms`.
 
 ```julia
-function F_tcp(xc, xd, t, parms)
+function F_tcp!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
-  return xd[1]
+  xcdot[1] = xd[1]
+  nothing
 end
 ```
 
@@ -53,19 +54,24 @@ This is encoded in the following function
 
 
 ```julia
-function R_tcp(xc, xd, t, parms, sum_rate::Bool)
-  # rate function for each transition
+function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
   # in this case,  the transitions are xd->xd+2 or xd->xd-2
-  # sum_rate is a boolean which tells R_tcp the type which must be returned:
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
   # i.e. the sum of the rates or the vector of the rates
-  if sum_rate==false
+  if sum_rate == false
       if xd[1] > 0
-          return [0,1]
+          rate[1] = 0.
+          rate[2] = 1.
       else
-          return [1,0]
+      		rate[1] = 1.
+          rate[2] = 0.
       end
+      #we return 0. because nothing is supposed to be returned
+      return 0.
   else
-    return 1
+  	# we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+    return 1.
   end
 end
 
@@ -74,7 +80,7 @@ xc0 = vec([0.05])
 xd0 = vec([1])
 
 # matrix of jumps for the discrete variables, analogous to chemical reactions
-const nu = reshape([[2];[-2]],2,1)
+u = reshape([[2];[-2]],2,1)
 
 
 # parameters
@@ -82,10 +88,10 @@ parms = [0.]
 tf = 2000.
 
 # compile the program:
-dummy =  PDMP.pdmp(2,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
+dummy =  PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,false,n_jumps=1)
 
 # compute a trajectory
-result =  @time PDMP.pdmp(100,xc0,xd0,F_tcp,R_tcp,nu,parms,0.0,tf,false)
+result =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,false,n_jumps=100)
 
 # plotting
 using Plots

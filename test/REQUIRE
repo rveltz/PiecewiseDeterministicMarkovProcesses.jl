@@ -5,6 +5,5 @@ DataArrays
 Sundials
 PDMP
 JSON
-GR
 ProgressMeter
 julia 0.6

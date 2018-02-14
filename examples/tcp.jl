@@ -10,19 +10,12 @@ function F_tcp!(ẋ, xc, xd, t, parms)
     nothing
 end
 
-function F_tcp(xc, xd, t, parms)
-    # vector field used for the continuous variable
-    if mod(xd[1],2)==0
-        return vec([xc[1]])
-    else
-        return vec([-xc[1]])
-    end
-end
-
-function R_tcp(xc, xd, t, parms, sum_rate::Bool)
+function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
     # rate fonction
     if sum_rate==false
-        return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])
+        rate[1] = 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1
+        rate[2] = parms[1]
+        return 0.
     else
         return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
     end
@@ -35,23 +28,20 @@ const nu_tcp = [[1 0];[0 -1]]
 parms = vec([0.1]) # sampling rate
 tf = 200.
 
-println("--> basic implementation")
-srand(1234)
-result =  PDMP.pdmp(2,        xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-result =  @time PDMP.pdmp(200,xc0,xd0,F_tcp,R_tcp,nu_tcp,parms,0.0,tf,false)
-
-println("--> inplace implementation")
+println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 srand(1234)
-result2=        PDMP.pdmp(2,  xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false)
-result2=  @time PDMP.pdmp(200,xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false)
-result2=        PDMP.pdmp(2,  xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false,ode=:lsoda)
-result2=  @time PDMP.pdmp(200,xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false,ode=:lsoda)
+result2=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 2)
+result2=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 100)
+srand(1234)
+println(" ----> lsoda")
+result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 2)
+result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 100)
 
 println("--> Case optimised:")
 srand(1234)
-dummy_t =  PDMP.pdmp(2,xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false, algo=:chv_optim)
-dummy_t =  @time PDMP.pdmp(200,xc0,xd0,F_tcp!,R_tcp,nu_tcp,parms,0.0,tf,false, algo=:chv_optim)
+dummy_t =        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 2)
+dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 100)
 
-println("--> stopping time == tf? (not more) ",maximum(result.time) == tf)
-println("#jumps = ", length(result.time))
+println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
+println("#jumps = ", length(result2.time))
