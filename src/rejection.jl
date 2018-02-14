@@ -14,7 +14,7 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false)
+function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda]
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
@@ -134,7 +134,7 @@ It takes the following arguments:
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
 """
-function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},Phi::Function,R::Function,DX::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true)
+function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},Phi::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true;ind_save_d=-1:1,ind_save_c=-1:1)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	const nsteps = 1
@@ -146,24 +146,13 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
 
 	# Set up initial variables
 	t::Float64 = ti
-	xc0 = reshape(xc0,1,length(xc0))
-	X0  = vec(xc0)
-	xd0 = reshape(xd0,1,length(xd0))
-	Xd  = deepcopy(xd0)
-	deltaxc = copy(nu[1,:]) #declare this variable
+	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max,true)
+	nsteps += 1
 
-	# arrays for storing history, pre-allocate storage
-	t_hist  = Array(Float64, n_max)
-	xc_hist = Array(Float64, length(xc0), n_max)
-	xd_hist = Array(Int64,   length(xd0), n_max)
-	res_ode = Array(Float64,2,length(xc0))
-	rate_vector = zeros(length(nu[:,1]))
-
-
-	# initialise arrays
-	t_hist[nsteps] = t
-	xc_hist[:,nsteps] = copy(xc0)
-	xd_hist[:,nsteps] = copy(xd0)
+	deltaxd     = copy(nu[1,:]) # declare this variable
+	numpf       = size(nu,1)    # number of reactions
+	rate_vector = zeros(numpf)#vector of rates	
+	tp = [0., 1.]
 
 	# Main loop
 	termination_status = "finaltime"
@@ -204,11 +193,10 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
 		# there is a jump!
 		lambda_star = R(rate_vector,X0,Xd,t,parms,false)[2]
 		if verbose println("----> rate = $rate_vector" ) end
-		pf = WeightVec(convert(Array{Float64,1},rate_vector)) #this is to ease sampling
 
 		if (t < tf)
 			# make a jump
-			ev = Distributions.sample(pf)
+			ev = pfsample(rate_vector,sum(rate_vector),numpf)
 			if verbose println("----> reaction = $ev" ) end
 
 			if xd_jump

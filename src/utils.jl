@@ -56,10 +56,18 @@ end
 """
 Function to pre-allocate arrays contening the result.
 """
-function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;bla=1:10)
+function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind_save_d=-1:1)
+	if ind_save_c[1] == -1
+		ind_save_c = 1:length(xc0)
+	end
+	
+	if ind_save_d[1] == -1
+		ind_save_d = 1:length(xd0)
+	end
+	
 	nsteps = 1
-	xc0     = reshape(xc0,1,length(xc0))
-	xd0     = reshape(xd0,1,length(xd0))
+	xc0     = reshape(xc0,1,length(ind_save_c))
+	xd0     = reshape(xd0,1,length(ind_save_d))
 
 	if rejection
 		X0  = vec(xc0)
@@ -82,6 +90,17 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;bla=1:10)
 	t_hist[nsteps] = ti
 	xc_hist[:,nsteps] = copy(xc0)
 	xd_hist[:,nsteps] = copy(Xd)
-	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode
+	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 
+"""
+function to save data
+"""
+function save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+	@inbounds for ii in eachindex(ind_save_c)
+		xc_hist[ii,nsteps] = X0[ind_save_c[ii]]
+    end
+    @inbounds for ii in eachindex(ind_save_d)
+		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
+    end
+end

@@ -1,4 +1,3 @@
-push!(LOAD_PATH,"/Users/rveltz/work/prog_gd/julia")
 using PDMP
 
 function R_sir!(rate,xc,xd,t::Float64,parms,sum_rate::Bool)
@@ -39,5 +38,5 @@ result = @time PDMP.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,false,n_jumps=10
 
 srand(1234)
 # automatic determination of algorithm, here CHV for SSA
-result = PDMP.pdmp!(xd0,R_sir,nu,parms,0.0,tf,false,n_jumps=1)
-result = @time PDMP.pdmp!(xd0,R_sir,nu,parms,0.0,tf,false,n_jumps=1000)
+result = PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,false,n_jumps=1)
+result = @time PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,false,n_jumps=1000)
