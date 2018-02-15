@@ -65,8 +65,8 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 		ind_save_d = 1:length(xd0)
 	end
 	
-	xc0     = reshape(xc0,1,length(ind_save_c))
-	xd0     = reshape(xd0,1,length(ind_save_d))
+	# xc0     = reshape(xc0,1,length(ind_save_c))
+	# xd0     = reshape(xd0,1,length(ind_save_d))
 
 	if rejection
 		X0  = vec(xc0)
@@ -80,14 +80,14 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 
 	# arrays for storing history, pre-allocate storage
 	t_hist  = zeros(n_max)
-	xc_hist = zeros(length(xc0), n_max)
-	xd_hist = zeros(length(xd0), n_max)
+	xc_hist = zeros(length(ind_save_c), n_max)
+	xd_hist = zeros(length(ind_save_d), n_max)
 	res_ode = zeros(2,length(X0))
 
 
 	# initialise arrays
 	t_hist[1] = ti
-	xc_hist[:,1] = copy(xc0)
+	xc_hist[:,1] = copy(xc0|> vec)
 	xd_hist[:,1] = copy(Xd)
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
