@@ -5,7 +5,7 @@ using LSODA
 
 
 
-export pdmp,
+export pdmp!,
 	ssa,
 	chv!,chv,
 	rejection!,
