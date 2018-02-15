@@ -41,7 +41,7 @@ It takes the following arguments:
 - **ind_save_d**: a range to hold the indices of the discrete variable to be saved
 - **ind_save_c**: a range to hold the indices of the continuous variable to be saved
 """
-function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1)
+function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.)
 	@assert algo in [:chv,:chv_optim,:rejection] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 	# determine if the Rate function is suited to rejection algorithms in which case we might want to take only
 	# the first argument
@@ -68,9 +68,9 @@ function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::B
 	end
 end
 
-pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo, n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo, n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-pdmp!{T}(xd0,R,nu,parms::Vector{T},ti,tf;verbose =  false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!{T}(xd0,R,nu,parms::Vector{T},ti,tf;verbose =  false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 end # module

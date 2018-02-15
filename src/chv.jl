@@ -22,7 +22,6 @@ function pfsample(w::Array{Float64,1},s::Float64,n::Int64)
     return i
 end
 
-
 """
 This is a wrapper implementing the change of variable method to simulate the PDMP.
 This wrapper is meant to be called by Sundials.CVode
@@ -34,7 +33,7 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	xdot = convert(Vector, xdot_nv)
 
 	# the first x is a dummy variable
-	const sr = user_data[2](x, x, user_data[3], t, user_data[4], true)::Float64
+	const sr = user_data[2](x, x, user_data[3], t, user_data[4], true)[1]::Float64
 	@assert sr > 0.0 "Total rate must be positive"
 
 	const isr = min(1.0e9,1.0 / sr)
@@ -142,7 +141,14 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 			# save state
 			t_hist[nsteps] = t
             save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+			# @inbounds for ii in eachindex(xc0)
+			# 	xc_hist[ii,nsteps] = X0[ii]
+			# 		    end
+			# 		    @inbounds for ii in eachindex(Xd)
+			# 	xd_hist[ii,nsteps] = Xd[ii]
+			# 		    end
 		else
+			println("I am here")
 			if ode==:cvode
 				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
@@ -151,7 +157,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 			t = tf
 
 			# save state
-			t_hist[nsteps] = t
+			t_hist[nsteps] = tf
 			# xc_hist[:,nsteps] = copy(vec(res_ode[end,:]))
 			# xd_hist[:,nsteps] = copy(Xd)
 			# save_c && (xc_hist[:,nsteps] .= X0[ind_save_c])
@@ -281,7 +287,7 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 			t = tf
 
 			# save state
-			t_hist[nsteps] = t
+			t_hist[nsteps] = tf
 			@inbounds for ii in eachindex(ind_save_c)
 				xc_hist[ii,nsteps] = res_ode_last[end,ind_save_c[ii]]
 		    end
