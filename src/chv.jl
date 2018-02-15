@@ -157,9 +157,13 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 			# save_c && (xc_hist[:,nsteps] .= X0[ind_save_c])
 			# save_d && (xd_hist[:,nsteps] .= Xd[ind_save_d])
             # save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
-            @inbounds for ii in length(X0)-1
-    			xc_hist[ii,nsteps] = res_ode_last[end,ii]
-    		end
+
+			@inbounds for ii in eachindex(ind_save_c)
+				xc_hist[ii,nsteps] = res_ode_last[end,ind_save_c[ii]]
+		    end
+		    @inbounds for ii in eachindex(ind_save_d)
+				xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
+		    end
 		end
 		nsteps += 1
 	end
@@ -278,9 +282,12 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
 
 			# save state
 			t_hist[nsteps] = t
-            @inbounds for ii in length(X0)-1
-    			xc_hist[ii,nsteps] = res_ode_last[end,ii]
-    		end
+			@inbounds for ii in eachindex(ind_save_c)
+				xc_hist[ii,nsteps] = res_ode_last[end,ind_save_c[ii]]
+		    end
+		    @inbounds for ii in eachindex(ind_save_d)
+				xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
+		    end
 		end
 		nsteps += 1
 	end
