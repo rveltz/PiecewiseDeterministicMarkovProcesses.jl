@@ -31,9 +31,11 @@ To install this (unregistered) package, run the command
 Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 ```
 
-## Basic example
+## Basic example with CHV method
 
-See the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples).
+**A strong requirement for the CHV method is that the total rate (*i.e.* sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).**
+
+See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples.
 
 A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. 
 
@@ -48,7 +50,6 @@ We then define a function that encodes the dynamics in between jumps. We need to
 function F_tcp!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
   xcdot[1] = xd[1]*xc[1]
-  nothing
 end
 ```
 
@@ -71,13 +72,13 @@ function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
           rate[1] = 0.
           rate[2] = 1.
       else
-      		rate[1] = 1.
+      	  rate[1] = 1.
           rate[2] = 0.
       end
       #we return 0. because nothing is supposed to be returned
       return 0.
   else
-  	# we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+  	# we return sum(rate) without altering rate as we are asked to do
     return 1.
   end
 end
