@@ -12,8 +12,6 @@ PDMP.jl is a Julia package that allows simulation of *Piecewise Deterministic Ma
 
 Please, read the [documentation](https://rveltz.github.io/PDMP.jl/latest) for more information.
 
-[TOC]
-
 We provide several methods for the simulation:
 
 - a recent trick, called **CHV**, explained in [paper-2015](http://arxiv.org/abs/1504.06873) which allows to implement the **True Jump Method** without the need to use event detection schemes for the ODE integrator. These event detections can be quite unstable as explained in [paper-2015](http://arxiv.org/abs/1504.06873) and CHV provide a solution to this problem.
@@ -56,12 +54,9 @@ end
 
 Let's consider a stochastic process with following transitions.
 
-
-| Transition | Rate |
-|---|---|---|
-|$x_d\to x_d-2$ if $x_d>0$ | 1 |
-|$x_d\to x_d+2$ if $x_d<0$ | 1 |
-
+* x_d => x_d - 2, rate = 1 if x_d > 0
+* x_d => x_d + 2, rate = 1 if x_d < 0
+	
 This is encoded in the following function
 
 
