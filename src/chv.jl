@@ -105,9 +105,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
-		Flow=(X0_,Xd_,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda
-		Flow=(X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
 	end
 
 	# Main loop
@@ -144,9 +144,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
             save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 		else
 			if ode==:cvode
-				res_ode .=   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
-				res_ode .= LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 
@@ -156,7 +156,10 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 			# xd_hist[:,nsteps] = copy(Xd)
 			# save_c && (xc_hist[:,nsteps] .= X0[ind_save_c])
 			# save_d && (xd_hist[:,nsteps] .= Xd[ind_save_d])
-            save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+            # save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+            @inbounds for ii in length(X0)-1
+    			xc_hist[ii,nsteps] = res_ode_last[end,ii]
+    		end
 		end
 		nsteps += 1
 	end
@@ -269,13 +272,15 @@ function chv_optim!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1}, F:
             save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 		else
 			if ode==:cvode
-				res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
+				res_ode_last = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd ,t,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-8, reltol = 1e-7)
 			end
 			t = tf
 
 			# save state
 			t_hist[nsteps] = t
-            save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+            @inbounds for ii in length(X0)-1
+    			xc_hist[ii,nsteps] = res_ode_last[end,ii]
+    		end
 		end
 		nsteps += 1
 	end

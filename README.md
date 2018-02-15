@@ -107,7 +107,7 @@ Plots.plot(result.time, result.xd[1,:],line=:step,title = string("#Jumps = ",len
 Plots.plot(result.time, result.xc',title = string("#Jumps = ",length(result.time)),label="Xc")
 ```
 
-This produce the following graph:
+This produces the following graph:
 
 ![TCP](docs/src/xc.png)
 
@@ -147,7 +147,7 @@ end
 
 srand(123)
 result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
-Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result.time)),label="Xc2")
+Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result2.time)),label="Xc2")
 ```
 
 This gives the following result:
