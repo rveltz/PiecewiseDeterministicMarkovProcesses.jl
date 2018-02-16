@@ -1,5 +1,6 @@
-"""
+using Distributions
 
+"""
 tauleap
 
 
@@ -19,108 +20,109 @@ It takes the following arguments:
 - **ode**: ode time stepper :cvode or :lsoda
 - **dt**: stepsize for the tau-leap method
 """
-function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,dt = 0.1,algo=:tauleap)
-  # it is faster to pre-allocate arrays and fill it at run time
-  @assert algo in [:tauleap,:binomial_tauleap]
-  n_max += 1 #to hold initial vector
-  nsteps = 1
-  warn("-->Jump on the continuous variable not considered!")
-  
-  step! = tau_leap_step!
-  if algo==:binomial_tauleap
-	  step! = binomial_tau_leap_step!
-  end
-	
+function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode = :cvode,dt = 0.1,algo=:tauleap)
+    # it is faster to pre-allocate arrays and fill it at run time
+    @assert algo in [:tauleap,:binomial_tauleap]
+    n_max += 1 #to hold initial vector
+    nsteps = 1
+    warn("-->Jump on the continuous variable not considered!")
 
-  # Args
-  args = pdmpArgs(xc0,xd0,F,R,F,nu,parms,tf)
-  if verbose println("--> Args saved!") end
+    step! = tau_leap_step!
+    if algo==:binomial_tauleap
+        step! = binomial_tau_leap_step!
+    end
 
-  # Set up initial variables
-  t::Float64 = ti
-  xc0 = reshape(xc0,1,length(xc0))
-  X0  = vec(xc0)
-  # to hold the vector field
-  dX0  = zeros(X0)
-  xd0 = reshape(xd0,1,length(xd0))
-  Xd  = deepcopy(xd0)
-  deltaxc = copy(nu[1,:]) #declare this variable
 
-  # arrays for storing history, pre-allocate storage
-  t_hist  = Array{Float64}(n_max)
-  xc_hist = Array{Float64}(length(xc0), n_max)
-  xd_hist = Array{Int64}(length(xd0), n_max)
-  res_ode = Array{Float64,2}
+    # Args
+    args = pdmpArgs(xc0,xd0,F,R,F,nu,parms,tf)
+    if verbose println("--> Args saved!") end
 
-  # initialise arrays
-  t_hist[nsteps] = t
-  xc_hist[:,nsteps] = copy(xc0)
-  xd_hist[:,nsteps] = copy(xd0)
+    # Set up initial variables
+    t::Float64 = ti
+    xc0 = reshape(xc0,1,length(xc0))
+    X0  = vec(xc0)
+    # to hold the vector field
+    dX0  = zeros(X0)
+    xd0 = reshape(xd0,1,length(xd0))
+    Xd  = deepcopy(xd0)
+    deltaxc = copy(nu[1,:]) #declare this variable
+    deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
+    numpf   = size(nu,1)    # number of reactions
+    rate    = zeros(numpf)  #vector of rates
 
-  # Main loop
-  termination_status = "finaltime"
+    # arrays for storing history, pre-allocate storage
+    t_hist  = Array{Float64}(n_max)
+    xc_hist = Array{Float64}(length(xc0), n_max)
+    xd_hist = Array{Int64}(length(xd0), n_max)
+    res_ode = Array{Float64,2}
 
-  tp = [0.,0.]
-  ppf = R(X0,Xd,t,parms,false)
-  while (t < tf) && (nsteps < n_max) 
-	# println("#################\nX  = $X0\nXd = $Xd\n,$nsteps,t=$t")
-	@assert sum(Xd.<0)==0 "You have negative discrete component, $Xd, $t, $nsteps"
-	  
-    verbose && println("--> step : ",nsteps," / ",n_max )
-	t += dt
-	nsteps += 1
-
-	# Poisson approximation for discrete part
-	ppf = R(X0,Xd,t,parms,false)
-	step!(dt,ppf,nu,Xd)
-
-	# Euler scheme for ODE part
-	F(dX0,X0,Xd,t,parms)
-	X0 .= X0 .+ dt * dX0
-
+    # initialise arrays
     t_hist[nsteps] = t
-    xc_hist[:,nsteps] = copy(X0)
-    xd_hist[:,nsteps] = copy(Xd)
+    xc_hist[:,nsteps] = copy(xc0)
+    xd_hist[:,nsteps] = copy(xd0)
 
-  end
+    # Main loop
+    termination_status = "finaltime"
 
-  # nsteps -=1
+    tp = [0.,0.]
+    R(rate,X0,Xd,t,parms,false)
+    while (t < tf) && (nsteps < n_max)
+        # println("#################\nX  = $X0\nXd = $Xd\n,$nsteps,t=$t")
+        @assert sum(Xd.<0)==0 "You have negative discrete component, $Xd, $t, $nsteps"
 
-  verbose && println("-->Done")
-  stats = pdmpStats(termination_status,nsteps)
-  
-  verbose && println("--> xc = ",xd_hist[:,1:nsteps])
-  result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps],stats,args)
-  
-  return(result)
+        verbose && println("--> step : ",nsteps," / ",n_max )
+        t += dt
+        nsteps += 1
+
+        # Poisson approximation for discrete part
+        R(rate,X0,Xd,t,parms,false)
+        step!(dt,rate,nu,X0,Xd)
+
+        # Euler scheme for ODE part
+        F(dX0,X0,Xd,t,parms)
+        @. X0 .= X0 + dt * dX0
+
+        t_hist[nsteps] = t
+        xc_hist[:,nsteps] = copy(X0)
+        xd_hist[:,nsteps] = copy(Xd)
+    end
+
+    # nsteps -=1
+
+    verbose && println("-->Done")
+    stats = pdmpStats(termination_status,nsteps)
+
+    verbose && println("--> xc = ",xd_hist[:,1:nsteps])
+    result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps],stats,args)
+
+    return(result)
 end
 
-function tau_leap_step!(dt,rates,nu,Xd)
-	nb_mol = 0
-	for i=1:length(rates)
+function tau_leap_step!(dt,rates,nu,Xc,Xd)
+    nb_mol = 0
+    for i=1:length(rates)
         if rates[i]>0
-			nb_mol = rand(Poisson(dt * rates[i])) # tau-leap method
-		    Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+            nb_mol = rand(Poisson(dt * rates[i])) # tau-leap method
+            Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+            # DX(Xc,Xd,)
         end
-	end
+    end
 end
 
-function binomial_tau_leap_step!(dt,rates,nu,X,Xd)
-	nb_mol = 0
-	for i=1:length(ppf)
+function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd)
+    nb_mol = 0
+    for i=1:length(ppf)
         if ppf[i]>0
-			# nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
-			ind = find(nu[i,:] .== -1)
-			if length(ind) == 0
-				nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
-			else
-				# @show ind,nsteps,t,nu[i,:],i, dt * ppf[i],Xd[ind[1]]
-				println("--> dt = $dt, $(dt * ppf[i]/Xd[ind[1]])")
-				nb_mol = rand(Distributions.Binomial(Xd[ind[1]],dt * ppf[i]/Xd[ind[1]]))
-			end
-		    Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+            # nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
+            ind = find(nu[i,:] .== -1)
+            if length(ind) == 0
+                nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
+            else
+                # @show ind,nsteps,t,nu[i,:],i, dt * ppf[i],Xd[ind[1]]
+                println("--> dt = $dt, $(dt * ppf[i]/Xd[ind[1]])")
+                nb_mol = rand(Distributions.Binomial(Xd[ind[1]],dt * ppf[i]/Xd[ind[1]]))
+            end
+            Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
         end
-	end
+    end
 end
-
-

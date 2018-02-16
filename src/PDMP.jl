@@ -21,6 +21,7 @@ include("cvode.jl")
 include("lsoda.jl")
 include("chv.jl")
 include("rejection.jl")
+include("tau-leap.jl")
 
 
 """
@@ -42,7 +43,7 @@ It takes the following arguments:
 - **ind_save_c**: a range to hold the indices of the continuous variable to be saved
 """
 function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.)
-	@assert algo in [:chv,:chv_optim,:rejection] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
+	@assert algo in [:chv,:chv_optim,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 	# determine if the Rate function is suited to rejection algorithms in which case we might want to take only
 	# the first argument
 	# res = R(xc0,xd0,0.,parms,false)
@@ -65,6 +66,8 @@ function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::B
 		return PDMP.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	elseif algo==:rejection_exact
 		return PDMP.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+	elseif algo==:tauleap
+		return PDMP.tauleap(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose=verbose,ode=ode,dt=dt)
 	end
 end
 
