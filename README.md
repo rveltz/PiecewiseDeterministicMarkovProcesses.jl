@@ -112,7 +112,7 @@ This produces the following graph:
 
 ![TCP](docs/src/xc.png)
 
-# Adding more sampling points in between jumps
+## Adding more sampling points in between jumps
 The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
 
 A simple trick to force output is to add a Poisson process to the reaction with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this.
@@ -155,6 +155,50 @@ This gives the following result:
 
 ![TCP](docs/src/xc2.png)
  
+## Basic example with the rejection method
+The rejection method assume some a priori knowledge of the process one wants to simulation. In particular, the user must be able to provide a bound on the total rates. More precisely, the user must provide a constant bound in between jump. In the example above, this is easily done as returning `sum(rate), bound_rejection`. Note that this means that in between jumps,
+
+`sum(rate)(t) <= bound_rejection `
+
+```julia
+nu2 = [[2 0];[-2 0];[0 1]]
+# the second component is the Poisson process
+xd0 = vec([1, 0])
+
+function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
+  # in this case,  the transitions are xd->xd+2 or xd->xd-2
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
+  # i.e. the sum of the rates or the vector of the rates
+  rate_save       = 10.           # sampling rate in between true jumps
+  bound_rejection = 1.+rate_save  # bound on the total rate, here 0 + 1 + rate_save
+  if sum_rate == false
+      if xd[1] > 0
+          rate[1] = 0.
+          rate[2] = 1.
+          rate[3] = rate_save #Poisson process used as sampling process
+      else
+          rate[1] = 1.
+          rate[2] = 0.
+          rate[3] = rate_save #Poisson process used as sampling process
+      end
+      #we return 0. because nothing is supposed to be returned
+      return 0., bound_rejection
+  else
+    # we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+    return 1. + rate_save, bound_rejection
+  end
+end
+```
+
+We can now simulate this process as follows
+
+```julia
+srand(123)
+result3 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000,algo=:rejection)
+Plots.plot(result3.time, result3.xc',title = string("#Jumps = ",length(result3.time)),label="rejection")
+```
+
 
 # Application programming interface
 

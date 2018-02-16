@@ -1,12 +1,3 @@
-function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms)
-    # vector field used for the continuous variable
-    # trivial dynamics
-    out[1,:] .= xc
-    out[2,:] .= xc
-    nothing
-end
-
-
 """
 This function performs a simulation using the rejection method.
 It takes the following arguments:
@@ -25,6 +16,14 @@ It takes the following arguments:
 """
 function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda]
+
+	# define the ODE flow
+	if ode == :cvode
+		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
+	elseif ode == :lsoda
+		Flow = (X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
+	end
+
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1
@@ -35,40 +34,27 @@ function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::
 	if verbose println("--> Args saved!") end
 
 	# Set up initial variables
-	t::Float64 = ti
-	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max,true)
-	nsteps += 1
+	t = ti
+	X0,_, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max,true)
 
 	deltaxd = copy(nu[1,:]) # declare this variable
 	numpf   = size(nu,1)    # number of reactions
-	rate    = zeros(numpf)#vector of rates
-	tp = [0., 1.]
-
-	# define the ODE flow
-	if ode==:cvode
-		Flow=(X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->F(xdot,x,Xd,t,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
-	elseif ode==:lsoda
-		Flow=(X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,t,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
-	end
+	rate    = zeros(numpf)  # vector of rates
+	tp = [ti, tf]           # vector to hold the time interval over which to integrate the flow
 
 	# Main loop
 	termination_status = "finaltime"
 
+	#variables for rejection algorithm
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
-	tp = [0.,0.]
 	ppf = R(rate,X0,Xd,t,parms,true)
 	while (t < tf) && (nsteps < n_max)
 		if verbose println("--> step : ",nsteps," / ",n_max ) end
 		reject = true
 		while (reject) && (nsteps < n_max)
 			tp .= [t, min(tf, t - log(rand())/ppf[2]) ] #mettre un lambda_star?
-			if verbose println("----> tspan : ",tp ) end
-			# if ode==:cvode
-			# 	res_ode = Sundials.cvode((t,x,xdot)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
-			# elseif ode==:lsoda
-			# 	_,res_ode = LSODA.lsoda((t,x,xdot,data)->F(xdot,x,Xd,t,parms), X0, tp, abstol = 1e-9, reltol = 1e-7)
-			# end
+			verbose && println("----> tspan : ",tp )
 			res_ode .= Flow(X0,Xd,tp)
 
 			@inbounds for ii in eachindex(X0)
@@ -83,29 +69,8 @@ function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::
 			else
 				reject = rand() < (1. - ppf[1] / ppf[2])
 			end
-			if save_rejected
-				nsteps += 1
-				t_hist[nsteps] = t
-	            @inbounds for ii in eachindex(X0)
-					xc_hist[ii,nsteps] = X0[ii]
-	            end
-	            @inbounds for ii in eachindex(Xd)
-					xd_hist[ii,nsteps] = Xd[ii]
-	            end
-			end
-
 		end
 
-		if save_rejected==false
-			nsteps += 1
-			t_hist[nsteps] = t
-            @inbounds for ii in eachindex(X0)
-				xc_hist[ii,nsteps] = X0[ii]
-            end
-            @inbounds for ii in eachindex(Xd)
-				xd_hist[ii,nsteps] = Xd[ii]
-            end
-		end
 		# there is a jump!
 		ppf = R(rate,X0,Xd,t,parms,false)
 
@@ -120,6 +85,15 @@ function rejection!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,X0[end],parms,ev)
 		end
+
+		nsteps += 1
+		t_hist[nsteps] = t
+        @inbounds for ii in eachindex(X0)
+			xc_hist[ii,nsteps] = X0[ii]
+        end
+        @inbounds for ii in eachindex(Xd)
+			xd_hist[ii,nsteps] = Xd[ii]
+        end
 	end
 	if verbose println("-->Done") end
 	stats = pdmpStats(termination_status,nsteps)
@@ -159,7 +133,6 @@ function rejection_exact{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1
 	# Set up initial variables
 	t::Float64 = ti
 	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max,true)
-	nsteps += 1
 
 	deltaxd     = copy(nu[1,:]) # declare this variable
 	numpf       = size(nu,1)    # number of reactions

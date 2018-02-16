@@ -104,9 +104,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
-		Flow = (X0_,Xd_,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,t0,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [t0, t0 + dt_], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda
-		Flow = (X0_,Xd_,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0.0, dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,t0,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [t0, t0 + dt_], abstol = 1e-9, reltol = 1e-7)
 	end
 
 	# Main loop
@@ -116,7 +116,7 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 		dt = -log(rand())
 		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
 
-		res_ode .= Flow(X0,Xd,dt)
+		res_ode .= Flow(X0,Xd,t,dt)
 
 		verbose && println("--> ode solve is done!")
 
@@ -148,7 +148,6 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 			# 	xd_hist[ii,nsteps] = Xd[ii]
 			# 		    end
 		else
-			println("I am here")
 			if ode==:cvode
 				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda

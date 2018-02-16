@@ -28,7 +28,7 @@ This type stores the output, and comprises of:
 - **xd** : a `Matrix` of `Int	64`, containing the simulated states for the continuous variable.
 - **stats** : an instance of `PDMPStats`.
 - **args** : arguments passed.
-""" 
+"""
 type pdmpResult
 	time::Vector{Float64}
 	xc::Matrix{Float64}
@@ -54,26 +54,38 @@ function Delta_dummy(xc, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, i
 end
 
 """
+Dummy flow to be used in gillespie algo
+"""
+
+function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms)
+    # vector field used for the continuous variable
+    # trivial dynamics
+    out[1,:] .= xc
+    out[2,:] .= xc
+    nothing
+end
+
+"""
 Function to pre-allocate arrays contening the result.
 """
 function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind_save_d=-1:1)
 	if ind_save_c[1] == -1
 		ind_save_c = 1:length(xc0)
 	end
-	
+
 	if ind_save_d[1] == -1
 		ind_save_d = 1:length(xd0)
 	end
-	
+
 	# xc0     = reshape(xc0,1,length(ind_save_c))
 	# xd0     = reshape(xd0,1,length(ind_save_d))
 
 	if rejection
-		X0  = vec(xc0)
+		X0  = copy(xc0)
 		Xc  = copy(X0)
 	else
 		# for the CVH method, needs to enlarge the state space
-		X0 = vec([xc0 ti])
+		X0 = copy(xc0); push!(X0,ti)
 		Xc = @view X0[1:end-1]
 	end
 	Xd     = copy(vec(xd0))
