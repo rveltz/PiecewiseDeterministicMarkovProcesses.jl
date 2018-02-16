@@ -33,13 +33,13 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	xdot = convert(Vector, xdot_nv)
 
 	# the first x is a dummy variable
-	const sr = user_data[2](x, x, user_data[3], t, user_data[4], true)[1]::Float64
+	tau = x[end]
+	sr = user_data[2](x, x, user_data[3], tau, user_data[4], true)[1]::Float64
 	@assert sr > 0.0 "Total rate must be positive"
 
-	const isr = min(1.0e9,1.0 / sr)
-	user_data[1](xdot, x, user_data[3], t, user_data[4])
-	const ly = length(xdot)
-	@inbounds for i = 1:ly
+	isr = min(1.0e9,1.0 / sr)
+	user_data[1](xdot, x, user_data[3], tau, user_data[4])
+	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] * isr
 	end
 	xdot[end] = isr
@@ -49,10 +49,11 @@ end
 function f_CHV!{T}(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms::Vector{T})
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
-	sr = R(xdot,x,xd,t,parms,true)[1]
+	tau = x[end]
+	sr = R(xdot,x,xd,tau,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
-	F(xdot,x,xd,t,parms)
+	F(xdot,x,xd,tau,parms)
 	xdot[end] = 1.0
 	ly = length(xdot)
 	scale!(xdot, isr)
@@ -83,18 +84,15 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 	@assert ode in [:cvode,:lsoda]
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
-	nsteps = 1
+	nsteps = 1 #index for the current jump number
 	npoints = 2 # number of points for ODE integration
 
-	# booleans to know if we save data
-	save_c = true
-	save_d = true
 	# permutation to choose randomly a given number of data Args
 	args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
 	if verbose println("--> Args saved!") end
 
 	# Set up initial variables
-	t::Float64 = ti         # initial simulation time
+	t = ti         # initial simulation time
 	X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c = allocate_arrays(ti,xc0,xd0,n_max,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	nsteps += 1
 
@@ -104,19 +102,20 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
-		Flow = (X0_,Xd_,t0,dt_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [t0, t0 + dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda
-		Flow = (X0_,Xd_,t0,dt_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [t0, t0 + dt_], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	end
 
 	# Main loop
 	termination_status = "finaltime"
 	while (t < tf) && (nsteps < n_max)
 
-		dt = -log(rand())
+		# dt = -log(rand())
+		dt = - log(rand())
 		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
 
-		res_ode .= Flow(X0,Xd,t,dt)
+		res_ode .= Flow(X0,Xd,dt)
 
 		verbose && println("--> ode solve is done!")
 
