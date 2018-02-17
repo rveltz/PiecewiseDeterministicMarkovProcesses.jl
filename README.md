@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.org/rveltz/PDMP.jl.svg?branch=master)](https://travis-ci.org/rveltz/PDMP.jl)
 <a href='https://coveralls.io/github/rveltz/PDMP.jl?branch=master'><img src='https://coveralls.io/repos/github/rveltz/PDMP.jl/badge.svg?branch=master' alt='Coverage Status' /></a>
-
 <!--[![Build status](https://ci.appveyor.com/api/projects/status/github/rveltz/PDMP.jl?svg=true&branch=master)](https://ci.appveyor.com/project/rveltz/pdmp-jl/branch/master)
 --><!--[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://rveltz.github.io/PDMP.jl/stable)-->
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://rveltz.github.io/PDMP.jl/latest)

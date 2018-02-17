@@ -63,4 +63,9 @@ result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,
 println("--> Case tauleap:")
 resultt = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
 srand(1234)
-resultt = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200,algo=:tauleap,dt=0.1)
+resultt = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
+
+
+# Plots.plot(resultt.time,resultt.xc[1,:])
+#
+# Plots.plot(result.time,result.xc[1,:])

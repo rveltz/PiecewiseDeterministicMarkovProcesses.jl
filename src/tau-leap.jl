@@ -25,7 +25,7 @@ function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Fun
     @assert algo in [:tauleap,:binomial_tauleap]
     n_max += 1 #to hold initial vector
     nsteps = 1
-    warn("-->Jump on the continuous variable not considered!")
+    # warn("-->Jump on the continuous variable not considered!")
 
     step! = tau_leap_step!
     if algo==:binomial_tauleap
@@ -76,7 +76,7 @@ function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Fun
 
         # Poisson approximation for discrete part
         R(rate,X0,Xd,t,parms,false)
-        step!(dt,rate,nu,X0,Xd)
+        step!(t,dt,rate,nu,X0,Xd,DX,parms)
 
         # Euler scheme for ODE part
         F(dX0,X0,Xd,t,parms)
@@ -98,21 +98,21 @@ function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Fun
     return(result)
 end
 
-function tau_leap_step!(dt,rates,nu,Xc,Xd)
+function tau_leap_step!(t,dt,rates,nu,Xc,Xd,DX,p)
     nb_mol = 0
     for i=1:length(rates)
         if rates[i]>0
             nb_mol = rand(Poisson(dt * rates[i])) # tau-leap method
             Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
-            # DX(Xc,Xd,)
+            DX(Xc,Xd,t,p,i)
         end
     end
 end
 
-function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd)
+function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd,DX,p)
     nb_mol = 0
     for i=1:length(ppf)
-        if ppf[i]>0
+        if rates[i]>0
             # nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
             ind = find(nu[i,:] .== -1)
             if length(ind) == 0
@@ -123,6 +123,7 @@ function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd)
                 nb_mol = rand(Distributions.Binomial(Xd[ind[1]],dt * ppf[i]/Xd[ind[1]]))
             end
             Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+			DX(Xc,Xd,t,p,i)
         end
     end
 end
