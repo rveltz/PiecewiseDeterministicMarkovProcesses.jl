@@ -30,14 +30,13 @@ To install this (unregistered) package, run the command
 ```julia
 Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 ```
+See the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples.
 
 ## Basic example with CHV method
 
-**A strong requirement for the CHV method is that the total rate (*i.e.* sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).**
+**A strong requirement for the CHV method is that the total rate (*i.e.* `sum(rate)`) must be a positive function. This can be easily achieved by adding a dummy Poisson process with very low constant intensity (see next section).**
 
-See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples.
-
-A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. 
+A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where $$X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$$ In between jumps, $x_c$ evolves according to $$\dot x_c(t) = x_d(t)x_c(t).$$ 
 
 We first need to load the library.
 
@@ -108,18 +107,19 @@ Plots.plot(result.time, result.xd[1,:],line=:step,title = string("#Jumps = ",len
 Plots.plot(result.time, result.xc',title = string("#Jumps = ",length(result.time)),label="Xc")
 ```
 
-This produces the following graph:
+Executing this produces the following graph:
 
 ![TCP](docs/src/xc.png)
 
 ## Adding more sampling points in between jumps
 The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
 
-A simple trick to force output is to add a Poisson process to the reaction with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this.
+A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this.
 
 ```julia
 nu2 = [[2 0];[-2 0];[0 1]]
 # the second component is the Poisson process
+# it keeps adding one to the last component of xd
 xd0 = vec([1, 0])
 
 function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
@@ -156,7 +156,10 @@ This gives the following result:
 ![TCP](docs/src/xc2.png)
  
 ## Basic example with the rejection method
-The rejection method assume some a priori knowledge of the process one wants to simulation. In particular, the user must be able to provide a bound on the total rates. More precisely, the user must provide a constant bound in between jump. In the example above, this is easily done as returning `sum(rate), bound_rejection`. Note that this means that in between jumps,
+
+The previous method is useful when the total rate function varies a lot. In the case where the total rate is mostly constant in between jumps, the **rejection method** is more appropriate. 
+
+The **rejection method** assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between jump. To use this method, one needs to return `sum(rate), bound_rejection` in the above function `R_tcp!`. Note that this means that in between jumps, one have:
 
 `sum(rate)(t) <= bound_rejection `
 

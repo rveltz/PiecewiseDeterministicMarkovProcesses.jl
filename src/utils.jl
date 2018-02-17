@@ -96,7 +96,7 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 
 	# initialise arrays
 	t_hist[1] = ti
-	xc_hist[:,1] .= copy(xc0|> vec)
+	xc_hist[:,1] .= copy(xc0)
 	xd_hist[:,1] .= copy(Xd)
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
