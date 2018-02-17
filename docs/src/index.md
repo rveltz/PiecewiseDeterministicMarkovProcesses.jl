@@ -22,9 +22,11 @@ To install this (unregistered) package, run the command
 Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 ```
 
-## Basic example
+## Basic example with CHV method
 
-See the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples).
+**A strong requirement for the CHV method is that the total rate (*i.e.* sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).**
+
+See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples.
 
 A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. 
 
@@ -39,18 +41,14 @@ We then define a function that encodes the dynamics in between jumps. We need to
 function F_tcp!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
   xcdot[1] = xd[1]*xc[1]
-  nothing
 end
 ```
 
 Let's consider a stochastic process with following transitions.
 
-
-| Transition | Rate |
-|---|---|---|
-|$x_d\to x_d-2$ if $x_d>0$ | 1 |
-|$x_d\to x_d+2$ if $x_d<0$ | 1 |
-
+* x_d => x_d - 2, rate = 1 if x_d > 0
+* x_d => x_d + 2, rate = 1 if x_d < 0
+	
 This is encoded in the following function
 
 
@@ -65,13 +63,13 @@ function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
           rate[1] = 0.
           rate[2] = 1.
       else
-      		rate[1] = 1.
+      	  rate[1] = 1.
           rate[2] = 0.
       end
       #we return 0. because nothing is supposed to be returned
       return 0.
   else
-  	# we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+  	# we return sum(rate) without altering rate as we are asked to do
     return 1.
   end
 end
@@ -101,11 +99,11 @@ Plots.plot(result.time, result.xd[1,:],line=:step,title = string("#Jumps = ",len
 Plots.plot(result.time, result.xc',title = string("#Jumps = ",length(result.time)),label="Xc")
 ```
 
-This produce the following graph:
+This produces the following graph:
 
 ![TCP](xc.png)
 
-# Adding more sampling points in between jumps
+## Adding more sampling points in between jumps
 The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
 
 A simple trick to force output is to add a Poisson process to the reaction with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this.
@@ -141,12 +139,57 @@ end
 
 srand(123)
 result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
-Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result.time)),label="Xc2")
+Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result2.time)),label="Xc2")
 ```
 
 This gives the following result:
 
 ![TCP](xc2.png)
+ 
+## Basic example with the rejection method
+The rejection method assume some a priori knowledge of the process one wants to simulation. In particular, the user must be able to provide a bound on the total rates. More precisely, the user must provide a constant bound in between jump. In the example above, this is easily done as returning `sum(rate), bound_rejection`. Note that this means that in between jumps,
+
+`sum(rate)(t) <= bound_rejection `
+
+```julia
+nu2 = [[2 0];[-2 0];[0 1]]
+# the second component is the Poisson process
+xd0 = vec([1, 0])
+
+function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
+  # in this case,  the transitions are xd->xd+2 or xd->xd-2
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
+  # i.e. the sum of the rates or the vector of the rates
+  rate_save       = 10.           # sampling rate in between true jumps
+  bound_rejection = 1.+rate_save  # bound on the total rate, here 0 + 1 + rate_save
+  if sum_rate == false
+      if xd[1] > 0
+          rate[1] = 0.
+          rate[2] = 1.
+          rate[3] = rate_save #Poisson process used as sampling process
+      else
+          rate[1] = 1.
+          rate[2] = 0.
+          rate[3] = rate_save #Poisson process used as sampling process
+      end
+      #we return 0. because nothing is supposed to be returned
+      return 0., bound_rejection
+  else
+    # we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+    return 1. + rate_save, bound_rejection
+  end
+end
+```
+
+We can now simulate this process as follows
+
+```julia
+srand(123)
+result3 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000,algo=:rejection)
+Plots.plot(result3.time, result3.xc',title = string("#Jumps = ",length(result3.time)),label="rejection")
+```
+
  
 
 # Application programming interface
