@@ -22,7 +22,7 @@ To install this (unregistered) package, run the command
 Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 ```
 
-## Basic example with CHV method 
+## Basic example with CHV method
 
 **A strong requirement for the CHV method is that the total rate (*i.e.* sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).**
 
