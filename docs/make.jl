@@ -1,9 +1,8 @@
 using Documenter, PDMP
 
 makedocs(
-	format = :html,
-	sitename = "Piecewise Deterministic Markov Processes in Julia ",
-	assets = ["assets/style.css"]
+	# format = :html,
+	sitename = "Piecewise Deterministic Markov Processes in Julia "
 	)
 
 # ENV["DOCUMENTER_DEBUG"] = true
