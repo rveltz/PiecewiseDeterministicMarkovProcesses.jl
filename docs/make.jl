@@ -1,6 +1,10 @@
 using Documenter, PDMP
 
-makedocs(format = :html,sitename = "Piecewise Deterministic Markov Processes in Julia ")
+makedocs(
+	format = :html,
+	sitename = "Piecewise Deterministic Markov Processes in Julia ",
+	pages = ["Home" => "index.md"]
+	)
 
 # ENV["DOCUMENTER_DEBUG"] = true
 # ENV["TRAVIS_REPO_SLUG"] = "github.com/rveltz/PDMP.jl.git"
