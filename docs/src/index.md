@@ -49,8 +49,6 @@ Let's consider a stochastic process with following transitions:
 * $x_d\to x_d-2$, rate = 1 if $x_d>0$
 * $x_d\to x_d+2$, rate = 1 if $x_d<0$
 
-or better:
-
 | Transition | Rate | 
 |---|---|---| 
 |$x_d\to x_d-2$ if $x_d>0$ | 1 | 
