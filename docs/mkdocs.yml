@@ -3,7 +3,7 @@ repo_url:         https://github.com/rveltz/PDMP.jl
 site_description: Piecewise Deterministic Markov Processes in Julia 
 site_author:      rveltz
 
-theme: readthedocs
+theme: cinder
 
 extra_css:
   - assets/Documenter.css
