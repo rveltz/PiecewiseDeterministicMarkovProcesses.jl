@@ -46,11 +46,13 @@ end
 
 Let's consider a stochastic process with following transitions:
 
-* $x_d\to x_d-2$, transition rate = 1 if $x_d>0$
+$$x_d\to x_d-2$$ with transition rate = 1 if $x_d>0$
 
-* $x_d\to x_d+2$, transition rate = 1 if $x_d<0$
+$$x_d\to x_d+2$$ with transition rate = 1 if $x_d<0$
 
- | Transition | Rate | 
+or
+
+| Transition | Rate | 
 |---|---|---| 
 |$x_d\to x_d-2$ if $x_d>0$ | 1 | 
 |$x_d\to x_d+2$ if $x_d<0$ | 1 |
