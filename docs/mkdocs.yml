@@ -1,5 +1,6 @@
 site_name:        PDMP.jl
 repo_url:         https://github.com/rveltz/PDMP.jl
+edit_uri:         https://github.com/rveltz/PDMP.jl/blob/master/docs/src/index.md
 site_description: Piecewise Deterministic Markov Processes in Julia 
 site_author:      rveltz
 
@@ -21,4 +22,4 @@ markdown_extensions:
 docs_dir: 'build'
 
 pages:
-  - Home: src/index.md
+  - Home: index.md
