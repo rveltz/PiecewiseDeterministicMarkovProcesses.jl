@@ -41,7 +41,7 @@ We then define a function that encodes the dynamics in between jumps. We need to
 function F_tcp!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
   xcdot[1] = xd[1]*xc[1]
-end
+end 
 ```
 
 Let's consider a stochastic process with following transitions:
