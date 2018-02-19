@@ -135,7 +135,7 @@
 <h2 id="basic-example-with-chv-method">Basic example with CHV method</h2>
 <p><strong>A strong requirement for the CHV method is that the total rate (<em>i.e.</em> sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).</strong></p>
 <p>See also the <a href="https://github.com/rveltz/PDMP.jl/tree/master/examples">examples directory</a> for more involved examples.</p>
-<p>A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where X(t) = $(x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace$. In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t)$. </p>
+<p>A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where $X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$ In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t).$ </p>
 <p>We first need to load the library.</p>
 <pre><code class="julia">using PDMP
 </code></pre>
@@ -147,11 +147,12 @@
 end
 </code></pre>
 
-<p>Let's consider a stochastic process with following transitions.</p>
+<p>Let's consider a stochastic process with following transitions:</p>
 <ul>
 <li>x_d =&gt; x_d - 2, rate = 1 if x_d &gt; 0</li>
 <li>x_d =&gt; x_d + 2, rate = 1 if x_d &lt; 0</li>
 </ul>
+<p>| Transition | Rate |  |–-|–-|–-|  |$x_d\to x_d-2$ if $x_d&gt;0$ | 1 |  |$x_d\to x_d+2$ if $x_d&lt;0$ | 1 |   </p>
 <p>This is encoded in the following function</p>
 <pre><code class="julia">function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
   # transition rates function for each transition
@@ -204,7 +205,7 @@ Plots.plot(result.time, result.xc',title = string(&quot;#Jumps = &quot;,length(r
 <p><a id='Adding-more-sampling-points-in-between-jumps-1'></a></p>
 <h2 id="adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</h2>
 <p>The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. </p>
-<p>A simple trick to force output is to add a Poisson process to the reaction with a given sampling rate. We have to modify <code>nu, xcd0</code> and <code>R_tcp!</code> for this.</p>
+<p>A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify <code>nu, xcd0</code> and <code>R_tcp!</code> for this.</p>
 <pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
 # the second component is the Poisson process
 xd0 = vec([1, 0])
@@ -242,7 +243,8 @@ Plots.plot(result2.time, result2.xc',title = string(&quot;#Jumps = &quot;,length
 <p><img alt="TCP" src="./xc2.png" /></p>
 <p><a id='Basic-example-with-the-rejection-method-1'></a></p>
 <h2 id="basic-example-with-the-rejection-method">Basic example with the rejection method</h2>
-<p>The rejection method assume some a priori knowledge of the process one wants to simulation. In particular, the user must be able to provide a bound on the total rates. More precisely, the user must provide a constant bound in between jump. In the example above, this is easily done as returning <code>sum(rate), bound_rejection</code>. Note that this means that in between jumps,</p>
+<p>The previous method is useful when the total rate function varies a lot. In the case where the total rate is mostly constant in between jumps, the <strong>rejection method</strong> is more appropriate. </p>
+<p>The <strong>rejection method</strong> assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between jump. To use this method, one needs to return <code>sum(rate), bound_rejection</code> in the above function <code>R_tcp!</code>. Note that this means that in between jumps, one have:</p>
 <p><code>sum(rate)(t) &lt;= bound_rejection</code></p>
 <pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
 # the second component is the Poisson process
@@ -302,7 +304,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>ind_save_d</strong>: a range to hold the indices of the discrete variable to be saved</li>
 <li><strong>ind_save_c</strong>: a range to hold the indices of the continuous variable to be saved</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/ec2ee7b893417c3c78c2dbc015bf0baff8f5f8e9/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.chv!' href='#PDMP.chv!'>#</a>
 <strong><code>PDMP.chv!</code></strong> &mdash; <em>Function</em>.</p>
 <p>chv!</p>
@@ -320,7 +322,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/ec2ee7b893417c3c78c2dbc015bf0baff8f5f8e9/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
 <strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
 <p>rejection_exact</p>
@@ -337,7 +339,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/ec2ee7b893417c3c78c2dbc015bf0baff8f5f8e9/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -382,5 +384,5 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 
 <!--
 MkDocs version : 0.17.2
-Build Date UTC : 2018-02-19 06:31:40
+Build Date UTC : 2018-02-19 06:55:08
 -->
