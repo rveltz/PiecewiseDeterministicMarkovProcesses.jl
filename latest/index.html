@@ -1,121 +1,103 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Piecewise Deterministic Markov Processes in Julia">
-  <meta name="author" content="rveltz">
-  <link rel="shortcut icon" href="./img/favicon.ico">
-  <title>Home - PDMP.jl</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+<html lang="en">
 
-  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="./css/highlight.css">
-  <link href="./assets/Documenter.css" rel="stylesheet">
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Home";
-    var mkdocs_page_input_path = "index.md";
-    var mkdocs_page_url = "/";
-  </script>
-  
-  <script src="./js/jquery-2.1.1.min.js"></script>
-  <script src="./js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
-  
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <link rel="shortcut icon" href="./img/favicon.ico">
+
+    <title></title>
+
+    <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="./css/base.css" rel="stylesheet">
+    <link href="./css/cinder.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/highlight.css">
+
+
+    <link href="./assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body>
 
-  <div class="wy-grid-for-nav">
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
 
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-      <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> PDMP.jl</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-  </form>
-</div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1 current">
-		
-    <a class="current" href=".">Home</a>
-    <ul class="subnav">
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             
-    <li class="toctree-l2"><a href="#pdmpjl">PDMP.jl</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#installation">Installation</a></li>
-        
-            <li><a class="toctree-l3" href="#basic-example-with-chv-method">Basic example with CHV method</a></li>
-        
-            <li><a class="toctree-l3" href="#adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</a></li>
-        
-            <li><a class="toctree-l3" href="#basic-example-with-the-rejection-method">Basic example with the rejection method</a></li>
-        
-        </ul>
-    
 
-    <li class="toctree-l2"><a href="#application-programming-interface">Application programming interface</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#functions">Functions</a></li>
-        
-        </ul>
-    
+            <!-- Main title -->
 
-    </ul>
-	    </li>
-          
-        </ul>
-      </div>
-      &nbsp;
-    </nav>
+            <a class="navbar-brand" href=".">PDMP.jl</a>
+        </div>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
 
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">PDMP.jl</a>
-      </nav>
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Home</li>
-    <li class="wy-breadcrumbs-aside">
-      
-        <a href="https://github.com/rveltz/PDMP.jl/edit/master/docs/index.md"
-          class="icon icon-github"> Edit on GitHub</a>
-      
-    </li>
-  </ul>
-  <hr/>
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fa fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/rveltz/PDMP.jl/edit/master/docs/index.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
 </div>
-          <div role="main">
-            <div class="section">
-              
-                <p><a id='PDMP.jl-1'></a></p>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#pdmpjl">PDMP.jl</a></li>
+            <li class="second-level"><a href="#installation">Installation</a></li>
+                
+            <li class="second-level"><a href="#basic-example-with-chv-method">Basic example with CHV method</a></li>
+                
+            <li class="second-level"><a href="#adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</a></li>
+                
+            <li class="second-level"><a href="#basic-example-with-the-rejection-method">Basic example with the rejection method</a></li>
+                
+        <li class="first-level "><a href="#application-programming-interface">Application programming interface</a></li>
+            <li class="second-level"><a href="#functions">Functions</a></li>
+                
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='PDMP.jl-1'></a></p>
 <h1 id="pdmpjl">PDMP.jl</h1>
 <p>PDMP.jl is a Julia package that allows simulation of <em>Piecewise Deterministic Markov Processes</em> (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.</p>
 <p>We provide several methods for the simulation:</p>
@@ -149,10 +131,41 @@ end
 
 <p>Let's consider a stochastic process with following transitions:</p>
 <ul>
-<li>x_d =&gt; x_d - 2, rate = 1 if x_d &gt; 0</li>
-<li>x_d =&gt; x_d + 2, rate = 1 if x_d &lt; 0</li>
+<li>
+<p>
+<script type="math/tex; mode=display">
+    x_d\to x_d-2
+    </script>
+</p>
+<p>, rate = 1 if $x_d&gt;0$
+  * <script type="math/tex; mode=display">
+x_d\to x_d+2
+</script>
+</p>
+<p>, rate = 1 if $x_d&lt;0$</p>
+</li>
 </ul>
-<p>| Transition | Rate |  |–-|–-|–-|  |$x_d\to x_d-2$ if $x_d&gt;0$ | 1 |  |$x_d\to x_d+2$ if $x_d&lt;0$ | 1 |   </p>
+<table>
+<thead>
+<tr>
+<th align="right">&lt;!–</th>
+<th align="right">Transition</th>
+<th align="right">Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">$x_d\to x_d-2$ if $x_d&gt;0$</td>
+<td align="right">1</td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right">$x_d\to x_d+2$ if $x_d&lt;0$</td>
+<td align="right">1</td>
+<td align="right">–&gt;</td>
+</tr>
+</tbody>
+</table>
 <p>This is encoded in the following function</p>
 <pre><code class="julia">function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
   # transition rates function for each transition
@@ -304,7 +317,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>ind_save_d</strong>: a range to hold the indices of the discrete variable to be saved</li>
 <li><strong>ind_save_c</strong>: a range to hold the indices of the continuous variable to be saved</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/c5c44f4a9c3d01b29bb361843a77aa22acb7851f/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.chv!' href='#PDMP.chv!'>#</a>
 <strong><code>PDMP.chv!</code></strong> &mdash; <em>Function</em>.</p>
 <p>chv!</p>
@@ -322,7 +335,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/c5c44f4a9c3d01b29bb361843a77aa22acb7851f/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
 <strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
 <p>rejection_exact</p>
@@ -339,50 +352,57 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/6b102db39149a1eb5665e80699e38c2a2d8a2f44/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
-              
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/c5c44f4a9c3d01b29bb361843a77aa22acb7851f/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="./js/jquery-1.10.2.min.js"></script>
+    <script src="./js/bootstrap-3.0.3.min.js"></script>
+    <script src="./js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '.';
+    </script>
+    <script data-main="./mkdocs/js/search.js" src="./mkdocs/js/require.js"></script>
+    <script src="./js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="./assets/mathjaxhelper.js"></script>
+    <script src="./search/require.js"></script>
+    <script src="./search/search.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
             </div>
-          </div>
-          <footer>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-    
-  </div>
-
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-      
         </div>
-      </div>
+    </div>
 
-    </section>
+    </body>
 
-  </div>
-
-  <div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/rveltz/PDMP.jl/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-      
-    </span>
-</div>
-    <script>var base_url = '.';</script>
-    <script src="./js/theme.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
-      <script src="./assets/mathjaxhelper.js"></script>
-      <script src="./search/require.js"></script>
-      <script src="./search/search.js"></script>
-
-</body>
 </html>
-
-<!--
-MkDocs version : 0.17.2
-Build Date UTC : 2018-02-19 06:55:08
--->
