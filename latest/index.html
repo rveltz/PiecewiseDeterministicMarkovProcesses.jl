@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <link rel="shortcut icon" href="./img/favicon.ico">
+
+    <title></title>
+
+    <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
+    <link href='//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="./css/base.css" rel="stylesheet">
+    <link href="./css/cinder.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/highlight.css">
+
+
+    <link href="./assets/Documenter.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Open Sans', 'PT Sans']
+        }
+    });
+    </script>
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            <a class="navbar-brand" href=".">PDMP.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fa fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/rveltz/PDMP.jl/edit/master/docs/index.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#pdmpjl">PDMP.jl</a></li>
+            <li class="second-level"><a href="#installation">Installation</a></li>
+                
+            <li class="second-level"><a href="#basic-example-with-chv-method">Basic example with CHV method</a></li>
+                
+            <li class="second-level"><a href="#adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</a></li>
+                
+            <li class="second-level"><a href="#basic-example-with-the-rejection-method">Basic example with the rejection method</a></li>
+                
+        <li class="first-level "><a href="#application-programming-interface">Application programming interface</a></li>
+            <li class="second-level"><a href="#functions">Functions</a></li>
+                
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<p><a id='PDMP.jl-1'></a></p>
+<h1 id="pdmpjl">PDMP.jl</h1>
+<p>PDMP.jl is a Julia package that allows simulation of <em>Piecewise Deterministic Markov Processes</em> (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.</p>
+<p>We provide several methods for the simulation:</p>
+<ul>
+<li>a recent trick, called <strong>CHV</strong>, explained in <a href="http://arxiv.org/abs/1504.06873">paper-2015</a> which allows to implement the <strong>True Jump Method</strong> without the need to use event detection schemes for the ODE integrator. These event detections can be quite unstable as explained in <a href="http://arxiv.org/abs/1504.06873">paper-2015</a> and CHV provide a solution to this problem.</li>
+<li><strong>rejection methods</strong> for which the user is asked to provide a bound on the reaction rates. These last methods are the most "exact" but not the fastest if the reaction rate bound is not tight. In case the flow is known analytically, a method is also provided.</li>
+</ul>
+<p>These methods require solving stiff ODEs (for CHV ) in an efficient manner. <a href="https://github.com/JuliaLang/Sundials.jl"><code>Sundials.jl</code></a> and <a href="https://github.com/rveltz/LSODA.jl"><code>LSODA.jl</code></a> are used, but other solvers could be easily added. (See <a href="http://lh3lh3.users.sourceforge.net/solveode.shtml">stiff ode solvers</a>).</p>
+<p>We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.</p>
+<p><a id='Installation-1'></a></p>
+<h2 id="installation">Installation</h2>
+<p>To install this (unregistered) package, run the command </p>
+<pre><code class="julia">Pkg.clone(&quot;https://github.com/rveltz/PDMP.jl.git&quot;)
+</code></pre>
+
+<p><a id='Basic-example-with-CHV-method-1'></a></p>
+<h2 id="basic-example-with-chv-method">Basic example with CHV method</h2>
+<p><strong>A strong requirement for the CHV method is that the total rate (<em>i.e.</em> sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).</strong></p>
+<p>See also the <a href="https://github.com/rveltz/PDMP.jl/tree/master/examples">examples directory</a> for more involved examples.</p>
+<p>A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where $X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$ In between jumps, $x_c$ evolves according to $\dot x_c(t) = x_d(t)x_c(t).$ </p>
+<p>We first need to load the library.</p>
+<pre><code class="julia">using PDMP
+</code></pre>
+
+<p>We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable <code>parms</code>.</p>
+<pre><code class="julia">function F_tcp!(xcdot, xc, xd, t, parms)
+  # vector field used for the continuous variable
+  xcdot[1] = xd[1]*xc[1]
+end
+</code></pre>
+
+<p>Let's consider a stochastic process with following transitions:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Transition</th>
+<th align="right">Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">$x_d\to x_d-2$ if $x_d&gt;0$</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">$x_d\to x_d+2$ if $x_d&lt;0$</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<p>This is encoded in the following function</p>
+<pre><code class="julia">function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
+  # in this case,  the transitions are xd-&gt;xd+2 or xd-&gt;xd-2
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
+  # i.e. the sum of the rates or the vector of the rates
+  if sum_rate == false
+      if xd[1] &gt; 0
+          rate[1] = 0.
+          rate[2] = 1.
+      else
+          rate[1] = 1.
+          rate[2] = 0.
+      end
+      #we return 0. because nothing is supposed to be returned
+      return 0.
+  else
+    # we return sum(rate) without altering rate as we are asked to do
+    return 1.
+  end
+end
+
+# initial conditions for the continuous/discrete variables
+xc0 = vec([0.05])
+xd0 = vec([1])
+
+# matrix of jumps for the discrete variables, analogous to chemical reactions
+nu = reshape([[2];[-2]],2,1)
+
+
+# parameters
+parms = [0.]
+tf = 25.
+
+# compile the program:
+dummy =  PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=1)
+
+# compute a trajectory, in this case 100 jumps
+srand(123)
+result =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=100)
+
+# plotting
+using Plots
+Plots.plot(result.time, result.xd[1,:],line=:step,title = string(&quot;#Jumps = &quot;,length(result.time)),label=&quot;Xd&quot;)
+Plots.plot(result.time, result.xc',title = string(&quot;#Jumps = &quot;,length(result.time)),label=&quot;Xc&quot;)
+</code></pre>
+
+<p>This produces the following graph:</p>
+<p><img alt="TCP" src="./xc.png" /></p>
+<p><a id='Adding-more-sampling-points-in-between-jumps-1'></a></p>
+<h2 id="adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</h2>
+<p>The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. </p>
+<p>A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify <code>nu, xcd0</code> and <code>R_tcp!</code> for this.</p>
+<pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
+# the second component is the Poisson process
+xd0 = vec([1, 0])
+
+function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
+  # in this case,  the transitions are xd-&gt;xd+2 or xd-&gt;xd-2
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
+  # i.e. the sum of the rates or the vector of the rates
+  rate_save = 10. #sampling rate in between true jumps
+  if sum_rate == false
+      if xd[1] &gt; 0
+          rate[1] = 0.
+          rate[2] = 1.
+          rate[3] = rate_save #Poisson process used as sampling process
+      else
+          rate[1] = 1.
+          rate[2] = 0.
+          rate[3] = rate_save #Poisson process used as sampling process
+      end
+      #we return 0. because nothing is supposed to be returned
+      return 0.
+  else
+    # we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+    return 1. + rate_save
+  end
+end
+
+srand(123)
+result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
+Plots.plot(result2.time, result2.xc',title = string(&quot;#Jumps = &quot;,length(result2.time)),label=&quot;Xc2&quot;)
+</code></pre>
+
+<p>This gives the following result:</p>
+<p><img alt="TCP" src="./xc2.png" /></p>
+<p><a id='Basic-example-with-the-rejection-method-1'></a></p>
+<h2 id="basic-example-with-the-rejection-method">Basic example with the rejection method</h2>
+<p>The previous method is useful when the total rate function varies a lot. In the case where the total rate is mostly constant in between jumps, the <strong>rejection method</strong> is more appropriate. </p>
+<p>The <strong>rejection method</strong> assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between jump. To use this method, one needs to return <code>sum(rate), bound_rejection</code> in the above function <code>R_tcp!</code>. Note that this means that in between jumps, one have:</p>
+<p><code>sum(rate)(t) &lt;= bound_rejection</code></p>
+<pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
+# the second component is the Poisson process
+xd0 = vec([1, 0])
+
+function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
+  # transition rates function for each transition
+  # in this case,  the transitions are xd-&gt;xd+2 or xd-&gt;xd-2
+  # sum_rate is a boolean which tells R_tcp if it needs to return the total reaction rates, this may 
+  # i.e. the sum of the rates or the vector of the rates
+  rate_save       = 10.           # sampling rate in between true jumps
+  bound_rejection = 1.+rate_save  # bound on the total rate, here 0 + 1 + rate_save
+  if sum_rate == false
+      if xd[1] &gt; 0
+          rate[1] = 0.
+          rate[2] = 1.
+          rate[3] = rate_save #Poisson process used as sampling process
+      else
+          rate[1] = 1.
+          rate[2] = 0.
+          rate[3] = rate_save #Poisson process used as sampling process
+      end
+      #we return 0. because nothing is supposed to be returned
+      return 0., bound_rejection
+  else
+    # we see that we effectively return sum(rate) without altering rate because it is not asked to do so
+    return 1. + rate_save, bound_rejection
+  end
+end
+</code></pre>
+
+<p>We can now simulate this process as follows</p>
+<pre><code class="julia">srand(123)
+result3 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000,algo=:rejection)
+Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length(result3.time)),label=&quot;rejection&quot;)
+</code></pre>
+
+<p><a id='Application-programming-interface-1'></a></p>
+<h1 id="application-programming-interface">Application programming interface</h1>
+<p><a id='Functions-1'></a></p>
+<h2 id="functions">Functions</h2>
+<p><a id='PDMP.pdmp!' href='#PDMP.pdmp!'>#</a>
+<strong><code>PDMP.pdmp!</code></strong> &mdash; <em>Function</em>.</p>
+<p>This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method. It takes the following arguments:</p>
+<ul>
+<li><strong>xc0</strong>: a <code>Vector</code> of <code>Float64</code>, representing the initial states of the continuous variable.</li>
+<li><strong>xd0</strong>: a <code>Vector</code> of <code>Int64</code>, representing the initial states of the discrete variable.</li>
+<li><strong>F!</strong>: an inplace <code>Function</code> or a callable type, which itself takes five arguments to represent the vector field; xdot a <code>Vector</code> of <code>Float64</code> representing the vector field associated to the continuous variable, xc <code>Vector</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time and parms, a <code>Vector</code> of <code>Float64</code> representing the parameters of the system. <code>F!(xdot,xc,xd,t,parms)</code> returns <code>nothing</code></li>
+<li><strong>R!</strong>: an inplace <code>Function</code> or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate <code>Vector</code> of <code>Float64</code> holding the different reaction rates, xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and sum_rate a <code>Bool</code> being a flag asking to return a <code>Float64</code> if true and a <code>Vector</code> otherwise. <code>R!(rate,xc,xd,t,parms,sum_rate)</code> returns <code>Float64,Float64</code></li>
+<li><strong>DX</strong>: a <code>Function</code> or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and ind_rec an <code>Int64</code> representing the index of the discrete jump. <code>DX(xc,xd,t,parms,ind_rec)</code> returns <code>nothing</code></li>
+<li><strong>nu</strong>: a <code>Matrix</code> of <code>Int64</code>, representing the transitions of the system, organised by row.</li>
+<li><strong>parms</strong> : a <code>Vector</code> of <code>Float64</code> representing the parameters of the system.</li>
+<li><strong>tf</strong>: the final simulation time (<code>Float64</code>)</li>
+<li><strong>verbose</strong>: a <code>Bool</code> for printing verbose.</li>
+<li><strong>ode</strong>: ode time stepper :cvode or :lsoda.</li>
+<li><strong>n_jumps</strong>: an <code>Int64</code> representing the maximum number of jumps to be computed.</li>
+<li><strong>ind_save_d</strong>: a range to hold the indices of the discrete variable to be saved</li>
+<li><strong>ind_save_c</strong>: a range to hold the indices of the continuous variable to be saved</li>
+</ul>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/f157951a97d2a97822ae2ea97eb7ebb96e9bf7cd/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
+<p><a id='PDMP.chv!' href='#PDMP.chv!'>#</a>
+<strong><code>PDMP.chv!</code></strong> &mdash; <em>Function</em>.</p>
+<p>chv!</p>
+<p>This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873. It takes the following arguments:</p>
+<ul>
+<li><strong>n_max</strong>: an <code>Int64</code> representing the maximum number of jumps to be computed.</li>
+<li><strong>xc0</strong> : a <code>Vector</code> of <code>Float64</code>, representing the initial states of the continuous variable.</li>
+<li><strong>xd0</strong> : a <code>Vector</code> of <code>Int64</code>, representing the initial states of the discrete variable.</li>
+<li><strong>F!</strong> : an inplace <code>Function</code> or a callable type, which itself takes five arguments to represent the vector field; xdot a <code>Vector</code> of <code>Float64</code> representing the vector field associated to the continuous variable, xc <code>Vector</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time and parms, a <code>Vector</code> of <code>Float64</code> representing the parameters of the system.</li>
+<li><strong>R</strong> : an inplace <code>Function</code> or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate <code>Vector</code> of <code>Float64</code> holding the different reaction rates, xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and sum_rate a <code>Bool</code> being a flag asking to return a <code>Float64</code> if true and a <code>Vector</code> otherwise.</li>
+<li><strong>DX</strong> : a <code>Function</code> or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and ind_rec an <code>Int64</code> representing the index of the discrete jump.</li>
+<li><strong>nu</strong> : a <code>Matrix</code> of <code>Int64</code>, representing the transitions of the system, organised by row.</li>
+<li><strong>parms</strong> : a <code>Vector</code> of <code>Float64</code> representing the parameters of the system.</li>
+<li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
+<li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
+<li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
+</ul>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/f157951a97d2a97822ae2ea97eb7ebb96e9bf7cd/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
+<p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
+<strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
+<p>rejection_exact</p>
+<p>This function performs a simulation using the rejection method when the flow <strong>is known analytically</strong>. It takes the following arguments:</p>
+<ul>
+<li><strong>n_max</strong>: an <code>Int64</code> representing the maximum number of jumps to be computed.</li>
+<li><strong>xc0</strong> : a <code>Vector</code> of <code>Float64</code>, representing the initial states of the continuous variable.</li>
+<li><strong>xd0</strong> : a <code>Vector</code> of <code>Int64</code>, representing the initial states of the discrete variable.</li>
+<li><strong>Phi!</strong> : a <code>Function</code> or a callable type, which itself takes 6 arguments to represent the vector field; rate a <code>Vector</code> of <code>Float64</code> representing the <strong>flow</strong> of the vector which needs to be filled with values of the rates, xdot a <code>Vector</code> of <code>Float64</code> representing the vector field associated to the continuous variable, xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time and parms, a <code>Vector</code> of <code>Float64</code> representing the parameters of the system, sum_of_rate a <code>Bool</code> stating if the function must return the total rate.</li>
+<li><strong>R!</strong> : a <code>Function</code> or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and sum_rate a <code>Bool</code> being a flag asking to return a <code>Float64</code> if true and a <code>Vector</code> otherwise. The returned vector has components. If sum_rate is <code>False</code>, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is <code>True</code>, one must return total_rate,bound_ where total_rate is a <code>Float64</code> that is the sum of the rates. In any case, the function must return a couple (total_rates, bound) where bound is a bound for the total rate.</li>
+<li><strong>Delta</strong> : a <code>Function</code> or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and ind_rec an <code>Int64</code> representing the index of the discrete jump.</li>
+<li><strong>nu</strong> : a <code>Matrix</code> of <code>Int64</code>, representing the transitions of the system, organised by row.</li>
+<li><strong>parms</strong> : a <code>Vector</code> of <code>Float64</code> representing the parameters of the system.</li>
+<li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
+<li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
+</ul>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/f157951a97d2a97822ae2ea97eb7ebb96e9bf7cd/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p></div>
+        
+    </div>
+
+    <footer class="col-md-12 text-center">
+        <hr>
+        <p>
+        <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p></small>
+    </footer>
+
+    <script src="./js/jquery-1.10.2.min.js"></script>
+    <script src="./js/bootstrap-3.0.3.min.js"></script>
+    <script src="./js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+    var base_url = '.';
+    </script>
+    <script data-main="./mkdocs/js/search.js" src="./mkdocs/js/require.js"></script>
+    <script src="./js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="./assets/mathjaxhelper.js"></script>
+    <script src="./search/require.js"></script>
+    <script src="./search/search.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+</html>
