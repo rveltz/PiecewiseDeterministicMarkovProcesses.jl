@@ -30,7 +30,7 @@ See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/
 
 A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where $$X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$$ In between jumps, $x_c$ evolves according to $$\dot x_c(t) = x_d(t)x_c(t).$$ 
 
-We first need to load the library.
+We first need to load the library. 
 
 ```julia
 using PDMP
