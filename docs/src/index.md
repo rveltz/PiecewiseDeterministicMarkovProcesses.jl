@@ -37,7 +37,7 @@ using PDMP
 ```
 We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable `parms`.
 
-```julia
+```julia 
 function F_tcp!(xcdot, xc, xd, t, parms)
   # vector field used for the continuous variable
   xcdot[1] = xd[1]*xc[1]
