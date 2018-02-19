@@ -33,7 +33,7 @@ A simple example of a TCP process is given below. More precisely, we look at the
 We first need to load the library.  
 
 ```julia
-using PDMP
+using PDMP 
 ```
 We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable `parms`.
 
