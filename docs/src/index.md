@@ -28,14 +28,14 @@ Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
 
 See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples. 
 
-A simple example of a TCP process is given below. More precisely, we look at the following process of switching dynamics where $$X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$$ In between jumps, $x_c$ evolves according to $$\dot x_c(t) = x_d(t)x_c(t).$$  
+A simple example of jump process is given below. More precisely, we look at the following process of switching dynamics where $$X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$$ In between jumps, $x_c$ evolves according to $$\dot x_c(t) = x_d(t)x_c(t).$$  
 
 We first need to load the library.  
 
 ```julia
 using PDMP
 ```
-We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE with a function. Hence, we need to define a function that given continuous state $x_c$ and discrete state $x_d$ at time $t$ return the vector field. In addition some parameters can be passed with the variable `parms`.
+We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE. Hence, we need to define a function that, given continuous state $x_c$ and discrete state $x_d$ at time $t$, returns the vector field. In addition some parameters can be passed with the variable `parms`.
 
 ```julia  
 function F_tcp!(xcdot, xc, xd, t, parms)
@@ -140,7 +140,7 @@ function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
   end
 end
 
-srand(123)
+srand(123) 
 result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
 Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result2.time)),label="Xc2")
 ```
