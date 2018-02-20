@@ -140,7 +140,7 @@ function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
   end
 end
 
-srand(123) 
+srand(123)  
 result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
 Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result2.time)),label="Xc2")
 ```
