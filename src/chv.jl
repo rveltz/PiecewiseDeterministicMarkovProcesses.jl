@@ -143,9 +143,9 @@ function chv!{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
 
 		else
 			if ode==:cvode
-				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
-				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[end-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 
