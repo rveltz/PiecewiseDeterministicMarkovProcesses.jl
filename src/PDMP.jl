@@ -34,7 +34,7 @@ It takes the following arguments:
 - **R!**: an inplace `Function` or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate `Vector` of `Float64` holding the different reaction rates, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. `R!(rate,xc,xd,t,parms,sum_rate)` returns `Float64,Float64`
 - **DX**: a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump. `DX(xc,xd,t,parms,ind_rec)` returns `nothing`
 - **nu**: a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
-- **parms** : a `Vector` of `Float64` representing the parameters of the system.
+- **parms** : data for the parameters of the system.
 - **tf**: the final simulation time (`Float64`)
 - **verbose**: a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda.
@@ -42,7 +42,7 @@ It takes the following arguments:
 - **ind_save_d**: a range to hold the indices of the discrete variable to be saved
 - **ind_save_c**: a range to hold the indices of the continuous variable to be saved
 """
-function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::Matrix{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.)
+function pdmp!(xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.)
 	@assert algo in [:chv,:chv_optim,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 	# determine if the Rate function is suited to rejection algorithms in which case we might want to take only
 	# the first argument
@@ -71,9 +71,9 @@ function pdmp!{T}(xc0::Vector{Float64},xd0::Array{Int64,1},F::Base.Callable,R::B
 	end
 end
 
-pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo, n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;verbose = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo, n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-pdmp!{T}(xc0,xd0,F,R,nu,parms::Vector{T},ti,tf;verbose = false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;verbose = false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 
-pdmp!{T}(xd0,R,nu,parms::Vector{T},ti,tf;verbose =  false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+pdmp!(xd0,R,nu,parms,ti,tf;verbose =  false,ode=:cvode,algo=:chv,n_jumps=1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf,verbose=verbose,ode=ode,algo=algo,n_jumps = n_jumps,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 end # module
