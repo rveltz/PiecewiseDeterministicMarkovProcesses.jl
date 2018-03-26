@@ -220,7 +220,29 @@ Plots.plot(result.time, result.xc',title = string(&quot;#Jumps = &quot;,length(r
 <p><a id='Adding-more-sampling-points-in-between-jumps-1'></a></p>
 <h2 id="adding-more-sampling-points-in-between-jumps">Adding more sampling points in between jumps</h2>
 <p>The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. </p>
-<p>A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify <code>nu, xcd0</code> and <code>R_tcp!</code> for this.</p>
+<p>A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify <code>nu, xcd0</code> and <code>R_tcp!</code> for this. The set of reactions is now the following</p>
+<table>
+<thead>
+<tr>
+<th align="right">Transition</th>
+<th align="right">Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">$x_d[1]\to x_d[1]-2$ if $x_d[1]&gt;0$</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">$x_d[1]\to x_d[1]+2$ if $x_d[1]&lt;0$</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">$x_d[2]\to x_d[2]+1$</td>
+<td align="right">rate_save</td>
+</tr>
+</tbody>
+</table>
 <pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
 # the second component is the Poisson process
 xd0 = vec([1, 0])
@@ -314,9 +336,9 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>xd0</strong>: a <code>Vector</code> of <code>Int64</code>, representing the initial states of the discrete variable.</li>
 <li><strong>F!</strong>: an inplace <code>Function</code> or a callable type, which itself takes five arguments to represent the vector field; xdot a <code>Vector</code> of <code>Float64</code> representing the vector field associated to the continuous variable, xc <code>Vector</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time and parms, a <code>Vector</code> of <code>Float64</code> representing the parameters of the system. <code>F!(xdot,xc,xd,t,parms)</code> returns <code>nothing</code></li>
 <li><strong>R!</strong>: an inplace <code>Function</code> or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate <code>Vector</code> of <code>Float64</code> holding the different reaction rates, xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and sum_rate a <code>Bool</code> being a flag asking to return a <code>Float64</code> if true and a <code>Vector</code> otherwise. <code>R!(rate,xc,xd,t,parms,sum_rate)</code> returns <code>Float64,Float64</code></li>
-<li><strong>DX</strong>: a <code>Function</code> or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and ind_rec an <code>Int64</code> representing the index of the discrete jump. <code>DX(xc,xd,t,parms,ind_rec)</code> returns <code>nothing</code></li>
+<li><strong>DX</strong>: a <code>Function</code> or a callable type, which itself takes five arguments to apply the jump to the continuous/discrete variable;xc <code>Vector</code> of <code>Float64</code> representing the current state of the continuous variable, xd <code>Vector</code> of <code>Int64</code> representing the current state of the discrete variable, t a <code>Float64</code> representing the current time, parms a <code>Vector</code> of <code>Float64</code> representing the parameters of the system and ind_rec an <code>Int64</code> representing the index of the discrete jump. <code>DX(xc,xd,t,parms,ind_rec)</code> returns <code>nothing</code></li>
 <li><strong>nu</strong>: a <code>Matrix</code> of <code>Int64</code>, representing the transitions of the system, organised by row.</li>
-<li><strong>parms</strong> : data for the parameters of the system.</li>
+<li><strong>parms</strong> : data for the parameters of the system. It is passed to <code>F!</code>,<code>R!</code> and <code>DX</code>.</li>
 <li><strong>tf</strong>: the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong>: a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda.</li>
@@ -324,7 +346,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>ind_save_d</strong>: a range to hold the indices of the discrete variable to be saved</li>
 <li><strong>ind_save_c</strong>: a range to hold the indices of the continuous variable to be saved</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/0ad8442d9df40384eeea0c8e55cfb0961e6b43de/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.chv!' href='#PDMP.chv!'>#</a>
 <strong><code>PDMP.chv!</code></strong> &mdash; <em>Function</em>.</p>
 <p>chv!</p>
@@ -342,7 +364,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/0ad8442d9df40384eeea0c8e55cfb0961e6b43de/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
 <strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
 <p>rejection_exact</p>
@@ -359,7 +381,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/0ad8442d9df40384eeea0c8e55cfb0961e6b43de/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -404,5 +426,5 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 
 <!--
 MkDocs version : 0.17.3
-Build Date UTC : 2018-03-18 21:58:53
+Build Date UTC : 2018-03-26 16:49:30
 -->
