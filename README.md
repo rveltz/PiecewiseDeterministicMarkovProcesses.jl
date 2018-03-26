@@ -10,6 +10,11 @@ This is a joint work of [Romain Veltz](https://romainveltz.pythonanywhere.com/) 
 
 PDMP.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.
 
-<!--Please, read the [documentation](https://rveltz.github.io/PDMP.jl/latest) for more information.-->
+To install this (unregistered) package, run the command 
+
+```julia
+Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
+```
+
 
 Please, have a look at the [documention](https://rveltz.github.io/PDMP.jl/latest).

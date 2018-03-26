@@ -109,7 +109,15 @@ This produces the following graph:
 ## Adding more sampling points in between jumps
 The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
 
-A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this.
+A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this. The set of reactions is now the following
+
+| Transition | Rate | 
+|---|---| 
+|$x_d[1]\to x_d[1]-2$ if $x_d[1]>0$ | 1 | 
+|$x_d[1]\to x_d[1]+2$ if $x_d[1]<0$ | 1 |
+|$x_d[2]\to x_d[2]+1$ | rate_save |
+	
+
 
 ```julia
 nu2 = [[2 0];[-2 0];[0 1]]
@@ -196,7 +204,15 @@ result3 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=1000
 Plots.plot(result3.time, result3.xc',title = string("#Jumps = ",length(result3.time)),label="rejection")
 ```
 
- 
+## How to chose a simulation method?
+
+The choice of the method CHV vs Rejection only depends on how much you know about the system. 
+
+More precisely, if the total rate function does not vary much in between jumps, use the rejection method. For example, if the rate is $R(x_c(t)) = 1+0.1\cos(t)$,  then $1+0.1$ will provide a tight bound to use for the rejection method and almost no (fictitious) jumps will be rejected. 
+
+In all other cases, one should try the CHV method where no a priori knowledge of the rate function is requied.
+
+
 
 # Application programming interface
 
