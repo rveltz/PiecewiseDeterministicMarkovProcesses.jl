@@ -46,13 +46,15 @@ end
 
 Let's consider a stochastic process with following transitions:
 
-| Transition | Rate | 
-|---|---| 
-|$x_d\to x_d-2$ if $x_d>0$ | 1 | 
-|$x_d\to x_d+2$ if $x_d<0$ | 1 |
+| Transition | Rate | Reaction number | Jump |
+|---|---|---| ---|
+|$x_d\to x_d-2$ if $x_d>0$ | 1 | 1 | [-2] |
+|$x_d\to x_d+2$ if $x_d<0$ | 1 | 2 | [2] |
+
+We implement these jumps using a 2x1 matrix `nu` of Integers, such that the jumps on each discrete component of `xd` is given by `nu * xd`. Hence, we have `nu = reshape([[2];[-2]],2,1)`.	
 	
 	
-This is encoded in the following function
+These reactions with their rate are encoded in the following function.
 
 
 ```julia
@@ -111,11 +113,13 @@ The current interface "only" returns the jumping times. On may want to resolve t
 
 A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this. The set of reactions is now the following
 
-| Transition | Rate | 
-|---|---| 
-|$x_d[1]\to x_d[1]-2$ if $x_d[1]>0$ | 1 | 
-|$x_d[1]\to x_d[1]+2$ if $x_d[1]<0$ | 1 |
-|$x_d[2]\to x_d[2]+1$ | rate_save |
+| Transition | Rate | Jump |
+|---|---|---| 
+|$x_d[1]\to x_d[1]-2$ if $x_d[1]>0$ | 1 | [-2,0] |
+|$x_d[1]\to x_d[1]+2$ if $x_d[1]<0$ | 1 | [2,0] |
+|$x_d[2]\to x_d[2]+1$ | rate_save | [0,1] |
+
+Hence, we implement these jumps with the following matrix: `nu2 = [[2 0];[-2 0];[0 1]]`.
 	
 
 
@@ -211,6 +215,12 @@ The choice of the method CHV vs Rejection only depends on how much you know abou
 More precisely, if the total rate function does not vary much in between jumps, use the rejection method. For example, if the rate is $R(x_c(t)) = 1+0.1\cos(t)$,  then $1+0.1$ will provide a tight bound to use for the rejection method and almost no (fictitious) jumps will be rejected. 
 
 In all other cases, one should try the CHV method where no a priori knowledge of the rate function is requied.
+
+
+# Advance uses
+## Specify a jump with a function
+to be done
+
 
 
 
