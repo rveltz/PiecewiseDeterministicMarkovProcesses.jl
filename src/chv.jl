@@ -32,8 +32,9 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	x    = convert(Vector, x_nv)
 	xdot = convert(Vector, xdot_nv)
 
-	# the first x is a dummy variable
 	tau = x[end]
+	# the first x is a dummy variable, it will be seen as the rate vector but it 
+	# must not be modified
 	sr = user_data[2](x, x, user_data[3], tau, user_data[4], true)[1]::Float64
 	@assert sr > 0.0 "Total rate must be positive"
 
@@ -50,6 +51,8 @@ function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Ve
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
+	# the first xdot is a dummy variable, it will be seen as the rate vector in 
+	# the function R but it MUST not be modified
 	sr = R(xdot,x,xd,tau,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
