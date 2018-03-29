@@ -70,6 +70,15 @@
         </ul>
     
 
+    <li class="toctree-l2"><a href="#advance-uses">Advance uses</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#specify-a-jump-with-a-function">Specify a jump with a function</a></li>
+        
+        </ul>
+    
+
     <li class="toctree-l2"><a href="#application-programming-interface">Application programming interface</a></li>
     
         <ul>
@@ -155,20 +164,27 @@ end
 <tr>
 <th align="right">Transition</th>
 <th align="right">Rate</th>
+<th align="right">Reaction number</th>
+<th align="right">Jump</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="right">$x_d\to x_d-2$ if $x_d&gt;0$</td>
 <td align="right">1</td>
+<td align="right">1</td>
+<td align="right">[-2]</td>
 </tr>
 <tr>
 <td align="right">$x_d\to x_d+2$ if $x_d&lt;0$</td>
 <td align="right">1</td>
+<td align="right">2</td>
+<td align="right">[2]</td>
 </tr>
 </tbody>
 </table>
-<p>This is encoded in the following function</p>
+<p>We implement these jumps using a 2x1 matrix <code>nu</code> of Integers, such that the jumps on each discrete component of <code>xd</code> is given by <code>nu * xd</code>. Hence, we have <code>nu = reshape([[2];[-2]],2,1)</code>.  </p>
+<p>These reactions with their rate are encoded in the following function.</p>
 <pre><code class="julia">function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
   # transition rates function for each transition
   # in this case,  the transitions are xd-&gt;xd+2 or xd-&gt;xd-2
@@ -226,23 +242,28 @@ Plots.plot(result.time, result.xc',title = string(&quot;#Jumps = &quot;,length(r
 <tr>
 <th align="right">Transition</th>
 <th align="right">Rate</th>
+<th align="right">Jump</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="right">$x_d[1]\to x_d[1]-2$ if $x_d[1]&gt;0$</td>
 <td align="right">1</td>
+<td align="right">[-2,0]</td>
 </tr>
 <tr>
 <td align="right">$x_d[1]\to x_d[1]+2$ if $x_d[1]&lt;0$</td>
 <td align="right">1</td>
+<td align="right">[2,0]</td>
 </tr>
 <tr>
 <td align="right">$x_d[2]\to x_d[2]+1$</td>
 <td align="right">rate_save</td>
+<td align="right">[0,1]</td>
 </tr>
 </tbody>
 </table>
+<p>Hence, we implement these jumps with the following matrix: <code>nu2 = [[2 0];[-2 0];[0 1]]</code>.</p>
 <pre><code class="julia">nu2 = [[2 0];[-2 0];[0 1]]
 # the second component is the Poisson process
 xd0 = vec([1, 0])
@@ -324,6 +345,11 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <p>The choice of the method CHV vs Rejection only depends on how much you know about the system. </p>
 <p>More precisely, if the total rate function does not vary much in between jumps, use the rejection method. For example, if the rate is $R(x_c(t)) = 1+0.1\cos(t)$,  then $1+0.1$ will provide a tight bound to use for the rejection method and almost no (fictitious) jumps will be rejected. </p>
 <p>In all other cases, one should try the CHV method where no a priori knowledge of the rate function is requied.</p>
+<p><a id='Advance-uses-1'></a></p>
+<h1 id="advance-uses">Advance uses</h1>
+<p><a id='Specify-a-jump-with-a-function-1'></a></p>
+<h2 id="specify-a-jump-with-a-function">Specify a jump with a function</h2>
+<p>to be done</p>
 <p><a id='Application-programming-interface-1'></a></p>
 <h1 id="application-programming-interface">Application programming interface</h1>
 <p><a id='Functions-1'></a></p>
@@ -346,7 +372,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>ind_save_d</strong>: a range to hold the indices of the discrete variable to be saved</li>
 <li><strong>ind_save_c</strong>: a range to hold the indices of the continuous variable to be saved</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/7eaff4084aac6e89fb39ede846ed7a2427eea827/src/PDMP.jl#L27-L44' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.chv!' href='#PDMP.chv!'>#</a>
 <strong><code>PDMP.chv!</code></strong> &mdash; <em>Function</em>.</p>
 <p>chv!</p>
@@ -364,7 +390,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 <li><strong>ode</strong>: ode time stepper :cvode or :lsoda</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/chv.jl#L63-L81' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/7eaff4084aac6e89fb39ede846ed7a2427eea827/src/chv.jl#L66-L84' class='documenter-source'>source</a><br></p>
 <p><a id='PDMP.rejection_exact' href='#PDMP.rejection_exact'>#</a>
 <strong><code>PDMP.rejection_exact</code></strong> &mdash; <em>Function</em>.</p>
 <p>rejection_exact</p>
@@ -381,7 +407,7 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 <li><strong>tf</strong> : the final simulation time (<code>Float64</code>)</li>
 <li><strong>verbose</strong> : a <code>Bool</code> for printing verbose.</li>
 </ul>
-<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/634a4a3dea31bd33bcd2ab903540a926bbd00139/src/rejection.jl#L105-L122' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/rveltz/PDMP.jl/blob/7eaff4084aac6e89fb39ede846ed7a2427eea827/src/rejection.jl#L108-L125' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -426,5 +452,5 @@ Plots.plot(result3.time, result3.xc',title = string(&quot;#Jumps = &quot;,length
 
 <!--
 MkDocs version : 0.17.3
-Build Date UTC : 2018-03-26 16:50:12
+Build Date UTC : 2018-03-29 22:31:50
 -->
