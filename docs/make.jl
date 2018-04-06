@@ -9,7 +9,7 @@ makedocs(
 # ENV["TRAVIS_REPO_SLUG"] = "github.com/rveltz/PDMP.jl.git"
 
 deploydocs(
-	deps   = Deps.pip("mkdocs", "python-markdown-math", "mkdocs-cinder"),
+	deps   = Deps.pip("mkdocs", "python-markdown-math", "mkdocs-cinder", "pygments"),
 	repo   = "github.com/rveltz/PDMP.jl.git",
 	julia  = "0.6",
 	osname = "linux",
