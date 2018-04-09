@@ -33,9 +33,9 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	xdot = convert(Vector, xdot_nv)
 
 	tau = x[end]
-	# the first x is a dummy variable, it will be seen as the rate vector but it 
+	# the first x is a dummy variable, it will be seen as the rate vector but it
 	# must not be modified
-	sr = user_data[2](x, x, user_data[3], tau, user_data[4], true)[1]::Float64
+	sr = user_data[2](user_data[5], x, user_data[3], tau, user_data[4], true)[1]::Float64
 	@assert sr > 0.0 "Total rate must be positive"
 
 	isr = min(1.0e9,1.0 / sr)
@@ -47,13 +47,11 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	return Sundials.CV_SUCCESS
 end
 
-function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms)
+function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms,rate)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
-	# the first xdot is a dummy variable, it will be seen as the rate vector in 
-	# the function R but it MUST not be modified
-	sr = R(xdot,x,xd,tau,parms,true)[1]
+	sr = R(rate,x,xd,tau,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,tau,parms)
@@ -105,9 +103,9 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
-		Flow = (X0_,Xd_,dt)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda
-		Flow = (X0_,Xd_,dt)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt,r_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	end
 
 	# Main loop
@@ -118,7 +116,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 		dt = - log(rand())
 		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
 
-		res_ode .= Flow(X0,Xd,dt)
+		res_ode .= Flow(X0,Xd,dt,rate)
 
 		verbose && println("--> ode solve is done!")
 
@@ -214,7 +212,7 @@ function chv_optim!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 
 	# save ODE context, reduces allocation of memory
 	if ode==:cvode
-		ctx = cvode_ctx(F,R,Xd,parms, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
+		ctx = cvode_ctx(F,R,Xd,parms,rate, X0, [0.0, 1.0], abstol = 1e-9, reltol = 1e-7)
 	else
 		# ctx = LSODA.lsoda_context_t()
 		dt_lsoda = 0.
@@ -227,7 +225,7 @@ function chv_optim!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 
 		if ode==:cvode
 			# println(" --> CVODE solve #",nsteps,", X0 = ", X0)
-			cvode_evolve!(res_ode, ctx[1],F,R,Xd,parms, X0, [0.0, dt])
+			cvode_evolve!(res_ode, ctx[1],F,R,Xd,parms, rate, X0, [0.0, dt])
 			# println(" ----> res_ode = ", res_ode)
 			@inbounds for ii in eachindex(X0)
 				X0[ii] = res_ode[end,ii]
@@ -235,7 +233,7 @@ function chv_optim!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 		else
 			if nsteps == 2
 				println(" --> LSODA solve #",nsteps,", X0 = ", X0)
-				res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
+				res_ode = LSODA.lsoda((t,x,xdot,data)->f_CHV(F,R,t,x,xdot,Xd,parms,rate), X0, [0.0, dt], abstol = 1e-9, reltol = 1e-7)
 				X0 = vec(res_ode[end,:])
 				dt_lsoda += dt
 				println(" ----> res_ode = ", res_ode, ", neq = ",ctx)
