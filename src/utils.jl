@@ -112,3 +112,12 @@ function save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
     end
 end
+
+"""
+a type to hold data
+"""
+struct DataForODE{T}
+	parms::T
+	xd::Vector{Int64}
+	rate::Array{Float64}
+end

@@ -16,7 +16,7 @@ It takes the following arguments:
 """
 function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda]
-	
+
 	# define the ODE flow
 	if ode == :cvode
 		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
@@ -49,17 +49,17 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
 	ppf = R(rate,X0,Xd,t,parms,true)
-	
+
 	@assert ppf[2] == R(rate,X0+0.1*rand(length(X0)),Xd,t+rand(),parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 	rate *= 0;ppf = R(rate,X0,Xd,t,parms,true)
 	@assert sum(rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
-	
+
 	while (t < tf) && (nsteps < n_max)
 		if verbose println("--> step : ",nsteps," / ",n_max ) end
 		reject = true
 		while (reject) && (nsteps < n_max)
 			tp .= [t, min(tf, t - log(rand())/ppf[2]) ] #mettre un lambda_star?
-			verbose && println("----> tspan : ",tp )
+			verbose && println("----> tspan : ",tp, ", X0 = ", X0 )
 			res_ode .= Flow(X0,Xd,tp)
 
 			@inbounds for ii in eachindex(X0)
@@ -152,7 +152,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	const lambda_star = 0.0 # this is the bound for the rejection method
 	tp = [0.,0.]
 	lambda_star = R(rate_vector,X0,Xd,t,parms,true)[2]
-	
+
 	@assert lambda_star == R(rate_vector,X0,Xd,t+rand(),parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 
 	t_hist[njumps] = t

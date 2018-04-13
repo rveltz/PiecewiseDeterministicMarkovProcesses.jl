@@ -2,6 +2,7 @@ module PDMP
 
 using Sundials
 using LSODA
+using DifferentialEquations
 
 
 

@@ -47,11 +47,11 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	return Sundials.CV_SUCCESS
 end
 
-function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms,rate)
+function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms,rate_::Array{Float64})
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
-	sr = R(rate,x,xd,tau,parms,true)[1]
+	sr = R(rate_,x,xd,tau,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,tau,parms)
@@ -61,6 +61,22 @@ function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Ve
 	nothing
 end
 
+function f_CHV_Wrap!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, p::DataForODE{T} where T)
+	f_CHV!(F,R,t, x, xdot, p.xd, p.parms,p.rate)
+end
+
+
+function Flow_Wrap!(X0,Xd,dt,r,prob::ODEProblem)
+	(prob.p).rate .= r
+	(prob.p).xd .= Xd
+	prob.u0[:] .= X0
+	println("flow wrap done")
+	sol = DifferentialEquations.solve(prob, DifferentialEquations.Tsit5(),save_start=true,save_end=true,save_everystep = false).u
+	# res[1,:] .= sol[1]
+	# res[2,:] .= sol[2]
+    return hcat(sol[1],sol[2])'
+	return nothing
+end
 """
 
 chv!
@@ -82,7 +98,7 @@ It takes the following arguments:
 """
 
 function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
-	@assert ode in [:cvode,:lsoda]
+	@assert ode in [:cvode,:lsoda,:OrdinaryDiffEq]
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1 #index for the current jump number
@@ -106,6 +122,10 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	elseif ode==:lsoda
 		Flow = (X0_,Xd_,dt,r_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
+	elseif ode==:OrdinaryDiffEq
+		data_ode = DataForODE(parms,Xd,rate)
+		prob_CHV = ODEProblem((xdot,x,data,tt)->f_CHV_Wrap!(F,R,tt,x,xdot,data),X0,(0.,1.),data_ode)
+		Flow = (X0_,Xd_,dt,r_)-> Flow_Wrap!(X0_,Xd_,dt,r_,prob_CHV)
 	end
 
 	# Main loop
@@ -114,7 +134,10 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 
 		# dt = -log(rand())
 		dt = - log(rand())
-		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
+		verbose && println("**********************\n--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
+
+        @show Flow(X0,Xd,dt,rate)
+		@show res_ode
 
 		res_ode .= Flow(X0,Xd,dt,rate)
 
