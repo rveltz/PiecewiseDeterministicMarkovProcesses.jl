@@ -16,7 +16,7 @@ type pdmpArgs
 	R::Any
 	Delta::Any
 	nu::Matrix{Int64}
-	parms::Vector{Any}
+	parms::Any
 	tf::Float64
 end
 
