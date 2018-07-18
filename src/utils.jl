@@ -1,7 +1,7 @@
 """
 A type storing the status at the end of a call.
 """
-type pdmpStats
+struct pdmpStats
 	termination_status::String
 	nsteps::Int64
 end
@@ -9,7 +9,7 @@ end
 """
 A type storing the call.
 """
-type pdmpArgs
+struct pdmpArgs
 	xc::Vector{Float64} # continuous variable
 	xd::Vector{Int64}# discrete variable
 	F::Any
@@ -29,7 +29,7 @@ This type stores the output, and comprises of:
 - **stats** : an instance of `PDMPStats`.
 - **args** : arguments passed.
 """
-type pdmpResult
+struct pdmpResult
 	time::Vector{Float64}
 	xc::Matrix{Float64}
 	xd::Matrix{Int64}

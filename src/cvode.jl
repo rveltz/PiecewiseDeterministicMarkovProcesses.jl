@@ -1,7 +1,7 @@
 """
 Allocate memory variable that contains the context to call Sundials.cvode
 """
-function cvode_ctx{T}(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},rate, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8)
+function cvode_ctx(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},rate, y0::Vector{Float64}, t::Vector{Float64}; reltol::Float64=1e-7, abstol::Float64=1e-8) where T
     neq = length(y0)
     mem_ptr = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
     (mem_ptr == C_NULL) && error("Failed to allocate CVODE solver object")
@@ -21,7 +21,7 @@ end
 """
 This functions allows to save re-allocating internal variables to call Sundials.CVode unlike cvode() above.
 """
-function cvode_evolve!{T}(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},rate,y0::Vector{Float64}, t::Vector{Float64})
+function cvode_evolve!(yres::Array{Float64,2}, mem, f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T},rate,y0::Vector{Float64}, t::Vector{Float64}) where T
     # How do I update the parameter d in mem??
     Sundials.CVodeReInit(mem,t[1],y0)
     Sundials.CVodeSetUserData(mem, [f,r,d,p,rate])

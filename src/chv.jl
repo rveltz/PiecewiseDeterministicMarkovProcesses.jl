@@ -82,7 +82,7 @@ It takes the following arguments:
 """
 
 function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
-	@assert ode in [:cvode,:lsoda]
+	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1 #index for the current jump number
@@ -103,7 +103,11 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
-		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :BDF)
+	elseif	ode==:BDF
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :BDF)
+	elseif	ode==:Adams
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :Adams)
 	elseif ode==:lsoda
 		Flow = (X0_,Xd_,dt,r_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
 	end
@@ -126,6 +130,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 		t = res_ode[end,end]
 
 		R(rate,Xc,Xd,t,parms, false)
+
 		# jump time:
 		if (t < tf)
 			# Update event
@@ -143,7 +148,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 
 		else
-			if ode==:cvode
+			if ode in [:cvode,:BDF,:Adams]
 				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
 				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
