@@ -56,7 +56,6 @@ end
 """
 Dummy flow to be used in gillespie algo
 """
-
 function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms)
     # vector field used for the continuous variable
     # trivial dynamics

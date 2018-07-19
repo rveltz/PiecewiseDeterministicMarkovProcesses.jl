@@ -128,9 +128,9 @@ It takes the following arguments:
 function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},Phi::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false, xd_jump::Bool=true;ind_save_d=-1:1,ind_save_c=-1:1)
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
-	const nsteps = 1
-	const npoints = 2 # number of points for ODE integration
-	const njumps = 1
+	nsteps = 1
+	npoints = 2 # number of points for ODE integration
+	njumps = 1
 
 	# Args
 	args = pdmpArgs(xc0,xd0,Phi,R,DX,nu,parms,tf)
@@ -147,9 +147,9 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	# Main loop
 	termination_status = "finaltime"
 
-	const reject = true
-	const nb_rejet::Int = 0
-	const lambda_star = 0.0 # this is the bound for the rejection method
+	reject = true
+	nb_rejet::Int = 0
+	lambda_star = 0.0 # this is the bound for the rejection method
 	tp = [0.,0.]
 	lambda_star = R(rate_vector,X0,Xd,t,parms,true)[2]
 	

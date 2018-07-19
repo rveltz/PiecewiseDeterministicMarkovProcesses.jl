@@ -57,7 +57,10 @@ function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Ve
 	F(xdot,x,xd,tau,parms)
 	xdot[end] = 1.0
 	ly = length(xdot)
-	scale!(xdot, isr)
+	# scale!(xdot, isr)
+	@inbounds for i in eachindex(xdot)
+		xdot[i] = xdot[i] * isr
+	end
 	nothing
 end
 
@@ -80,7 +83,6 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 - **ode**: ode time stepper :cvode or :lsoda
 """
-
 function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
 	# it is faster to pre-allocate arrays and fill it at run time
