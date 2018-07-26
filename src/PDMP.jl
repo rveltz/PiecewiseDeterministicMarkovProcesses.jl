@@ -1,6 +1,6 @@
 module PDMP
 
-using Sundials
+using Random, LinearAlgebra, Sundials
 using LSODA
 
 

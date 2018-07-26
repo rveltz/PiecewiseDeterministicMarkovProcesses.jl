@@ -1,4 +1,7 @@
 using PDMP
+try
+	using LinearAlgebra, Random
+end
 
 function F_tcp!(ẋ, xc, xd, t, parms)
     # vector field used for the continuous variable

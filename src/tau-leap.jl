@@ -20,7 +20,7 @@ It takes the following arguments:
 - **ode**: ode time stepper :cvode or :lsoda
 - **dt**: stepsize for the tau-leap method
 """
-function tauleap{T}(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode = :cvode,dt = 0.1,algo=:tauleap)
+function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms::Vector{T},ti::Float64, tf::Float64;verbose::Bool = false,ode = :cvode,dt = 0.1,algo=:tauleap) where T
     # it is faster to pre-allocate arrays and fill it at run time
     @assert algo in [:tauleap,:binomial_tauleap]
     n_max += 1 #to hold initial vector
