@@ -1,7 +1,7 @@
 module PDMP
 
-using Random, LinearAlgebra, Sundials
-using LSODA
+using Random, LinearAlgebra
+using LSODA, Sundials
 
 
 
