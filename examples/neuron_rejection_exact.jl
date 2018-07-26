@@ -1,5 +1,5 @@
 # Example of neural network
-using PDMP
+using PDMP, LinearAlgebra, Random
 
 const N = 100
 const lambda_ = 0.24

@@ -1,4 +1,4 @@
-immutable mlParams
+struct mlParams
   v_Na::Float64
   g_Na::Float64
   v_K::Float64

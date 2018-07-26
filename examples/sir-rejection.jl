@@ -1,4 +1,4 @@
-using PDMP
+using PDMP, LinearAlgebra, Random
 
 function R_sir_rej!(rate,xc,xd,t,parms,sum_rate::Bool)
   (S,I,R,~) = xd

@@ -1,4 +1,4 @@
-using PDMP
+using PDMP, LinearAlgebra, Random
 
 function F_eva!(xcdot, xc, xd, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable

@@ -1,4 +1,4 @@
-using PDMP
+using PDMP, LinearAlgebra, Random
 
 function F_tcpf(xcdot, xc, xd, t, parms::Vector{Float64})
   # vector field used for the continuous variable
