@@ -39,9 +39,9 @@ function ml_chv(x0,parms,tf;n_jumps=500)
     (I,C,gL,gCa,gK,vL,vCa,vK,v₁,v₂,v₃,v₄,ϕ,Ntot) = parms
     eparms = [parms;N]
     t=0.0
-    ta = Vector{Float64}(0)
-    va = Vector{Float64}(0)
-    Na = Vector{Float64}(0)
+    ta = Vector{Float64}()
+    va = Vector{Float64}()
+    Na = Vector{Float64}()
     push!(ta,t)
     push!(va,v)
     push!(Na,N)
