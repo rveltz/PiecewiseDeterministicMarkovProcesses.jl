@@ -56,4 +56,5 @@ try
     println(norm(dummy_t.time-result.time))
     println("--> xc_f-xc_t = ",norm(dummy_t.xc-result.xc))
     println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
+catch
 end
