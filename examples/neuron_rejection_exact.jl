@@ -1,5 +1,5 @@
 # Example of neural network
-using PDMP, LinearAlgebra, Random
+using PDMP, LinearAlgebra, Random, SparseArrays, Dates
 
 const N = 100
 const lambda_ = 0.24
@@ -14,7 +14,7 @@ function Phi(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Arra
   # for this particular model, the empirical mean is constant between jumps
   xbar::Float64 = sum(xc) / N
   out[1,:] = copy(xc)
-  out[2,:] = xbar + exp(-lambda_*(t[2]-t[1])).* (xc - xbar)
+  out[2,:] = xbar .+ exp(-lambda_*(t[2]-t[1])).* (xc - xbar)
   nothing
 end
 
@@ -48,11 +48,11 @@ end
 xc0 = rand(N)*0.2 + 0.5
 xd0 = Vector{Int64}(zeros(N))
 
-const nu_neur = sparse(Array{Int64}(N,N)*0)
+const nu_neur = SparseArrays.sparse(Array{Int64}(undef,N,N)*0)
 parms = [0.1]
 tf = 10050.
 
-println("--> Computing... (",string(now())[end-7:end],")")
+println("--> Computing... (",string(Dates.now())[end-7:end],")")
 result = @time PDMP.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
 result = @time PDMP.rejection_exact(40000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false,ind_save_d = 1:2,ind_save_c = 1:2)
 

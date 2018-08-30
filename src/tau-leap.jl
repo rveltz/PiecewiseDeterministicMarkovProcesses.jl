@@ -42,7 +42,7 @@ function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
     xc0 = reshape(xc0,1,length(xc0))
     X0  = vec(xc0)
     # to hold the vector field
-    dX0  = zeros(X0)
+    dX0  = zero(X0)
     xd0 = reshape(xd0,1,length(xd0))
     Xd  = deepcopy(xd0)
     deltaxc = copy(nu[1,:]) #declare this variable
@@ -51,9 +51,9 @@ function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
     rate    = zeros(numpf)  #vector of rates
 
     # arrays for storing history, pre-allocate storage
-    t_hist  = Array{Float64}(n_max)
-    xc_hist = Array{Float64}(length(xc0), n_max)
-    xd_hist = Array{Int64}(length(xd0), n_max)
+    t_hist  = Array{Float64}(undef,n_max)
+    xc_hist = Array{Float64}(undef,length(xc0), n_max)
+    xd_hist = Array{Int64}(undef,length(xd0), n_max)
     res_ode = Array{Float64,2}
 
     # initialise arrays
