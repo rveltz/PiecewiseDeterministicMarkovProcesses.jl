@@ -5,7 +5,7 @@ function R_sir!(rate,xc,xd,t::Float64,parms,sum_rate::Bool)
   (beta,mu) = parms
   infection = beta*S*I
   recovery = mu*I
-  const rate_display = 0.01
+  rate_display = 0.01
   if sum_rate == false
       rate[1] = infection
       rate[2] = recovery
