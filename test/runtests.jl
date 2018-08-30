@@ -1,4 +1,4 @@
-using PDMP, Test, LinearAlgebra, Random
+using PDMP, Test, LinearAlgebra, Random, Pkg
 
 cd(Pkg.dir("PDMP")*"/examples")
 

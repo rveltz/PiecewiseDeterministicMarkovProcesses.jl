@@ -103,7 +103,7 @@ function tau_leap_step!(t,dt,rates,nu,Xc,Xd,DX,p)
     for i=1:length(rates)
         if rates[i]>0
             nb_mol = rand(Poisson(dt * rates[i])) # tau-leap method
-            Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+            LinearAlgebra.BLAS.axpy!(nb_mol, nu[i,:], Xd)
             DX(Xc,Xd,t,p,i)
         end
     end
@@ -122,7 +122,7 @@ function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd,DX,p)
                 println("--> dt = $dt, $(dt * ppf[i]/Xd[ind[1]])")
                 nb_mol = rand(Distributions.Binomial(Xd[ind[1]],dt * ppf[i]/Xd[ind[1]]))
             end
-            Base.LinAlg.BLAS.axpy!(nb_mol, nu[i,:], Xd)
+            LinearAlgebra.BLAS.axpy!(nb_mol, nu[i,:], Xd)
 			DX(Xc,Xd,t,p,i)
         end
     end

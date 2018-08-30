@@ -40,13 +40,13 @@ parms = vec([0.])
 tf = p1["t_end"]
 tf=350.
 
-srand(123)
+Random.seed!(123)
 println("--> chv")
 dummy_t =       PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:cvode,n_jumps = 6)
 dummy_t = @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:cvode,n_jumps = 450)
 dummy_t = @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:lsoda,n_jumps = 450)
 
-srand(123)
+Random.seed!(123)
 println("--> chv_optim - call")
 result =        PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 6)
 result =  @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 4500) #cpp = 100ms/2200 jumps

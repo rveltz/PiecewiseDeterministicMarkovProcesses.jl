@@ -139,7 +139,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			ev = pfsample(rate,sum(rate),numpf)
 			deltaxd .= nu[ev,:]
 			# Xd = Xd .+ deltaxd
-			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
 			DX(Xc,Xd,t,parms,ev) #requires allocation!!
@@ -262,7 +262,7 @@ function chv_optim!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 			ev = pfsample(rate,sum(rate),numpf)
 			deltaxd .= nu[ev,:]
 			# Xd = Xd .+ deltaxd
-			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
 			DX(Xc,Xd,t,parms,ev) #requires allocation!!

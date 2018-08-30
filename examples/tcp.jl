@@ -31,16 +31,16 @@ tf = 200.
 
 println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
-srand(1234)
+Random.seed!(1234)
 result2=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 2)
 result2=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 100)
-srand(1234)
+Random.seed!(1234)
 println(" ----> lsoda")
 result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 2)
 result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 100)
 
 println("--> Case optimised:")
-srand(1234)
+Random.seed!(1234)
 dummy_t =        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 2)
 dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 100)
 

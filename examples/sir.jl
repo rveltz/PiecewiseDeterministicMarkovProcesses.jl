@@ -30,13 +30,13 @@ tf = 150.0
 
 
 
-srand(1234)
+Random.seed!(1234)
 dummy = PDMP.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1)
 result = @time PDMP.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1000)
 # this should throw an error:
 # result = @time PDMP.pdmp(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,algo=:rejection)
 
-srand(1234)
+Random.seed!(1234)
 # automatic determination of algorithm, here CHV for SSA
 result = PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1)
 result = @time PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1000)

@@ -85,7 +85,7 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 			deltaxd .= nu[ev,:]
 
 			# Xd = Xd .+ deltaxd
-			Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,X0[end],parms,ev)
@@ -195,7 +195,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 				deltaxd = nu[ev,:]
 				if verbose println("----> delta = $deltaxd" ) end
 				# Xd = Xd .+ deltaxd
-				Base.LinAlg.BLAS.axpy!(1.0, deltaxd, Xd)
+				LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 			end
 			# Xc = Xc .+ deltaxc
 			DX(X0,Xd,t,parms,ev)

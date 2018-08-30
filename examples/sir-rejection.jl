@@ -22,12 +22,12 @@ nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
 tf = 150.0
 
-srand(1234)
+Random.seed!(1234)
 println("--> rejection algorithm for SSA")
 dummy = PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1)
 result = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1000)
 
-srand(1234)
+Random.seed!(1234)
 println("--> CHV algorithm for SSA")
 dummy =PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1)
 result_chv = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1000)
