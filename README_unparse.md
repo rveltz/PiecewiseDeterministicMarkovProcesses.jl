@@ -69,7 +69,7 @@ println("#jumps = ", length(result.time))
 # plotting
 using GR
 GR.inline()
-ind = find(result.time.<149)
+ind = findall(result.time.<149)
 GR.plot(result.time[ind],
 	result.xc[1,:][ind],
 	"k",

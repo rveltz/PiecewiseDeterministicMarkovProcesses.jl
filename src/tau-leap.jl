@@ -114,7 +114,7 @@ function binomial_tau_leap_step!(dt,rates,nu,Xc,Xd,DX,p)
     for i=1:length(ppf)
         if rates[i]>0
             # nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
-            ind = find(nu[i,:] .== -1)
+            ind = findall(nu[i,:] .== -1)
             if length(ind) == 0
                 nb_mol = rand(Poisson(dt * ppf[i])) # tau-leap method
             else
