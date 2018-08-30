@@ -19,7 +19,7 @@ function Phi(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Arra
 end
 
 function R_mf_rejet(rate::Vector{Float64},xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64}, sum_rate::Bool)
-  const bound = N * f(1.201)#1.5 works well
+  bound = N * f(1.201)#1.5 works well
   # rate function
   if sum_rate == false
     for i=1:N
