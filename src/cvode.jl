@@ -6,7 +6,7 @@ function cvode_ctx(f::Base.Callable,r::Base.Callable,d::Array{Int64},p::Vector{T
     mem_ptr = Sundials.CVodeCreate(Sundials.CV_BDF, Sundials.CV_NEWTON)
     (mem_ptr == C_NULL) && error("Failed to allocate CVODE solver object")
     mem = Sundials.Handle(mem_ptr)
-    Sundials.@checkflag Sundials.CVodeInit(mem, cfunction(cvode_ode_wrapper, Cint, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Array{Any,1})), t[1], Sundials.nvector(y0))
+    Sundials.@checkflag Sundials.CVodeInit(mem, @cfunction($cvode_ode_wrapper, Cint, (Sundials.realtype, Sundials.N_Vector, Sundials.N_Vector, Array{Any,1})).ptr, t[1], Sundials.nvector(y0))
     Sundials.@checkflag Sundials.CVodeSetUserData(mem, [f,r,d,p,rate])
     Sundials.@checkflag Sundials.CVodeSStolerances(mem, reltol, abstol)
     # Sundials.@checkflag Sundials.CVDense(mem, neq)

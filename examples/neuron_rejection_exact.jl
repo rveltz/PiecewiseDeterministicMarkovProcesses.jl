@@ -14,7 +14,7 @@ function Phi(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Arra
   # for this particular model, the empirical mean is constant between jumps
   xbar::Float64 = sum(xc) / N
   out[1,:] = copy(xc)
-  out[2,:] = xbar .+ exp(-lambda_*(t[2]-t[1])).* (xc - xbar)
+  out[2,:] = xbar .+ exp(-lambda_*(t[2]-t[1])) .* (xc .- xbar)
   nothing
 end
 
