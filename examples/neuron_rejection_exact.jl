@@ -45,7 +45,7 @@ function Delta_xc_mf(xc::Array{Float64,1},xd::Array{Int64},t::Float64,parms::Vec
   return true
 end
 
-xc0 = rand(N)*0.2 + 0.5
+xc0 = rand(N)*0.2 .+ 0.5
 xd0 = Vector{Int64}(zeros(N))
 
 const nu_neur = SparseArrays.sparse(Array{Int64}(undef,N,N)*0)
