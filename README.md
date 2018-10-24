@@ -13,7 +13,7 @@ PDMP.jl is a Julia package that allows simulation of *Piecewise Deterministic Ma
 To install this (unregistered) package, run the command 
 
 ```julia
-Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
+add https://github.com/rveltz/PDMP.jl.git
 ```
 
 
