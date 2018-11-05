@@ -39,10 +39,5 @@ println(" ----> lsoda")
 result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 2)
 result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 100)
 
-println("--> Case optimised:")
-Random.seed!(1234)
-dummy_t =        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 2)
-dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf, algo=:chv_optim,n_jumps = 100)
-
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
