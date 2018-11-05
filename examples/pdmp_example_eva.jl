@@ -50,11 +50,6 @@ dummy_t =  PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_ju
 Random.seed!(1234)
 dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=200000)
 
-println("--> Case chv optimised:")
-dummy_t =  PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,algo=:chv_optim,n_jumps=20)
-Random.seed!(1234)
-dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,algo=:chv_optim,n_jumps=200_000)
-
 println("For simulations (lsoda):")
 result = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1)
 Random.seed!(1234)

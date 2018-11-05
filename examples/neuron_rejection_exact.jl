@@ -1,9 +1,9 @@
 # Example of neural network
 using PDMP, LinearAlgebra, Random, SparseArrays, Dates
 
-const N = 100
+const N       = 100
 const lambda_ = 0.24
-const J = 0.98
+const J       = 0.98
 
 function f(x)
   return  x.^8

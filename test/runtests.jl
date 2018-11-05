@@ -16,8 +16,8 @@ include("../examples/pdmp_example_eva.jl")
 @test isequal(result.time[end],100.)
 @test isequal(result.xd[2,end],93)
 
-println("\n\n==== Morris-Lecar model of neuron")
-include("../examples/morris_lecar.jl")
+# println("\n\n==== Morris-Lecar model of neuron")
+# include("../examples/morris_lecar.jl")
 
 println("\n\n==== Example sir ")
 include("../examples/sir.jl")

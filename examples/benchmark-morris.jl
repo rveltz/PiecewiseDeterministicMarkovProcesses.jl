@@ -86,13 +86,13 @@ parms_chv=[100.0,20.0,2.0,4.4,8.0,-60.0,120.0,-84.0,-1.2,18.0,2.0,30,0.04,40]
 x0_chv=[-50.0;20.0]
 tf_chv=100000.;
 
-srand(123)
+Random.seed!(123)
 sol_chv=ml_chv(x0_chv,parms_chv,tf_chv,n_jumps=660)
 plot(sol_chv[1],sol_chv[2])
 
 
 println("="^70)
-srand(123)
+Random.seed!(123)
 @time begin
     for i in 1:100
         out=ml_chv(x0_chv,parms_chv,tf_chv,n_jumps=660)
@@ -124,7 +124,7 @@ function r_ml_pdmp!(rate, xc, xd, t, parms, sum_rate)
   end
 end
 
-rate_ =zeros(2)
+rate_ = zeros(2)
 xc0 = [-50.0]
 xd0 = [20]
 xd0 |> typeof |> println
@@ -132,14 +132,17 @@ nu_ml = reshape([[1];[-1]],2,1)
 parms_chv_pdmp = [100.0,20.0,2.0,4.4,8.0,-60.0,120.0,-84.0,-1.2,18.0,2.0,30,0.04,40]
 tf_pdmp = 100000.;
 
-srand(123)
+Random.seed!(123)
 # sol_chv_pdmp=PDMP.pdmp(xc0, xd0, f_ml_pdmp!, r_ml_pdmp!, nu_ml, parms_chv_pdmp, 0.0, tf_pdmp, false, ode=:lsoda, n_jumps = 500);
 sol_chv_pdmp=PDMP.chv!(660, xc0, xd0, f_ml_pdmp!, r_ml_pdmp!,PDMP.Delta_dummy, nu_ml, parms_chv_pdmp, 0.0, tf_pdmp, ode=:lsoda)
 plot(sol_chv_pdmp.time,sol_chv_pdmp.xc[1,:]-sol_chv[2])
 
 # 1.022143 seconds (8.14 M allocations: 443.023 MiB, 12.90% gc time)
 # 1.072882 seconds (8.35 M allocations: 445.167 MiB, 12.10% gc time)
-srand(123)
+# v0.7
+# 0.832310 seconds (11.66 M allocations: 458.525 MiB, 11.06% gc time)
+# 0.832129 seconds (12.07 M allocations: 464.681 MiB, 11.09% gc time)
+Random.seed!(123)
 @time begin
     for i in 1:100
         # PDMP.pdmp(xc0, xd0, f_ml_pdmp!, r_ml_pdmp!, nu_ml, parms_chv_pdmp, 0.0, tf_pdmp, false, ode=:lsoda, n_jumps = 500);
@@ -150,7 +153,7 @@ end
 ################################################################################
 ################################################################################
 ################################################################################
-xd0chv=copy(x0_chv)
+xd0chv = copy(x0_chv)
 eparms = [parms_chv;20]
 @time(f_ml_chv!(1.0,x0_chv,xd0chv,eparms))
     println("--> CHV result xdot = $xd0chv for x = $x0_chv")

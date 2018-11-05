@@ -3,25 +3,6 @@
 # see https://arxiv.org/abs/1504.06873
 # """
 
-"
-Function copied from Gillespie.jl and StatsBase
-
-This function is a substitute for `StatsBase.sample(wv::WeightVec)`, which avoids recomputing the sum and size of the weight vector, as well as a type conversion of the propensity vector. It takes the following arguments:
-- **w** : an `Array{Float64,1}`, representing propensity function weights.
-- **s** : the sum of `w`.
-- **n** : the length of `w`.
-"
-function pfsample(w::Array{Float64,1},s::Float64,n::Int64)
-    t = rand() * s
-    i = 1
-    cw = w[1]
-    while cw < t && i < n
-        i += 1
-        @inbounds cw += w[i]
-    end
-    return i
-end
-
 """
 This is a wrapper implementing the change of variable method to simulate the PDMP.
 This wrapper is meant to be called by Sundials.CVode
@@ -81,10 +62,20 @@ It takes the following arguments:
 - **parms** : data for the parameters of the system.
 - **tf** : the final simulation time (`Float64`)
 - **verbose** : a `Bool` for printing verbose.
-- **ode**: ode time stepper :cvode or :lsoda
+- **ode**: ode time stepper, must be one of those: [:cvode,:lsoda,:Adams,:BDF]
+- **save_at**: array of ordered time at which the solution is required
 """
-function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1)
+function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
+				F::Function,R::Function,DX::Function,
+				nu::AbstractArray{Int64},parms,
+				ti::Float64, tf::Float64,
+				verbose::Bool = false;
+				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
+				
 	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
+	
+	length(save_at) == 0 && save_at = [tf+1]
+		
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_max += 1 #to hold initial vector
 	nsteps = 1 #index for the current jump number
@@ -102,6 +93,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
 	numpf   = size(nu,1)    # number of reactions
 	rate    = zeros(numpf)  #vector of rates
+	t_save = save_at[1];n_save = 1
 
 	# define the ODE flow, this leads to big memory saving
 	if ode==:cvode
@@ -135,6 +127,12 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 
 		# jump time:
 		if (t < tf)
+			############################################################
+			# save additional points
+			# nt = searchsortedlast(save_at,t)
+			# nT = searchsortedfirst(save_at,t) 
+			
+			############################################################
 			# Update event
 			ev = pfsample(rate,sum(rate),numpf)
 			deltaxd .= nu[ev,:]
@@ -150,6 +148,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 
 		else
+			
 			if ode in [:cvode,:BDF,:Adams]
 				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			elseif ode==:lsoda
