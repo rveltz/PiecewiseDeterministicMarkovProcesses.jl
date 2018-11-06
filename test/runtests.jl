@@ -9,7 +9,7 @@ include("../examples/tcp.jl")
 
 println(result2.time[end],", ",result2.xd[1,end])
 @test isequal(result2.time[end],200.)
-@test isequal(result2.xd[1,end],30)
+@test isequal(result2.xd[1,end],29)
 
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
@@ -36,7 +36,7 @@ include("../examples/neuron_rejection_exact.jl")
 
 println(result2.time[end],", ",result2.xd[1,end])
 @test isequal(result2.time[end],200.)
-@test isequal(result2.xd[1,end],30)
+@test isequal(result2.xd[1,end],29)
 @test isequal(size(result2.xd)[1],2)
 
 println("\n\n==== Example sir ")
