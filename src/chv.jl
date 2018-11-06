@@ -51,7 +51,7 @@ chv!
 This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
 It takes the following arguments:
 
-- **n_max**: an `Int64` representing the maximum number of jumps to be computed.
+- **n_max**: an `Int64` representing the maximum number of jumps to be computed. If n_max<=0, switch to the case where the array is growing dynamically 
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
 - **F!** : an inplace `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
@@ -70,6 +70,11 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
 				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
+	
+	if n_max <=0
+		# using extendable array
+		chv!(xc0,xd0,F,R,DX,nu,parms,ti,tf,verbose; ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at=save_at)
+	end
 				
 	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
 	
@@ -172,4 +177,102 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	stats = pdmpStats(termination_status,nsteps)
 	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
 	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
+end
+
+function chv!(xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
+				F::Function,R::Function,DX::Function,
+				nu::AbstractArray{Int64},parms,
+				ti::Float64, tf::Float64,
+				verbose::Bool = false;
+				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
+				
+	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
+	
+	if length(save_at) == 0
+		save_at = [tf+1]
+	end
+		
+	# it is faster to pre-allocate arrays and fill it at run time
+	n_max += 1  # to hold initial vector
+	nsteps = 1  # index for the current jump number
+	npoints = 2 # number of points for ODE integration
+
+	# Set up initial variables
+	t = ti         # initial simulation time
+	X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c = allocate_arrays(ti,xc0,xd0,n_max,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+	nsteps += 1
+
+	deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
+	numpf   = size(nu,1)    # number of reactions
+	rate    = zeros(numpf)  #vector of rates
+	t_save = save_at[1];n_save = 1
+
+	# define the ODE flow, this leads to big memory saving
+	if ode==:cvode
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :BDF)
+	elseif	ode==:BDF
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :BDF)
+	elseif	ode==:Adams
+		Flow = (X0_,Xd_,dt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7, integrator = :Adams)
+	elseif ode==:lsoda
+		Flow = (X0_,Xd_,dt,r_)->LSODA.lsoda((tt,x,xdot,data)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, [0., dt], abstol = 1e-9, reltol = 1e-7)
+	end
+
+	# Main loop
+	termination_status = "finaltime"
+	while (t < tf) && (nsteps < n_max)
+
+		dt = - log(rand())
+		verbose && println("--> t = ",t," - dt = ",dt, ",nstep =  ",nsteps)
+
+		res_ode .= Flow(X0,Xd,dt,rate)
+
+		verbose && println("--> ode solve is done!")
+
+		@inbounds for ii in eachindex(X0)
+			X0[ii] = res_ode[end,ii]
+		end
+		t = res_ode[end,end]
+
+		R(rate,Xc,Xd,t,parms, false)
+
+		# jump time:
+		if (t < tf)
+			# Update event
+			ev = pfsample(rate,sum(rate),numpf)
+			deltaxd .= nu[ev,:]
+			# Xd = Xd .+ deltaxd
+			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
+
+			# Xc = Xc .+ deltaxc
+			DX(Xc,Xd,t,parms,ev) #requires allocation!!
+
+			verbose && println("--> Which reaction? => ",ev)
+			# save state
+			t_hist[nsteps] = t
+			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+
+		else
+			
+			if ode in [:cvode,:BDF,:Adams]
+				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
+			elseif ode==:lsoda
+				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
+			end
+			t = tf
+
+			# save state
+			t_hist[nsteps] = tf
+			@inbounds for ii in eachindex(ind_save_c)
+				xc_hist[ii,nsteps] = res_ode_last[end,ind_save_c[ii]]
+		    end
+		    @inbounds for ii in eachindex(ind_save_d)
+				xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
+		    end
+		end
+		nsteps += 1
+	end
+	verbose && println("-->Done")
+	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
+	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats)
 end
