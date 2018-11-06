@@ -33,8 +33,6 @@ struct pdmpResult
 	time::Vector{Float64}
 	xc::Matrix{Float64}
 	xd::Matrix{Int64}
-	stats::pdmpStats
-	args::pdmpArgs
 end
 
 """
@@ -82,7 +80,7 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 	else
 		# for the CVH method, needs to enlarge the state space
 		X0 = copy(xc0); push!(X0,ti)
-		Xc = @view X0[1:end-1]
+		Xc = copy(xc0)
 	end
 	Xd     = copy(xd0)
 

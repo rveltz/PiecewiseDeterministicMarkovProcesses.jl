@@ -33,10 +33,7 @@ function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
     end
 
 
-    # Args
-    args = pdmpArgs(xc0,xd0,F,R,F,nu,parms,tf)
-    if verbose println("--> Args saved!") end
-
+    
     # Set up initial variables
     t::Float64 = ti
     xc0 = reshape(xc0,1,length(xc0))
@@ -90,10 +87,10 @@ function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
     # nsteps -=1
 
     verbose && println("-->Done")
-    stats = pdmpStats(termination_status,nsteps)
+    
 
     verbose && println("--> xc = ",xd_hist[:,1:nsteps])
-    result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps],stats,args)
+    result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
 
     return(result)
 end

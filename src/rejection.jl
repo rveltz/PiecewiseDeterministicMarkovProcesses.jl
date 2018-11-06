@@ -29,10 +29,6 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	nsteps = 1
 	npoints = 2 # number of points for ODE integration
 
-	# Args
-	args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
-	if verbose println("--> Args saved!") end
-
 	# Set up initial variables
 	t = ti
 	X0,_, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti,xc0,xd0,n_max,true)
@@ -101,9 +97,8 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
         end
 	end
 	if verbose println("-->Done") end
-	stats = pdmpStats(termination_status,nsteps)
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps],stats,args)
+	result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
 	return(result)
 end
 
@@ -132,8 +127,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	npoints = 2 # number of points for ODE integration
 	njumps = 1
 
-	# Args
-	args = pdmpArgs(xc0,xd0,Phi,R,DX,nu,parms,tf)
+	
 
 	# Set up initial variables
 	t::Float64 = ti
@@ -203,9 +197,9 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	end
 	println("njumps = ",njumps," / rejections = ", nb_rejet)
 	if verbose println("-->Done") end
-	stats = pdmpStats(termination_status,nsteps)
+	
 	# if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = pdmpResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps],stats,args)
+	result = pdmpResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps])
 	return(result)
 end
 

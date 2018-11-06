@@ -51,7 +51,7 @@ chv!
 This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
 It takes the following arguments:
 
-- **n_max**: an `Int64` representing the maximum number of jumps to be computed.
+- **n_max**: an `Int64` representing the maximum number of jumps to be computed. If n_max<=0, switch to the case where the array is growing dynamically 
 - **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
 - **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
 - **F!** : an inplace `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
@@ -70,6 +70,11 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
 				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
+	
+	if n_max <=0
+		# using extendable array
+		chv!(xc0,xd0,F,R,DX,nu,parms,ti,tf,verbose; ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at=save_at)
+	end
 				
 	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
 	
@@ -81,10 +86,6 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	n_max += 1 #to hold initial vector
 	nsteps = 1 #index for the current jump number
 	npoints = 2 # number of points for ODE integration
-
-	# permutation to choose randomly a given number of data Args
-	args = pdmpArgs(xc0,xd0,F,R,DX,nu,parms,tf)
-	if verbose println("--> Args saved!") end
 
 	# Set up initial variables
 	t = ti         # initial simulation time
@@ -169,7 +170,6 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 		nsteps += 1
 	end
 	verbose && println("-->Done")
-	stats = pdmpStats(termination_status,nsteps)
 	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
-	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1],stats,args)
+	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1])
 end
