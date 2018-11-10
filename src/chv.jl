@@ -71,10 +71,10 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 				verbose::Bool = false;
 				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
 	
-	if n_max <=0
-		# using extendable array
-		chv!(xc0,xd0,F,R,DX,nu,parms,ti,tf,verbose; ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at=save_at)
-	end
+	# if n_max <=0
+	# 	# using extendable array
+	# 	chv!(xc0,xd0,F,R,DX,nu,parms,ti,tf,verbose; ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at=save_at)
+	# end
 				
 	@assert ode in [:cvode,:lsoda,:Adams,:BDF]
 	

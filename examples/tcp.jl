@@ -25,7 +25,7 @@ end
 xc0 = vec([0.05])
 xd0 = vec([0, 1])
 
-const nu_tcp = [[1 0];[0 -1]]
+nu_tcp = [[1 0];[0 -1]]
 parms = vec([0.1]) # sampling rate
 tf = 200.
 
@@ -38,6 +38,7 @@ Random.seed!(1234)
 println(" ----> lsoda")
 result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 2)
 result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 100)
+# result3=  @time PDMP.chv!(10,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false)
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
