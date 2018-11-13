@@ -90,7 +90,7 @@ function tauleap(n_max::Int64,xc0::Vector{Float64},xd0::Array{Int64,1},F::Functi
     
 
     verbose && println("--> xc = ",xd_hist[:,1:nsteps])
-    result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
+    result = PDMPResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
 
     return(result)
 end

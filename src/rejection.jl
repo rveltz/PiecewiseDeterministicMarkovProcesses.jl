@@ -16,7 +16,7 @@ It takes the following arguments:
 """
 function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Function,R::Function,DX::Function,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64,verbose::Bool = false;ode = :cvode,save_rejected=false,ind_save_d=-1:1,ind_save_c=-1:1)
 	@assert ode in [:cvode,:lsoda]
-	
+
 	# define the ODE flow
 	if ode == :cvode
 		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0_, tp_, abstol = 1e-9, reltol = 1e-7)
@@ -25,8 +25,8 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	end
 
 	# it is faster to pre-allocate arrays and fill it at run time
-	n_max += 1 #to hold initial vector
-	nsteps = 1
+	n_max  += 1 #to hold initial vector
+	nsteps  = 1
 	npoints = 2 # number of points for ODE integration
 
 	# Set up initial variables
@@ -45,11 +45,11 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
 	ppf = R(rate,X0,Xd,t,parms,true)
-	
+
 	@assert ppf[2] == R(rate,X0+0.1*rand(length(X0)),Xd,t+rand(),parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 	rate *= 0;ppf = R(rate,X0,Xd,t,parms,true)
 	@assert sum(rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
-	
+
 	while (t < tf) && (nsteps < n_max)
 		if verbose println("--> step : ",nsteps," / ",n_max ) end
 		reject = true
@@ -98,7 +98,7 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	end
 	if verbose println("-->Done") end
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = pdmpResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
+	result = PDMPResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
 	return(result)
 end
 
@@ -127,7 +127,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	npoints = 2 # number of points for ODE integration
 	njumps = 1
 
-	
+
 
 	# Set up initial variables
 	t::Float64 = ti
@@ -146,7 +146,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	lambda_star = 0.0 # this is the bound for the rejection method
 	tp = [0.,0.]
 	lambda_star = R(rate_vector,X0,Xd,t,parms,true)[2]
-	
+
 	@assert lambda_star == R(rate_vector,X0,Xd,t+rand(),parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 
 	t_hist[njumps] = t
@@ -197,9 +197,9 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	end
 	println("njumps = ",njumps," / rejections = ", nb_rejet)
 	if verbose println("-->Done") end
-	
+
 	# if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = pdmpResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps])
+	result = PDMPResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps])
 	return(result)
 end
 

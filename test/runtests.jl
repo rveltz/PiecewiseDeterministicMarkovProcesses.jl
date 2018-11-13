@@ -8,13 +8,13 @@ println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
 
 println(result2.time[end],", ",result2.xd[1,end])
-@test isequal(result2.time[end],200.)
-@test isequal(result2.xd[1,end],29)
+@test isequal(result2.time[end],1666.7832109949431)
+@test isequal(result2.xd[1,end],230)
 
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
 @test isequal(result.time[end],100.)
-@test isequal(result.xd[2,end],93)
+@test isequal(result.xd[2,end],91)
 
 # println("\n\n==== Morris-Lecar model of neuron")
 # include("../examples/morris_lecar.jl")
@@ -35,8 +35,8 @@ println("\n\n==== Example neural network ")
 include("../examples/neuron_rejection_exact.jl")
 
 println(result2.time[end],", ",result2.xd[1,end])
-@test isequal(result2.time[end],200.)
-@test isequal(result2.xd[1,end],29)
+@test isequal(result2.time[end],1666.7832109949431)
+@test isequal(result2.xd[1,end],230)
 @test isequal(size(result2.xd)[1],2)
 
 println("\n\n==== Example sir ")

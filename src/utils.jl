@@ -1,35 +1,27 @@
 """
-A type storing the status at the end of a call.
-"""
-struct pdmpStats
-	termination_status::String
-	nsteps::Int64
-end
-
-"""
 A type storing the call.
 """
-struct pdmpArgs
-	xc::Vector{Float64} # continuous variable
-	xd::Vector{Int64}# discrete variable
-	F::Any
-	R::Any
-	Delta::Any
-	nu::Matrix{Int64}
-	parms::Any
-	tf::Float64
+struct PDMPProblem{Ty}
+	xc::Vector{Float64}     # continuous variable
+	xd::Vector{Int64}       # discrete variable
+	F::Function			    # vector field for ODE between jumps
+	R::Function			    # rate function for jumps
+	Delta::Function		    # function to implement
+	nu::AbstractMatrix{Int64}
+	parms::Ty			    # container to hold parameters to be passed to F,R,Delta
+	tf::Float64			    # final simulation time
+	rate::Vector{Float64}	# to hold the rate vector for inplace computations
 end
 
 """
 This type stores the output, and comprises of:
-
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.
 - **xc** : a `Matrix` of `Float64`, containing the simulated states for the continuous variable.
 - **xd** : a `Matrix` of `Int	64`, containing the simulated states for the continuous variable.
 - **stats** : an instance of `PDMPStats`.
 - **args** : arguments passed.
 """
-struct pdmpResult
+struct PDMPResult
 	time::Vector{Float64}
 	xc::Matrix{Float64}
 	xd::Matrix{Int64}
@@ -38,23 +30,23 @@ end
 """
 Dummy vector field to be used in gillespie algo
 """
-function F_dummy(xcdot::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Vector{Float64})
+function F_dummy(ẋ::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Ty) where Ty
 	# vector field used for the continuous variable
-	xcdot[1] = 0.
+	ẋ[1] = 0.
 	nothing
 end
 
 """
 Dummy vector field to be used in gillespie algo
 """
-function Delta_dummy(xc, xd::Array{Int64}, t::Float64, parms::Vector{Float64}, ind_reaction::Int64)
+function Delta_dummy(xc, xd::Array{Int64}, t::Float64, parms::Ty, ind_reaction::Int64) where Ty
 	return true
 end
 
 """
 Dummy flow to be used in gillespie algo
 """
-function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms)
+function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms::Ty) where Ty
     # vector field used for the continuous variable
     # trivial dynamics
     out[1,:] .= xc

@@ -27,18 +27,24 @@ xd0 = vec([0, 1])
 
 nu_tcp = [[1 0];[0 -1]]
 parms = vec([0.1]) # sampling rate
-tf = 200.
+tf = Inf64
 
 println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
-result2=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 2)
-result2=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,n_jumps = 100)
+result2=        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
+result2=  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 400, ode = :cvode)
+
 Random.seed!(1234)
 println(" ----> lsoda")
-result3=        PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 2)
-result3=  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu_tcp,parms,0.0,tf,ode=:lsoda,n_jumps = 100)
-# result3=  @time PDMP.chv!(10,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false)
+result3=        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
+result3=  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 400)
+
+# Random.seed!(1234)
+# println(" ----> euler")
+# result4=        PDMP.chv!(2  ,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false;ode=:euler, dt = 0.001)
+# result4=  @time PDMP.chv!(400,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false;ode=:euler, dt = 0.001)
+
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
