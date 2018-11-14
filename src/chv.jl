@@ -37,8 +37,6 @@ function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Ve
 	isr = min(1.0e9,1.0 / sr)
 	F(xdot,x,xd,tau,parms)
 	xdot[end] = 1.0
-	ly = length(xdot)
-	# scale!(xdot, isr)
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] * isr
 	end
@@ -104,14 +102,14 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	nsteps = 1 #index for the current jump number
 	npoints = 2 # number of points for ODE integration
 
-	# Set up initial variables
-	t = ti         # initial simulation time
+	# Set up initial simulation time
+	t = ti
 	X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c = allocate_arrays(ti,xc0,xd0,n_max,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 	nsteps += 1
 
 	deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
 	numpf   = size(nu,1)    # number of reactions
-	rate    = zeros(numpf)  #vector of rates
+	rate    = zeros(numpf)  # vector of rates
 	t_save = save_at[1];n_save = 1
 
 	# define the ODE flow, this leads to big memory saving
@@ -128,7 +126,6 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	end
 
 	# Main loop
-	termination_status = "finaltime"
 	while (t < tf) && (nsteps < n_max)
 
 		δt = - log(rand())
@@ -186,142 +183,4 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	verbose && println("-->Done")
 	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
 	return PDMPResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1])
-end
-
-###################################################################################################
-###################################################################################################
-###################################################################################################
-### WIP implementation of the CHV algo using DiffEq
-
-"""
-a type to hold data
-"""
-struct DataForODE{T}
-	parms::T
-	xd::Vector{Int64}
-	rate::Array{Float64}
-end
-
-function f_CHV_Wrap!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, p::DataForODE{Ty}) where Ty
-	f_CHV!(F,R,t, x, xdot, p.xd, p.parms,p.rate)
-end
-
-function Flow_Wrap!(X0,Xd,dt,r,prob::ODEProblem)
-	(prob.p).rate .= r
-	(prob.p).xd   .= Xd
-	prob.u0[:]    .= X0
-	println("flow wrap done")
-	sol = DifferentialEquations.solve(prob, DifferentialEquations.Tsit5(),save_start=false,save_end=true,save_everystep = false).u
-    return sol[end]
-end
-
-@inline function discrete_callback_chv(u,t,integrator)
-    t >= integrator.opts.tstops
-end
-
-# The following function is called as a discrete callback. Its role is to perform the jump on the solution
-# given by the ODE solver
-function (p::PDMPProblem)(integrator)
-	# find the next jump time
-	t = integrator.u[end]
-
-	# execute the jump
-	p.
-
-	# we register the next time interval to solve ode
-	add_tstop!(integrator,- log(rand()))
-end
-
-
-
-
-function chv_diffeq!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
-				F::Function,R::Function,DX::Function,
-				nu::AbstractArray{Int64},parms,
-				ti::Float64, tf::Float64,
-				verbose::Bool = false;
-				ode=Euler(),ind_save_d=-1:1,ind_save_c=-1:1,save_at=[],dt=0.001)
-	@warn "Modifying parameters is fine if the Interpolant is not lazy like a Vern method"
-
-
-	# Set up initial variables
-	t = ti         # initial simulation time
-
-
-	deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
-	numpf   = size(nu,1)    # number of reactions
-	rate    = zeros(numpf)  #vector of rates
-	t_save  = save_at[1];n_save = 1
-
-	#custom type to collect all parameters in one structure
-	data_ode = DataForODE(parms,Xd,rate)
-
-	# callback to discrete jump
-	affect! = function (integrator)
-	  @show integrator.u[1] += 0.05
-	end
-
-	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt)->f_CHV_Wrap!(F,R,tt,x,xdot,data),X0,(0.,1.),data_ode)
-
-	Flow = (X0_,Xd_,dt,r_)-> Flow_Wrap!(X0_,Xd_,dt,r_,prob_CHV)
-
-
-	# Main loop
-	termination_status = "finaltime"
-	while (t < tf) && (nsteps < n_max)
-
-		δt = - log(rand())
-		verbose && println("--> t = ",t," - δt = ",δt, ",nstep =  ",nsteps)
-
-		res_ode = Flow(X0,Xd,δt,rate)
-
-		verbose && println("--> ode solve is done!")
-
-		@inbounds for ii in eachindex(X0)
-			X0[ii] = res_ode[ii]
-		end
-		t = res_ode[end,end]
-
-		R(rate,Xc,Xd,t,parms, false)
-
-		# jump time:
-		if (t < tf)
-			# Update event
-			ev = pfsample(rate,sum(rate),numpf)
-			deltaxd .= nu[ev,:]
-			# Xd = Xd .+ deltaxd
-			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
-
-			# Xc = Xc .+ deltaxc
-			DX(Xc,Xd,t,parms,ev)
-
-			verbose && println("--> Which reaction? => ",ev)
-			# save state
-			t_hist[nsteps] = t
-			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
-
-		else
-
-			# if ode in [:cvode,:bdf,:adams]
-	# 			res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
-	# 		else#if ode==:lsoda
-	# 			res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
-	# 		end
-	# 		t = tf
-	#
-	# 		# save state
-	# 		t_hist[nsteps] = tf
-	# 		@inbounds for ii in eachindex(ind_save_c)
-	# 			xc_hist[ii,nsteps] = res_ode_last[end,ind_save_c[ii]]
-	# 	    end
-	# 	    @inbounds for ii in eachindex(ind_save_d)
-	# 			xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
-	# 	    end
-		end
-		nsteps += 1
-	end
-	verbose && println("-->Done")
-	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
-	return pdmpResult(t_hist[1:nsteps-1],xc_hist[:,1:nsteps-1],xd_hist[:,1:nsteps-1])
 end

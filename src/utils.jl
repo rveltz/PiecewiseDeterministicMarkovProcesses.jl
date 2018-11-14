@@ -1,16 +1,18 @@
 """
 A type storing the call.
 """
-struct PDMPProblem{Ty}
+mutable struct PDMPProblem{Ty}
 	xc::Vector{Float64}     # continuous variable
 	xd::Vector{Int64}       # discrete variable
 	F::Function			    # vector field for ODE between jumps
 	R::Function			    # rate function for jumps
 	Delta::Function		    # function to implement
-	nu::AbstractMatrix{Int64}
+	nu::AbstractArray{Int64}
 	parms::Ty			    # container to hold parameters to be passed to F,R,Delta
 	tf::Float64			    # final simulation time
 	rate::Vector{Float64}	# to hold the rate vector for inplace computations
+	tstop_extended::Float64
+	njumps::Int64
 end
 
 """

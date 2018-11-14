@@ -32,18 +32,18 @@ tf = Inf64
 println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
-result2=        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
-result2=  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 400, ode = :cvode)
+result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
+result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 400, ode = :cvode)
 
 Random.seed!(1234)
 println(" ----> lsoda")
-result3=        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
-result3=  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 400)
+result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
+result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 400)
 
-# Random.seed!(1234)
-# println(" ----> euler")
-# result4=        PDMP.chv!(2  ,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false;ode=:euler, dt = 0.001)
-# result4=  @time PDMP.chv!(400,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false;ode=:euler, dt = 0.001)
+Random.seed!(1234)
+println(" ----> DiffEq")
+result4 =        PDMP.chv_diffeq!(10 ,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,100.0,false)
+result4 =  @time PDMP.chv_diffeq!(400,xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf,false)
 
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)

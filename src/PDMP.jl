@@ -1,6 +1,6 @@
 module PDMP
 	using Random, LinearAlgebra
-	using LSODA, Sundials
+	using LSODA, Sundials, DifferentialEquations
 
 	export pdmp!,
 		ssa,
@@ -17,6 +17,8 @@ module PDMP
 	include("cvode.jl")
 	include("lsoda.jl")
 	include("chv.jl")
+	include("chvdiffeq.jl")
+
 	include("rejection.jl")
 	include("tau-leap.jl")
 
