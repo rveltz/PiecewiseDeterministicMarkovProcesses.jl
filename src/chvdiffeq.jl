@@ -3,40 +3,17 @@
 ###################################################################################################
 ### WIP implementation of the CHV algo using DiffEq
 
-"""
-a type to hold data
-"""
-struct DataForODE{T}
-	parms::T
-	xd::Vector{Int64}
-	rate::Array{Float64}
-end
-
-# function f_CHV_Wrap!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, p::DataForODE{Ty}) where Ty
-# 	f_CHV!(F,R,t, x, xdot, p.xd, p.parms,p.rate)
-# end
-#
-# function Flow_Wrap!(X0,Xd,dt,r,prob::ODEProblem)
-# 	(prob.p).rate .= r
-# 	(prob.p).xd   .= Xd
-# 	prob.u0[:]    .= X0
-# 	println("flow wrap done")
-# 	sol = DifferentialEquations.solve(prob, DifferentialEquations.Tsit5(),save_start=false,save_end=true,save_everystep = false).u
-#     return sol[end]
-# end
-
 @inline function (prob::PDMPProblem)(u,t,integrator)
     t == prob.tstop_extended
 end
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 function (prob::PDMPProblem)(integrator)
-	# print("----> Jump detected!, enter callback to deal with it")
 	# find the next jump time
 	t = integrator.u[end]
-	# println(", tjump = $t")
 
 	# state of the continuous variable right before the jump
+# HOW TO USE VIEW FOR THIS?
 	X0 = integrator.u[1:end-1]
 
 	# execute the jump
@@ -45,14 +22,14 @@ function (prob::PDMPProblem)(integrator)
 		# Update event
 		ev = pfsample(prob.rate,sum(prob.rate),length(prob.rate))
 
-		deltaxd = prob.nu[ev,:]
+		deltaxd = view(prob.nu,ev,:)
+
 		# Xd = Xd .+ deltaxd
 		LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
 
 		# Xc = Xc .+ deltaxc
 		prob.Delta(X0,prob.xd,t,prob.parms,ev)
 	end
-	# println("----> x = ",X0)
 	# we register the next time interval to solve ode
 	prob.njumps += 1
 	prob.tstop_extended += -log(rand())
@@ -83,19 +60,18 @@ function chv_diffeq!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVect
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
 				ode=:euler,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
-	@warn "Modifying parameters is fine if the Interpolant is not lazy like a Vern method\n"
+	# @warn "Modifying parameters is fine if the Interpolant is not lazy like a Vern method\n"
 
 	# Set up initial simulation time
 	t = ti
 
-	deltaxd = copy(nu[1,:]) # declare this variable, variable to hold discrete jump
 	numpf   = size(nu,1)    # number of reactions
 	rate    = zeros(numpf)  # vector of rates
+
 	# vector to hold the state space for the extended system
 	X_extended = copy(xc0); push!(X_extended,0.)
 
 	# custom type to collect all parameters in one structure
-	data_ode = DataForODE(parms,copy(xd0),rate)
 	problem  = PDMPProblem(copy(xc0),copy(xd0),F,R,DX,nu,parms,tf,rate,-log(rand()),0)
 
 	# definition of the callback structure passed to DiffEq
@@ -105,24 +81,24 @@ function chv_diffeq!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVect
 	X_hist = copy(xc0)
 	t_hist = [ti]
 	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.,1.))
-	integrator = init(prob_CHV, Tsit5(), tstops = problem.tstop_extended, callback=cb)
+	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
+	integrator = init(prob_CHV, Tsit5(), tstops = problem.tstop_extended, callback=cb, save_everystep = false, save_positions=(false,false))
 
 	njumps = 0
-	println("--> n = 0, t = $t, tf = $tf")
+# I DONT NEED TO TAKE CARE OF THE FACT THAT the last jump might be after tf	
 	while (t < tf) && problem.njumps < n_max
 		verbose && println("--> n = $(problem.njumps), t = $t")
-		# we compute a jump
-		step!(integrator)
 
+		step!(integrator)
 		t = integrator.u[end]
 
+		# the previous step was a jump!
 		if njumps < problem.njumps
 			# need to find a good way to solve the jumps, not done YET
-			append!(X_hist,integrator.u[1:end-1])
-			push!(t_hist,t)
+			# append!(X_hist,integrator.u[1:end-1])
+			# push!(t_hist,t)
 			njumps +=1
 		end
 	end
-	return t_hist,X_hist
+	return t_hist,X_hist,integrator.sol
 end
