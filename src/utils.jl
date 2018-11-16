@@ -1,12 +1,17 @@
 """
 A type storing the call.
 """
-mutable struct PDMPProblem{Tc,Td,Tp}
-	xc::AbstractVector{Tc}			# continuous variable
-	xd::AbstractVector{Td}			# discrete variable
-	F::Function						# vector field for ODE between jumps
-	R::Function			    		# rate function for jumps
-	Delta::Function		    		# function to implement
+
+struct PDMPFunctions{TF,TR,TD}
+	F::TF						# vector field for ODE between jumps
+	R::TR			    		# rate function for jumps
+	Delta::TD		    		# function to implement
+end
+
+mutable struct PDMPProblem{Tc,Td,Tp,TF,TR,TD}
+	xc::AbstractVector{Tc}		# continuous variable
+	xd::AbstractVector{Td}		# discrete variable
+	pdmpFunc::PDMPFunctions{TF,TR,TD}
 	nu::AbstractArray{Td}
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
@@ -19,20 +24,20 @@ mutable struct PDMPProblem{Tc,Td,Tp}
 	Xc::AbstractVectorOfArray{Tc}
 	Xd::AbstractVectorOfArray{Td}
 	verbose::Bool
-	PDMPProblem{Tc,Td,Tp}(xc0::AbstractVector{Tc},
+	PDMPProblem{Tc,Td,Tp,TF,TR,TD}(xc0::AbstractVector{Tc},
 						  xd0::AbstractVector{Td},
-						  F::Function,
-						  R::Function,
-						  DX::Function,
+						  F::TF,
+						  R::TR,
+						  DX::TD,
 						  nu::AbstractArray{Int64},
 						  parms::Tp,
 						  ti::Tc,
-						  tf::Tc) where {Tc,Td,Tp} = new(copy(xc0),copy(xd0),F,R,DX,nu,
+						  tf::Tc) where {Tc,Td,Tp,TF ,TR ,TD } = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
 			parms,tf,zeros(Tc,size(nu,1)),-log(rand()),0,[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
 end
 
-PDMPProblem(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},F::Function,R::Function,DX::Function,
-		nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp} = PDMP{Tc,Tp,Tp}(xc0,xd0,F,R,DX,nu,
+PDMPProblem(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},F::TF,R::TR,DX::TD,
+		nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp,TF ,TR ,TD } = PDMP{Tc,Tp,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,
 		parms,ti,tf)
 
 """

@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random
+using PDMP, LinearAlgebra, Random, DifferentialEquations
 
 
 function F_tcp!(ẋ, xc, xd, t, parms)
@@ -34,12 +34,14 @@ println("--> inplace implementation,\n ----> cvode")
 Random.seed!(1234)
 result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
 println(result2.time)
+Random.seed!(1234)
 result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 1000, ode = :cvode)
 
 Random.seed!(1234)
 println(" ----> lsoda")
 result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
 println(result3.time)
+Random.seed!(1234)
 result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 1000)
 
 Random.seed!(1234)
@@ -49,13 +51,13 @@ result4 =        PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
                 nu_tcp,parms,0.0,tf,false, n_jumps = 2, save_positions = (false,true))
 println(result4.time)
+Random.seed!(1234)
 result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 1000)
+                nu_tcp,parms,0.0,tf,false, n_jumps = 1000,ode = Tsit5(), save_positions = (false,false))
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
-
 
 # println("--> check for time stop at tf")
 # tf = 40.5
