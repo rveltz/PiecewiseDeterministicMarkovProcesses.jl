@@ -98,8 +98,8 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 	end
 
 	# it is faster to pre-allocate arrays and fill it at run time
-	n_max += 1 #to hold initial vector
-	nsteps = 1 #index for the current jump number
+	n_max  += 1 # to hold initial vector
+	nsteps  = 1 # index for the current jump number
 	npoints = 2 # number of points for ODE integration
 
 	# Set up initial simulation time
@@ -165,11 +165,10 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 
 		else
-
 			if ode in [:cvode,:bdf,:adams]
-				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last =   Sundials.cvode((tt,x,xdot)->F(xdot,x,Xd,tt,parms), xc_hist[:,nsteps-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			else#if ode==:lsoda
-				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), X0[1:end-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt,x,xdot,data)->F(xdot,x,Xd,tt,parms), xc_hist[:,nsteps-1], [t_hist[nsteps-1], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 

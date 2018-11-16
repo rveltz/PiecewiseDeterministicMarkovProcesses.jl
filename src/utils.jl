@@ -18,10 +18,17 @@ mutable struct PDMPProblem{Tc,Td,Tp}
 	save_pre_jump::Bool				# save the pre jump
 	Xc::AbstractVectorOfArray{Tc}
 	Xd::AbstractVectorOfArray{Td}
-	PDMPProblem{Tc,Td,Tp}(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},
-			F::Function,R::Function,DX::Function,
-			nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp} = new(xc0,xd0,F,R,DX,nu,
-			parms,tf,zeros(Tc,size(nu,1)),-log(rand()),0,[ti],false,VectorOfArray([xc0]),VectorOfArray([xd0]))
+	verbose::Bool
+	PDMPProblem{Tc,Td,Tp}(xc0::AbstractVector{Tc},
+						  xd0::AbstractVector{Td},
+						  F::Function,
+						  R::Function,
+						  DX::Function,
+						  nu::AbstractArray{Int64},
+						  parms::Tp,
+						  ti::Tc,
+						  tf::Tc) where {Tc,Td,Tp} = new(copy(xc0),copy(xd0),F,R,DX,nu,
+			parms,tf,zeros(Tc,size(nu,1)),-log(rand()),0,[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
 end
 
 PDMPProblem(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},F::Function,R::Function,DX::Function,

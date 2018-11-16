@@ -33,11 +33,13 @@ println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
 result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
+println(result2.time)
 result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 100, ode = :cvode)
 
 Random.seed!(1234)
 println(" ----> lsoda")
 result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
+println(result3.time)
 result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 100)
 
 Random.seed!(1234)
@@ -45,10 +47,27 @@ println(" ----> DiffEq")
 
 result4 =        PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,100.0,false, n_jumps = 2)
+                nu_tcp,parms,0.0,100.0,false, n_jumps = 2, save_positions = (true,true))
+println(result4.time)
 result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
                 nu_tcp,parms,0.0,tf,false, n_jumps = 100)
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
+
+
+# println("--> check for time stop at tf")
+# tf = 3.5
+# Random.seed!(1234)
+# result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 3,   ode = :cvode)
+# println(result2)
+#
+# Random.seed!(1234)
+# result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 3)
+# println(result3)
+#
+# Random.seed!(1234)
+#     result4 =  PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+#                     nu_tcp,parms,0.0,tf,false, n_jumps = 3, save_positions = (false,true))
+#     println(result4)
