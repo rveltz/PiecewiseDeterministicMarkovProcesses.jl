@@ -19,7 +19,7 @@ We briefly recall facts about a simple class of PDMPs. They are described by a c
 To install this (unregistered) package, run the command 
 
 ```julia
-Pkg.clone("https://github.com/rveltz/PDMP.jl.git")
+add https://github.com/rveltz/PDMP.jl.git
 ```
 
 ## Basic example with CHV method
