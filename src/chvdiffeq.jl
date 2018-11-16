@@ -1,7 +1,7 @@
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
-### WIP implementation of the CHV algo using DiffEq
+### implementation of the CHV algo using DiffEq
 
 @inline function (prob::PDMPProblem)(u,t,integrator)
     (t == prob.tstop_extended)
@@ -104,12 +104,13 @@ function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-
 		t = integrator.u[end]
 		# the previous step was a jump!
 		if njumps < problem.njumps && save_positions[2] && (t <= problem.tf)
-			problem.verbose && println("----> save post-jump, ")
+			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
 			# need to find a good way to solve the jumps, not done YET
 			push!(problem.Xc,integrator.u[1:end-1])
-			push!(problem.Xd,(problem.xd))
+			push!(problem.Xd,copy(problem.xd))
 			push!(problem.time,t)
 			njumps +=1
+			problem.verbose && println("----> end save post-jump, ")
 		end
 	end
 	# we check that the last bit [t_last_jump, tf] is not missing
@@ -119,7 +120,7 @@ function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-
 					problem.Xc[end],(problem.time[end],tf))
 		sol = solve(prob_last_bit, ode)
 		push!(problem.Xc,sol.u[end])
-		push!(problem.Xd,problem.xd)
+		push!(problem.Xd,copy(problem.xd))
 		push!(problem.time,sol.t[end])
 	end
 	return PDMPResult(problem.time,problem.Xc,problem.Xd)

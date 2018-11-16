@@ -47,7 +47,7 @@ println(" ----> DiffEq")
 
 result4 =        PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,100.0,false, n_jumps = 2, save_positions = (true,true))
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2, save_positions = (false,true))
 println(result4.time)
 result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
@@ -58,16 +58,17 @@ println("#jumps = ", length(result2.time))
 
 
 # println("--> check for time stop at tf")
-# tf = 3.5
+# tf = 4.5
+# nj = 5
 # Random.seed!(1234)
-# result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 3,   ode = :cvode)
+# result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = :cvode)
 # println(result2)
 #
 # Random.seed!(1234)
-# result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 3)
+# result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = nj)
 # println(result3)
 #
 # Random.seed!(1234)
 #     result4 =  PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
-#                     nu_tcp,parms,0.0,tf,false, n_jumps = 3, save_positions = (false,true))
+#                     nu_tcp,parms,0.0,tf,false, n_jumps = nj, save_positions = (false,true))
 #     println(result4)
