@@ -16,18 +16,17 @@ function (prob::PDMPProblem)(integrator)
 	# state of the continuous variable right before the jump
 # HOW TO USE VIEW FOR THIS?
 	X0 = integrator.u[1:end-1]
-	XD = prob.xd
-	prob.verbose && printstyled(color=:green,"--> jump not yet performed, xd = ",XD,"\n")
+	prob.verbose && printstyled(color=:green,"--> jump not yet performed, xd = ",prob.xd,"\n")
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
 		prob.verbose && printstyled(color=:green,"----> save pre-jump\n")
 		push!(prob.Xc,integrator.u[1:end-1])
-		push!(prob.Xd,XD)
+		push!(prob.Xd,copy(prob.xd))
 		push!(prob.time,t)
 	end
 
 	# execute the jump
-	prob.R(prob.rate,X0,XD,t,prob.parms, false)
+	prob.R(prob.rate,X0,prob.xd,t,prob.parms, false)
 	if (t < prob.tf)
 		# Update event
 		ev = pfsample(prob.rate,sum(prob.rate),length(prob.rate))
@@ -35,13 +34,12 @@ function (prob::PDMPProblem)(integrator)
 		deltaxd = view(prob.nu,ev,:)
 
 		# Xd = Xd .+ deltaxd
-		LinearAlgebra.BLAS.axpy!(1.0, deltaxd, XD)
+		LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
 
 		# Xc = Xc .+ deltaxc
-		prob.Delta(X0,XD,t,prob.parms,ev)
+		prob.Delta(X0,prob.xd,t,prob.parms,ev)
 	end
-	prob.xd .= XD
-	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",XD,"\n")
+	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",prob.xd,"\n")
 	# we register the next time interval to solve ode
 	prob.njumps += 1
 	prob.tstop_extended += -log(rand())
