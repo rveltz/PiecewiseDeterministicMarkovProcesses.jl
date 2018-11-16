@@ -140,6 +140,8 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 		@inbounds for ii in eachindex(X0)
 			X0[ii] = res_ode[end,ii]
 		end
+
+		# this is the next jump time
 		t = res_ode[end,end]
 
 		R(rate,X0,Xd,t,parms, false)
@@ -149,6 +151,7 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			# Update event
 			ev = pfsample(rate,sum(rate),numpf)
 			deltaxd .= nu[ev,:]
+
 			# Xd = Xd .+ deltaxd
 			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
@@ -156,7 +159,8 @@ function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int6
 			DX(X0,Xd,t,parms,ev)
 
 			verbose && println("--> Which reaction? => ",ev)
-			# save state
+
+			# save state, post-jump
 			t_hist[nsteps] = t
 			save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
 

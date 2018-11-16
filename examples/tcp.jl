@@ -27,7 +27,7 @@ xd0 = vec([0, 1])
 
 nu_tcp = [[1 0];[0 -1]]
 parms = vec([0.1]) # sampling rate
-tf = Inf64
+tf = 1000.
 
 println("--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
@@ -42,15 +42,13 @@ result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, od
 
 Random.seed!(1234)
 println(" ----> DiffEq")
-result4 =        PDMP.chv_diffeq!(2 ,xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,100.0,false)
-result4 =  @time PDMP.chv_diffeq!(100,xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false)
-@show result4[3].t
 
-# result4[1][1:100] - result3.time
+result4 =        PDMP.chv_diffeq!(xc0,xd0,
+                F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,100.0,false, n_jumps = 2)
+result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
+                F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = 100)
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))

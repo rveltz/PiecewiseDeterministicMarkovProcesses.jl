@@ -16,6 +16,12 @@ function (prob::PDMPProblem)(integrator)
 # HOW TO USE VIEW FOR THIS?
 	X0 = integrator.u[1:end-1]
 
+	if prob.save_pre_jump
+		push!(prob.Xc,integrator.u[1:end-1])
+		push!(prob.Xd,problem.xd)
+		push!(prob.time,t)
+	end
+
 	# execute the jump
 	prob.R(prob.rate,X0,prob.xd,t,prob.parms, false)
 	if (t < prob.tf)
@@ -41,7 +47,7 @@ function (prob::PDMPProblem)(xdot,x,p,t)
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
 	sr = prob.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	@assert sr > 0.0 "Total rate must be positive"
+	@assert(sr > 0.0, "Total rate must be positive")
 	isr = min(1.0e9,1.0 / sr)
 	prob.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
@@ -54,51 +60,49 @@ end
 """
 Implementation of the CHV method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
 """
-function chv_diffeq!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
+function chv_diffeq!(xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
 				F::Function,R::Function,DX::Function,
-				nu::AbstractArray{Int64},parms,
+				nu::AbstractArray{Int64},parms::Tp,
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
-				ode=:euler,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[])
-	# @warn "Modifying parameters is fine if the Interpolant is not lazy like a Vern method\n"
+				ode=Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where Tp
 
-	# Set up initial simulation time
+				# custom type to collect all parameters in one structure
+				problem  = PDMPProblem{Float64,Int64,Tp}(copy(xc0),copy(xd0),F,R,DX,nu,parms,ti,tf)
+				problem.save_pre_jump = save_positions[1]
+
+				chv_diffeq!(problem,ti,tf,verbose;ode=ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions=save_positions,n_jumps=n_jumps)
+end
+
+function chv_diffeq!(problem::PDMPProblem,ti,tf,verbose::Bool = false;ode=Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64)
 	t = ti
 
-	numpf   = size(nu,1)    # number of reactions
-	rate    = zeros(numpf)  # vector of rates
-
 	# vector to hold the state space for the extended system
-	X_extended = copy(xc0); push!(X_extended,0.)
-
-	# custom type to collect all parameters in one structure
-	problem  = PDMPProblem(copy(xc0),copy(xd0),F,R,DX,nu,parms,tf,rate,-log(rand()),0)
+	X_extended = copy(problem.xc); push!(X_extended,0.)
 
 	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, problem)
+	cb = DiscreteCallback(problem, problem, save_positions=(false,false))
 
-
-	X_hist = copy(xc0)
-	t_hist = [ti]
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
-	integrator = init(prob_CHV, Tsit5(), tstops = problem.tstop_extended, callback=cb, save_everystep = false, save_positions=(false,false))
+	integrator = init(prob_CHV, ode, tstops = problem.tstop_extended, callback=cb, save_everystep = false)
 
 	njumps = 0
-# I DONT NEED TO TAKE CARE OF THE FACT THAT the last jump might be after tf	
-	while (t < tf) && problem.njumps < n_max
+# I DONT NEED TO TAKE CARE OF THE FACT THAT the last jump might be after tf
+	while (t < tf) && problem.njumps < n_jumps
 		verbose && println("--> n = $(problem.njumps), t = $t")
 
 		step!(integrator)
 		t = integrator.u[end]
 
 		# the previous step was a jump!
-		if njumps < problem.njumps
+		if njumps < problem.njumps && save_positions[2]
 			# need to find a good way to solve the jumps, not done YET
-			# append!(X_hist,integrator.u[1:end-1])
-			# push!(t_hist,t)
+			push!(problem.Xc,integrator.u[1:end-1])
+			push!(problem.Xd,problem.xd)
+			push!(problem.time,t)
 			njumps +=1
 		end
 	end
-	return t_hist,X_hist,integrator.sol
+	return PDMPResult(problem.time,problem.Xc,problem.Xd)
 end

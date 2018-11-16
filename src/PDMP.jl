@@ -1,6 +1,6 @@
 module PDMP
 	using Random, LinearAlgebra
-	using LSODA, Sundials, DifferentialEquations
+	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
 
 	export pdmp!,
 		ssa,

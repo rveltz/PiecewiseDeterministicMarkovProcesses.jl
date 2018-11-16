@@ -1,19 +1,32 @@
 """
 A type storing the call.
 """
-mutable struct PDMPProblem{Ty}
-	xc::Vector{Float64}     # continuous variable
-	xd::Vector{Int64}       # discrete variable
-	F::Function			    # vector field for ODE between jumps
-	R::Function			    # rate function for jumps
-	Delta::Function		    # function to implement
-	nu::AbstractArray{Int64}
-	parms::Ty			    # container to hold parameters to be passed to F,R,Delta
-	tf::Float64			    # final simulation time
-	rate::Vector{Float64}	# to hold the rate vector for inplace computations
-	tstop_extended::Float64
+mutable struct PDMPProblem{Tc,Td,Tp}
+	xc::AbstractVector{Tc}			# continuous variable
+	xd::AbstractVector{Td}			# discrete variable
+	F::Function						# vector field for ODE between jumps
+	R::Function			    		# rate function for jumps
+	Delta::Function		    		# function to implement
+	nu::AbstractArray{Td}
+	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
+	tf::Tc			    			# final simulation time
+	rate::AbstractVector{Tc}		# to hold the rate vector for inplace computations
+	tstop_extended::Tc
 	njumps::Int64
+	# space to save result
+	time::Vector{Float64}
+	save_pre_jump::Bool				# save the pre jump
+	Xc::AbstractVectorOfArray{Tc}
+	Xd::AbstractVectorOfArray{Td}
+	PDMPProblem{Tc,Td,Tp}(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},
+			F::Function,R::Function,DX::Function,
+			nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp} = new(xc0,xd0,F,R,DX,nu,
+			parms,tf,zeros(Tc,size(nu,1)),-log(rand()),0,[ti],false,VectorOfArray([xc0]),VectorOfArray([xd0]))
 end
+
+PDMPProblem(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},F::Function,R::Function,DX::Function,
+		nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp} = PDMP{Tc,Tp,Tp}(xc0,xd0,F,R,DX,nu,
+		parms,ti,tf)
 
 """
 This type stores the output, and comprises of:
