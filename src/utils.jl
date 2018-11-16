@@ -8,36 +8,36 @@ struct PDMPFunctions{TF,TR,TD}
 	Delta::TD		    		# function to implement
 end
 
-mutable struct PDMPProblem{Tc,Td,Tp,TF,TR,TD}
-	xc::AbstractVector{Tc}		# continuous variable
-	xd::AbstractVector{Td}		# discrete variable
-	pdmpFunc::PDMPFunctions{TF,TR,TD}
-	nu::AbstractArray{Td}
-	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
-	tf::Tc			    			# final simulation time
-	rate::AbstractVector{Tc}		# to hold the rate vector for inplace computations
+mutable struct PDMPsimulation{Tc <: Real}
 	tstop_extended::Tc
 	njumps::Int64
+end
+
+struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF,TR,TD}
+	xc::vectype_xc					# continuous variable
+	xd::vectype_xd					# discrete variable
+	pdmpFunc::PDMPFunctions{TF,TR,TD}
+	nu::Tnu
+	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
+	tf::Tc			    			# final simulation time
+	rate::vectype_xc				# to hold the rate vector for inplace computations
+	sim::PDMPsimulation{Tc}
 	# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump
-	Xc::AbstractVectorOfArray{Tc}
-	Xd::AbstractVectorOfArray{Td}
+	Xc
+	Xd
 	verbose::Bool
-	PDMPProblem{Tc,Td,Tp,TF,TR,TD}(xc0::AbstractVector{Tc},
-						  xd0::AbstractVector{Td},
-						  F::TF,
-						  R::TR,
-						  DX::TD,
-						  nu::AbstractArray{Int64},
-						  parms::Tp,
-						  ti::Tc,
-						  tf::Tc) where {Tc,Td,Tp,TF ,TR ,TD } = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
-			parms,tf,zeros(Tc,size(nu,1)),-log(rand()),0,[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
+	PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
+			xc0::vectype_xc,xd0::vectype_xd,
+			F::TF,R::TR,DX::TD,
+			nu::Tnu,parms::Tp,
+			ti::Tc,tf::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
+			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc}(-log(rand()),0),[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
 end
 
-PDMPProblem(xc0::AbstractVector{Tc},xd0::AbstractVector{Td},F::TF,R::TR,DX::TD,
-		nu::AbstractArray{Int64},parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,Tp,TF ,TR ,TD } = PDMP{Tc,Tp,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,
+PDMPProblem(xc0::vectype_xc,xd0::vectype_xd,F::TF,R::TR,DX::TD,
+		nu::Tnu,parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = PDMP{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,
 		parms,ti,tf)
 
 """

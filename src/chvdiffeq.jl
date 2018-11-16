@@ -4,8 +4,8 @@
 ### implementation of the CHV algo using DiffEq
 
 # callable struct
-@inline function (prob::PDMPProblem)(u,t,integrator)
-    (t == prob.tstop_extended)
+function (prob::PDMPProblem)(u,t,integrator)
+    (t == prob.sim.tstop_extended)
 end
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
@@ -43,9 +43,9 @@ function (prob::PDMPProblem)(integrator)
 	end
 	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",prob.xd,"\n")
 	# we register the next time interval to solve ode
-	prob.njumps += 1
-	prob.tstop_extended += -log(rand())
-	add_tstop!(integrator, prob.tstop_extended)
+	prob.sim.njumps += 1
+	prob.sim.tstop_extended += -log(rand())
+	add_tstop!(integrator, prob.sim.tstop_extended)
 	prob.verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
@@ -68,22 +68,22 @@ end
 """
 Implementation of the CHV method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
 """
-function chv_diffeq!(xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
+function chv_diffeq!(xc0,xd0,
 				F::Tf,R::Tr,DX::Td,
-				nu::AbstractArray{Int64},parms::Tp,
+				nu::Tnu,parms::Tp,
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
-				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tp, Tf ,Tr ,Td }
+				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tnu <: AbstractArray{Int64}, Tp, Tf ,Tr ,Td }
 
 				# custom type to collect all parameters in one structure
-				problem  = PDMPProblem{Float64,Int64,Tp,Tf,Tr,Td}(xc0,xd0,F,R,DX,nu,parms,ti,tf)
-				problem.save_pre_jump = save_positions[1]
-				problem.verbose = verbose
+				problem  = PDMPProblem{eltype(xc0),eltype(xd0),typeof(xc0),typeof(xd0),Tnu,Tp,Tf,Tr,Td}(xc0,xd0,F,R,DX,nu,parms,ti,tf)
+				# problem.save_pre_jump = save_positions[1]
+				# problem.verbose = verbose
 
 				chv_diffeq!(problem,ti,tf;ode=ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
 end
 
-function chv_diffeq!(problem::PDMPProblem{Tc,Td,Tp,TF,TR,TD},ti,tf = false;ode=Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tp,TF <: Function,TR <: Function,TD <: Function}
+function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64)
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 	t = ti
 
@@ -95,15 +95,15 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,Tp,TF,TR,TD},ti,tf = false;ode=T
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
-	integrator = init(prob_CHV, ode, tstops = problem.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
+	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
 	njumps = 0
 # I DONT NEED TO TAKE CARE OF THE FACT THAT the last jump might be after tf
-	while (t < tf) && problem.njumps < n_jumps-1
+	while (t < tf) && problem.sim.njumps < n_jumps-1
 		problem.verbose && println("--> n = $(problem.njumps), t = $t")
 		step!(integrator)
 		t = integrator.u[end]
 		# the previous step was a jump!
-		if njumps < problem.njumps && save_positions[2] && (t <= problem.tf)
+		if njumps < problem.sim.njumps && save_positions[2] && (t <= problem.tf)
 			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
 			# need to find a good way to solve the jumps, not done YET
 			push!(problem.Xc,integrator.u[1:end-1])
