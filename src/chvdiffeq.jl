@@ -10,7 +10,7 @@ end
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
-function (prob::PDMPProblem)(integrator)
+@inline function (prob::PDMPProblem)(integrator)
 	prob.verbose && printstyled(color=:green,"--> Jump detected!!\n")
 	# find the next jump time
 	t = integrator.u[end]
@@ -50,7 +50,7 @@ function (prob::PDMPProblem)(integrator)
 end
 
 # callable struct
-function (prob::PDMPProblem)(xdot,x,p,t)
+@inline function (prob::PDMPProblem)(xdot,x,p,t)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]

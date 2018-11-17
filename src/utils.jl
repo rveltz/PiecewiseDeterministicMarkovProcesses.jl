@@ -8,12 +8,12 @@ struct PDMPFunctions{TF,TR,TD}
 	Delta::TD		    		# function to implement
 end
 
-mutable struct PDMPsimulation{Tc <: Real}
+mutable struct PDMPsimulation{Tc <: Real,Td}
 	tstop_extended::Tc
-	njumps::Int64
+	njumps::Td
 end
 
-struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF,TR,TD}
+struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
 	pdmpFunc::PDMPFunctions{TF,TR,TD}
@@ -21,23 +21,23 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
 	rate::vectype_xc				# to hold the rate vector for inplace computations
-	sim::PDMPsimulation{Tc}
+	sim::PDMPsimulation{Tc,Td}
 	# space to save result
 	time::Vector{Float64}
-	save_pre_jump::Bool				# save the pre jump
-	Xc
-	Xd
-	verbose::Bool
+	save_pre_jump::Bool				# save the pre jump?
+	Xc::VectorOfArray{Tc,2,Array{vectype_xc,1}}		# continuous variable history
+	Xd::VectorOfArray{Td,2,Array{vectype_xd,1}}		# discrete variable history
+	verbose::Bool					# print message?
 	PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
 			xc0::vectype_xc,xd0::vectype_xd,
 			F::TF,R::TR,DX::TD,
 			nu::Tnu,parms::Tp,
 			ti::Tc,tf::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
-			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc}(-log(rand()),0),[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
+			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(-log(rand()),0),[ti],false,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),false)
 end
 
 PDMPProblem(xc0::vectype_xc,xd0::vectype_xd,F::TF,R::TR,DX::TD,
-		nu::Tnu,parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = PDMP{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,
+		nu::Tnu,parms::Tp,ti::Tc,tf::Tc) where {Tc,Td,vectype_xc <: AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = PDMP{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD,vectype_xc_hist,vectype_xd_hist}(xc0,xd0,F,R,DX,nu,
 		parms,ti,tf)
 
 """
