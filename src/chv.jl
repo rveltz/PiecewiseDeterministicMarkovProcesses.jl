@@ -84,12 +84,12 @@ function euler(rhs!::Function,x0,dt,ti,tf)
 	return hcat(x0,x)
 end
 
-function chv!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},
+function chv!(n_max::Int64,xc0::vecc,xd0::vecd,
 				F::Function,R::Function,DX::Function,
-				nu::AbstractArray{Int64},parms,
+				nu::Tnu,parms,
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
-				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[],dt=0.001)
+				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,save_at=[],dt=0.001) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}, Tnu <:AbstractArray{Int64}}
 
 	@assert ode in [:cvode,:lsoda,:adams,:bdf,:euler]
 

@@ -35,26 +35,34 @@ Random.seed!(1234)
 result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
 println(result2.time)
 Random.seed!(1234)
-result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 1000, ode = :cvode)
+result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 10000, ode = :cvode)
 
 Random.seed!(1234)
 println(" ----> lsoda")
 result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
 println(result3.time)
 Random.seed!(1234)
-result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 1000)
+result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 10000)
 
 Random.seed!(1234)
 println(" ----> DiffEq")
 
 result4 =        PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2, save_positions = (false,true))
-println(result4.time)
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = Tsit5(), save_positions = (false,true))
+println(result4[1].time)
+
 Random.seed!(1234)
 result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 1000,ode = Tsit5(), save_positions = (false,false))
+                nu_tcp,parms,0.0,tf,false, n_jumps = 10000,ode = Tsit5(), save_positions = (false,true))
+
+
+# sxc0 = @SVector [x for x in xc0]
+# sxd0 = @SVector [x for x in xd0]
+# result5 =  @time PDMP.chv_diffeq!(sxc0,sxd0,
+#                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
+#                 nu_tcp,parms,0.0,tf,false, n_jumps = 10000,ode = Tsit5(), save_positions = (false,true))
 
 println("--> stopping time == tf? (not more) ",maximum(result2.time) == tf)
 println("#jumps = ", length(result2.time))
