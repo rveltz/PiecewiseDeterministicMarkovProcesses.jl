@@ -10,7 +10,7 @@ end
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
-@inline function (prob::PDMPProblem)(integrator)
+function (prob::PDMPProblem)(integrator)
 	prob.verbose && printstyled(color=:green,"--> Jump detected!!\n")
 	# find the next jump time
 	t = integrator.u[end]
@@ -50,17 +50,16 @@ end
 end
 
 # callable struct
-@inline function (prob::PDMPProblem)(xdot,x,p,t)
+function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::vectype_xc,x::vectype_xc,data,t::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
 	@assert(sr > 0.0, "Total rate must be positive")
-	isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-	xdot[end] = 1.0
+	xdot[end] = 1
 	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] * isr
+		xdot[i] = xdot[i] / sr
 	end
 	nothing
 end
@@ -76,14 +75,12 @@ function chv_diffeq!(xc0,xd0,
 				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tnu <: AbstractArray{Int64}, Tp, Tf ,Tr ,Td }
 
 				# custom type to collect all parameters in one structure
-				problem  = PDMPProblem{eltype(xc0),eltype(xd0),typeof(xc0),typeof(xd0),Tnu,Tp,Tf,Tr,Td}(xc0,xd0,F,R,DX,nu,parms,ti,tf)
-				# problem.save_pre_jump = save_positions[1]
-				# problem.verbose = verbose
+				problem  = PDMPProblem{eltype(xc0),eltype(xd0),typeof(xc0),typeof(xd0),Tnu,Tp,Tf,Tr,Td}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 
-				chv_diffeq!(problem,ti,tf;ode=ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
+				chv_diffeq!(problem,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
 end
 
-function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64)
+function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),ind_save_d = -1:1,ind_save_c = -1:1,save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 	t = ti
 
@@ -92,6 +89,9 @@ function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-
 
 	# definition of the callback structure passed to DiffEq
 	cb = DiscreteCallback(problem, problem, save_positions = (false,false))
+
+	xdot0 = copy(problem.xc)
+	xc0 = copy(problem.xc);push!(xc0,0.)
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
@@ -125,18 +125,3 @@ function chv_diffeq!(problem::PDMPProblem,ti,tf = false;ode=Tsit5(),ind_save_d=-
 	end
 	return PDMPResult(problem.time,problem.Xc,problem.Xd)
 end
-
-
-
-
-
-function lorenz(du,u,p,t)
- du[1] = 10.0*(u[2]-u[1])
- du[2] = u[1]*(28.0-u[3]) - u[2]
- du[3] = u[1]*u[2] - (8/3)*u[3]
-end
-
-u0 = [1.0;0.0;0.0]
-tspan = (0.0,100.0)
-prob = ODEProblem(lorenz,u0,(0.0,1000.0))
-sol = @time solve(prob,save_everystep = true)
