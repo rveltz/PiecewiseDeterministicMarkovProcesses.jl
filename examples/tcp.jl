@@ -50,21 +50,37 @@ ode = Tsit5()
 Random.seed!(1234)
 result4 =       PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
                 nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = true);
-println(result4[1].time)
+println(result4.time)
+
+ode = Rodas5(autodiff=false)
+Random.seed!(1234)
+result4 =       PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = true,save_positions = (false,true));
+println(result4.time)
 
 Random.seed!(1234)
-result4 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = true);
+result4 = @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = true,save_positions = (false,true));
 
-println(" ----> DiffEq - without callback")
-Random.seed!(1234)
-result5 =   PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = false);
-println(result5[1].time)
 
-Random.seed!(1234)
-result5 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = false);
+# prob_tcp = PDMP.PDMPPb(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,nu_tcp,parms,0.0,tf)
+
+
+
+
+# Random.seed!(1234)
+# result4 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+#                 nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = true);
+#
+# println(" ----> DiffEq - without callback")
+# Random.seed!(1234)
+# result5 =   PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+#                 nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = false);
+# println(result5.time)
+#
+# Random.seed!(1234)
+# result5 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+#                 nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = false);
 
 
 # sxc0 = @SVector [x for x in xc0]

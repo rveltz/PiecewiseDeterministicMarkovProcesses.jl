@@ -1,7 +1,7 @@
 using Revise, PDMP, LinearAlgebra, Random, DifferentialEquations
 const r = 10.
 
-function AnalyticalSample(xc0,xd0,ti,nj::Int64)
+function AnalyticalSample(xc0,xd0,ti,nj::Int64,verbose=false)
     xch = [xc0[1]]
     xdh = [xd0[1]]
     th  = [ti]
@@ -10,6 +10,7 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
         xc = xch[end]
         xd = xdh[end]
         S = -log(rand())
+        verbose && println("--> δt = $S")
         a = -r * (2mod(xd,2)-1)
         dt = log(a*S/xc+1)/a
         t += dt
@@ -17,6 +18,7 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
         push!(xch,xc + a * S )
         push!(xdh,xd .+ 1 )
         S = -log(rand())
+        @show S
     end
     return th,xch,xdh
 end
@@ -44,22 +46,23 @@ xd0 = vec([0,0])
 
 nu = [[1 0];[0 -1]]
 parms = vec([0.0])
+ti = 0.16536
 tf = 100000.
-nj = 50
+nj = 10
 
 # sampling of the PDMP
-res = PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, 0.0, tf, n_jumps = 2,   ode = CVODE_BDF())
+res = PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = 2,   ode = CVODE_BDF())
 
 Random.seed!(8)
-    res_a = AnalyticalSample(xc0,xd0,0.,nj)
+    res_a = AnalyticalSample(xc0,xd0,ti,nj,false)
 println("\n\nComparison of solvers")
-for ode in [:cvode,:lsoda,Tsit5(),AutoTsit5(Rosenbrock23())]
+    for ode in [(:cvode,:cvode),(:lsoda,:lsoda),(Tsit5(),:tsit5),(AutoTsit5(Rosenbrock23()),:tsit5RS23),(Rodas4P(autodiff=false),:rodas4p),(CVODE_BDF(),:CVODEBDF)]#,(Rodas5(autodiff=false),:rodas5)]:dp5)]
     Random.seed!(8)
-    res =  PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, 0.0, tf, n_jumps = nj, ode = ode, verbose = false)
-    println("--> norm difference = ", res.time - res_a[1] |> norm, "  - solver = ",ode)
+    res =  PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
+    println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
 end
 
 # using Plots
-plot(res.time,res.xc[1,:],label = "CHV",marker=:d)
-# plot!(res_a[1],res_a[2])
+# plot(res.time,res.xc[1,:],label = "CHV",marker=:d)
+#     plot!(res_a[1],res_a[2])
 # plot(res.time - res_a[1])

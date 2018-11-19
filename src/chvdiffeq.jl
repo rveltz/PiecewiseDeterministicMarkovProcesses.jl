@@ -51,19 +51,16 @@ function (prob::PDMPProblem)(integrator)
 	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",prob.xd,"\n")
 	# we register the next time interval to solve ode
 	prob.sim.njumps += 1
-	prob.sim.tstop_extended -= log(rand())
+	prob.sim.tstop_extended += -log(rand())
+	# DiffEqBase.set_t!(integrator,0.)
 	add_tstop!(integrator, prob.sim.tstop_extended)
 	prob.verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
 # callable struct
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::vectype_xc,x::vectype_xc,data,t::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
-	# used for the exact method
-	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	# @assert(sr > 0.0, "Total rate must be positive")
-	# isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
@@ -101,19 +98,19 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 	# vector to hold the state space for the extended system
 # ISSUE FOR USING WITH STATIC-ARRAYS
 	X_extended = similar(problem.xc,length(problem.xc)+1)
-	X_extended[1:end-1] .= problem.xc
-	X_extended[end] = ti	# definition of the callback structure passed to DiffEq
+	for ii in eachindex(problem.xc)
+		X_extended[ii] = problem.xc[ii]
+	end
+	X_extended[end] = ti
 
 	cb = DiscreteCallback(problem, problem, save_positions = (false,false))
 
-	# define the ODE flow, this leads to big memory saving
-	# @show tf, problem.sim.tstop_extended
-	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.0,tf))
+	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.0,1000000000.0))
 
 	if callback_algo
-		integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true,dt=0.0001)
+		integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-7,abstol=1e-9,advance_to_tstop=true)
 	else
-		integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true,dt=0.0001)
+		integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-7,abstol=1e-9,advance_to_tstop=true)
 	end
 
 	chv_diffeq!(problem,integrator,ti,tf;ode = ode, save_positions = save_positions,n_jumps = n_jumps, callback_algo = callback_algo)
@@ -126,7 +123,7 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 	njumps = 0
 
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended - integrator.t)
 		step!(integrator)
 		DiffEqBase.check_error!(integrator)
 		if callback_algo == false
