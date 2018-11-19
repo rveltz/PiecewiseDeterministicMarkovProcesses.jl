@@ -90,8 +90,9 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				# vector to hold the state space for the extended system
 # ISSUE FOR USING WITH STATIC-ARRAYS
 				X_extended = similar(problem.xc,length(problem.xc)+1)
-
-				# definition of the callback structure passed to DiffEq
+				X_extended[1:end-1] .= problem.xc
+				X_extended[end] = ti	# definition of the callback structure passed to DiffEq
+				
 				cb = DiscreteCallback(problem, problem, save_positions = (false,false))
 
 				# define the ODE flow, this leads to big memory saving
