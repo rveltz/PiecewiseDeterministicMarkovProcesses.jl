@@ -57,11 +57,8 @@ end
 
 # callable struct
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::vectype_xc,x::vectype_xc,data,t::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
-	# used for the exact method
-	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	# isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
@@ -88,6 +85,17 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				chv_diffeq!(problem,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
 end
 
+function PDMPPb(xc0::vecc,xd0::vecd,
+				F::TF,R::TR,DX::TD,
+				nu::Tnu,parms::Tp,
+				ti::Tc, tf::Tc,
+				verbose::Bool = false;
+				save_positions=(false,true)) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	# custom type to collect all parameters in one structure
+	return PDMPProblem{Tc,Td,typeof(xc0),typeof(xd0),Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+end
+
+
 function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},
 				ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),
 				ind_save_d = -1:1,ind_save_c = -1:1,
@@ -103,22 +111,24 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 	# vector to hold the state space for the extended system
 # ISSUE FOR USING WITH STATIC-ARRAYS
 	X_extended = similar(problem.xc,length(problem.xc)+1)
-	X_extended[1:end-1] .= problem.xc
+	for ii in eachindex(problem.xc)
+		X_extended[ii] = problem.xc[ii]
+	end
 	X_extended[end] = ti
 
 	# definition of the callback structure passed to DiffEq
 	cb = DiscreteCallback(problem, problem, save_positions = (false,false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true,dt = 0.001)
+	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.0,1000_000_000.0))
+	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-7,abstol=1e-9,advance_to_tstop=true)
 	njumps = 0
 
 
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t")
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended - integrator.t)
 		step!(integrator)
-		@assert(t < problem.sim.lastjumptime, "Solving the extended ODE had some problems")
+		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime)")
 		t = problem.sim.lastjumptime
 
 		# the previous step was a jump!
