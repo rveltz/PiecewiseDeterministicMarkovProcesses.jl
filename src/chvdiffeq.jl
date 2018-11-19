@@ -80,7 +80,9 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				nu::Tnu,parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD,
+				vecc <: AbstractVector{Tc},
+				vecd <:  AbstractVector{Td}}
 
 				# custom type to collect all parameters in one structure
 				problem  = PDMPProblem{Tc,Td,typeof(xc0),typeof(xd0),Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
@@ -88,16 +90,21 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				chv_diffeq!(problem,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
 end
 
-function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),ind_save_d = -1:1,ind_save_c = -1:1,save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},
+				ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),
+				ind_save_d = -1:1,ind_save_c = -1:1,
+				save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td,
+				vectype_xc<:AbstractVector{Tc},
+				vectype_xd<:AbstractVector{Td},
+				Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
-	t::Tc = ti
-	@show typeof(t)
+
+#ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
+	t = ti
 
 	# vector to hold the state space for the extended system
-
 # ISSUE FOR USING WITH STATIC-ARRAYS
 	X_extended = similar(problem.xc,length(problem.xc)+1)
-	# X_extended = copy(problem.xc); push!(X_extended,ti)
 
 	# definition of the callback structure passed to DiffEq
 	cb = DiscreteCallback(problem, problem, save_positions = (false,false))
@@ -109,16 +116,14 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 
 
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.njumps), t = $t")
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t")
 		step!(integrator)
 		t = problem.sim.lastjumptime
-		# t = integrator.u[end] # THIS ALLOCATES, TYPE INFERENCE ISSUE
 
 		# the previous step was a jump!
 		if njumps < problem.sim.njumps && save_positions[2] && (t <= problem.tf)
 			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
-#USING copy(problem.xc)) SHOULD LOWER ALLOCATIONS TOO
-			push!(problem.Xc,integrator.u[1:end-1])#copy(problem.xc))
+			push!(problem.Xc,copy(problem.xc))
 			push!(problem.Xd,copy(problem.xd))
 			push!(problem.time,t)
 			njumps +=1
