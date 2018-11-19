@@ -48,16 +48,11 @@ result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, od
 
 Random.seed!(1234)
 println(" ----> DiffEq")
-
-result4 =        PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = Tsit5())
-println(result4[1].time)
+result4 =  PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = Tsit5(), n_jumps = 2)
+println(result4.time)
 
 Random.seed!(1234)
-result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 10000,ode = Tsit5())
+result4 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = Tsit5(), n_jumps = 10000)
 
 
 # sxc0 = @SVector [x for x in xc0]

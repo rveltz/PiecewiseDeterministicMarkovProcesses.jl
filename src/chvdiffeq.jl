@@ -141,5 +141,5 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 		push!(problem.Xd,copy(problem.xd))
 		push!(problem.time,sol.t[end])
 	end
-	return PDMPResult(problem.time,problem.Xc,problem.Xd), problem
+	return PDMPResult(problem.time,problem.Xc,problem.Xd)#, problem
 end
