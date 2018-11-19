@@ -47,7 +47,7 @@ module PDMP
 					DX::Base.Callable,
 					nu::AbstractArray{Int64},parms,
 					ti::Float64, tf::Float64;
-					verbose::Bool = false,ode::Union{Symbol, OrdinaryDiffEqAlgorithm} = :cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
+					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol

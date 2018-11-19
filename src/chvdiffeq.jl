@@ -61,12 +61,11 @@ function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	@assert(sr > 0.0, "Total rate must be positive")
-	isr = min(1.0e9,1.0 / sr)
+	# isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] * isr
+		xdot[i] = xdot[i] / sr
 	end
 	nothing
 end
@@ -112,13 +111,14 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
+	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true,dt = 0.001)
 	njumps = 0
 
 
 	while (t < tf) && problem.sim.njumps < n_jumps-1
 		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t")
 		step!(integrator)
+		@assert(t < problem.sim.lastjumptime, "Solving the extended ODE had some problems")
 		t = problem.sim.lastjumptime
 
 		# the previous step was a jump!
@@ -134,7 +134,7 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
 		problem.verbose && println("----> LAST BIT!!, xc = ",problem.Xc[end], ", xd = ",problem.xd)
-		prob_last_bit = ODEProblem((xdot,x,data,tt)->problem.F(xdot,x,problem.xd,tt,problem.parms),
+		prob_last_bit = ODEProblem((xdot,x,data,tt)->problem.pdmpFunc.F(xdot,x,problem.xd,tt,problem.parms),
 					problem.Xc[end],(problem.time[end],tf))
 		sol = solve(prob_last_bit, ode)
 		push!(problem.Xc,sol.u[end])
