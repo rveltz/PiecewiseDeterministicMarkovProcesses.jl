@@ -1,6 +1,6 @@
 module PDMP
 	using Random, LinearAlgebra
-	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
+	using LSODA, Sundials, DifferentialEquations, DiffEqBase, RecursiveArrayTools
 
 	export pdmp!,
 		ssa,
@@ -40,7 +40,19 @@ module PDMP
 	- **ind_save_d**: a range to hold the indices of the discrete variable to be saved
 	- **ind_save_c**: a range to hold the indices of the continuous variable to be saved
 	"""
-	function pdmp!(xc0::AbstractVector{Float64},xd0::AbstractVector{Int64},F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64;verbose::Bool = false,ode=:cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [])
+	function pdmp!(xc0::AbstractVector{Float64},
+					xd0::AbstractVector{Int64},
+					F::Base.Callable,
+					R::Base.Callable,
+					DX::Base.Callable,
+					nu::AbstractArray{Int64},parms,
+					ti::Float64, tf::Float64;
+					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
+
+		# hack to call DiffEq solver
+		if typeof(ode) != Symbol
+			return chv_diffeq!(xc0,xd0,F,R,DX,	nu,parms,ti, tf,verbose;ode = ode,save_positions = save_positions,n_jumps = n_jumps)
+		end
 		@assert algo in [:chv,:chv_optim,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 		if algo==:chv
 			return PDMP.chv!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at = save_at)

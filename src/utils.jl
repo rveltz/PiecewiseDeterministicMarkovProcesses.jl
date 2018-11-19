@@ -37,10 +37,6 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(ti-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
 end
 
-PDMPProblem(xc0::vectype_xc,xd0::vectype_xd,F::TF,R::TR,DX::TD,
-		nu::Tnu,parms::Tp,ti::Tc,tf::Tc,savepre::Bool,verbose::Bool) where {Tc,Td,vectype_xc <: AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = PDMP{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD,vectype_xc_hist,vectype_xd_hist}(xc0,xd0,F,R,DX,nu,parms,ti,tf,savepre,verbose)
-
-
 """
 This type stores the output, and comprises of:
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.
@@ -58,7 +54,7 @@ end
 """
 Dummy vector field to be used in gillespie algo
 """
-function F_dummy(ẋ::Vector{Float64}, xc::Vector{Float64}, xd::Array{Int64}, t::Float64, parms::Ty) where Ty
+function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
 	# vector field used for the continuous variable
 	ẋ[1] = 0.
 	nothing
@@ -67,7 +63,7 @@ end
 """
 Dummy vector field to be used in gillespie algo
 """
-function Delta_dummy(xc, xd::Array{Int64}, t::Float64, parms::Ty, ind_reaction::Int64) where Ty
+function Delta_dummy(xc, xd, t, parms::Ty, ind_reaction::Int64) where Ty
 	return true
 end
 
