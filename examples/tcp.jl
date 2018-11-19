@@ -33,7 +33,7 @@ nj = 10000
 println("\n\n--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
-result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode, verbose = true)
+result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
 println(result2.time)
 Random.seed!(1234)
 result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj, ode = :cvode)
@@ -49,7 +49,7 @@ println(" ----> DiffEq - with callback")
 ode = Tsit5()
 Random.seed!(1234)
 result4 =       PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,true, n_jumps = 2,ode = ode, callback_algo = true);
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = true);
 println(result4[1].time)
 
 Random.seed!(1234)
