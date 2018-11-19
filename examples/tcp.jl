@@ -48,11 +48,13 @@ result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, od
 
 Random.seed!(1234)
 println(" ----> DiffEq")
-result4 =  PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = Tsit5(), n_jumps = 2)
+ode = Tsit5()
+ode = AutoTsit5(Rosenbrock23())
+result4 =  PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = ode, n_jumps = 2, save_positions = (false,false))
 println(result4.time)
 
 Random.seed!(1234)
-result4 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = Tsit5(), n_jumps = 10000)
+result4 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = ode, n_jumps = 10000,save_positions = (false,false))
 
 
 # sxc0 = @SVector [x for x in xc0]
