@@ -11,7 +11,7 @@ end
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function (prob::PDMPProblem)(integrator)
-	prob.verbose && printstyled(color=:green,"--> Jump detected!!\n")
+	prob.verbose && printstyled(color=:green,"--> Jump detected!!, entry in callback\n")
 	# find the next jump time
 	t = integrator.u[end]
 	prob.sim.lastjumptime = t
@@ -64,10 +64,11 @@ function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
 	@assert(sr > 0.0, "Total rate must be positive")
+	isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-	xdot[end] = 1
+	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] / sr
+		xdot[i] = xdot[i] * isr
 	end
 	nothing
 end
@@ -80,45 +81,53 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				nu::Tnu,parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64, callback_algo = true) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 
 				# custom type to collect all parameters in one structure
 				problem  = PDMPProblem{Tc,Td,typeof(xc0),typeof(xd0),Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 
-				chv_diffeq!(problem,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
+				problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
+
+				# vector to hold the state space for the extended system
+# ISSUE FOR USING WITH STATIC-ARRAYS
+				X_extended = similar(problem.xc,length(problem.xc)+1)
+
+				# definition of the callback structure passed to DiffEq
+				cb = DiscreteCallback(problem, problem, save_positions = (false,false))
+
+				# define the ODE flow, this leads to big memory saving
+				# @show tf, problem.sim.tstop_extended
+				prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
+
+				if callback_algo
+					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop = true, callback = cb)
+				else
+					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop = true)
+				end
+
+				chv_diffeq!(problem,integrator,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps, callback_algo = callback_algo)
 end
 
-function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),ind_save_d = -1:1,ind_save_c = -1:1,save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
-	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
-	t::Tc = ti
-	@show typeof(t)
-
-	# vector to hold the state space for the extended system
-
-# ISSUE FOR USING WITH STATIC-ARRAYS
-	X_extended = similar(problem.xc,length(problem.xc)+1)
-	# X_extended = copy(problem.xc); push!(X_extended,ti)
-
-	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, problem, save_positions = (false,false))
-
-	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
+function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},
+					integrator,ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),
+					ind_save_d = -1:1,ind_save_c = -1:1,
+					save_positions=(false,true),n_jumps::Td = Inf64, callback_algo = true) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+	t = ti
 	njumps = 0
 
-
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.njumps), t = $t")
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t")
 		step!(integrator)
+		if callback_algo == false
+			problem(integrator) #this is to be used with no callback in the integrator, somehow this is 10x slower than the discrete callback solution
+		end
 		t = problem.sim.lastjumptime
-		# t = integrator.u[end] # THIS ALLOCATES, TYPE INFERENCE ISSUE
 
 		# the previous step was a jump!
 		if njumps < problem.sim.njumps && save_positions[2] && (t <= problem.tf)
 			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
-#USING copy(problem.xc)) SHOULD LOWER ALLOCATIONS TOO
-			push!(problem.Xc,integrator.u[1:end-1])#copy(problem.xc))
+			push!(problem.Xc,copy(problem.xc))
+			# push!(problem.Xc,integrator.u[1:end-1])#copy(problem.xc))
 			push!(problem.Xd,copy(problem.xd))
 			push!(problem.time,t)
 			njumps +=1

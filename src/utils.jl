@@ -34,7 +34,7 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 			F::TF,R::TR,DX::TD,
 			nu::Tnu,parms::Tp,
 			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
-			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
+			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(ti-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
 end
 
 PDMPProblem(xc0::vectype_xc,xd0::vectype_xd,F::TF,R::TR,DX::TD,
