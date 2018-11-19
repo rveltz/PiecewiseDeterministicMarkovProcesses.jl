@@ -121,7 +121,7 @@ sol = solve(prob, Tsit5(), tstops = 5, callback=cb);
 sol = @time solve(prob, Tsit5(), tstops=5, callback=cb);
 
 sol = solve(prob, Tsit5(), tstops = 5);
-sol = @time solve(prob, Tsit5(), tstops=5);
+sol = @time solve(prob, Tsit5(), tstops=5); 
 
 integ = init(prob, Tsit5(), tstops=5);
 sol = @time evolve!(integ);
