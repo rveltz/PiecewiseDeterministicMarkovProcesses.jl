@@ -34,14 +34,13 @@ function (prob::PDMPProblem)(integrator)
 
 	# execute the jump
 	prob.pdmpFunc.R(prob.rate,prob.xc,prob.xd,t,prob.parms, false)
-	if (t < prob.tf) # THIS PART ALLOCATE 1.4 times THIS BLOCK
+	if (t < prob.tf)
 		# Update event
 		ev = pfsample(prob.rate,sum(prob.rate),length(prob.rate))
 
 		deltaxd = view(prob.nu,ev,:)
 
 		# Xd = Xd .+ deltaxd
-		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
 		@inbounds for ii in eachindex(prob.xd)
 			prob.xd[ii] += deltaxd[ii]
 		end
@@ -100,9 +99,9 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(ti,tf))
 
 				if callback_algo
-					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop = true, callback = cb)
+					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
 				else
-					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop = true)
+					integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, save_everystep = false,reltol=1e-8,abstol=1e-8,advance_to_tstop=true)
 				end
 
 				chv_diffeq!(problem,integrator,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps, callback_algo = callback_algo)
@@ -116,7 +115,7 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 	njumps = 0
 
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t")
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
 		step!(integrator)
 		if callback_algo == false
 			problem(integrator) #this is to be used with no callback in the integrator, somehow this is 10x slower than the discrete callback solution
@@ -134,6 +133,7 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 			problem.verbose && println("----> end save post-jump, ")
 		end
 	end
+	problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, t = ",integrator.u[end])
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
 		problem.verbose && println("----> LAST BIT!!, xc = ",problem.Xc[end], ", xd = ",problem.xd)

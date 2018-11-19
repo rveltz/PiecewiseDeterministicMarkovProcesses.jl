@@ -30,10 +30,10 @@ parms = vec([0.]) # sampling rate
 tf = 100000.
 nj = 10000
 
-println("--> inplace implementation,\n ----> cvode")
+println("\n\n--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
-result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
+result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode, verbose = true)
 println(result2.time)
 Random.seed!(1234)
 result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj, ode = :cvode)
@@ -45,31 +45,26 @@ println(result3.time)
 Random.seed!(1234)
 result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = nj)
 
-Random.seed!(1234)
 println(" ----> DiffEq - with callback")
 ode = Tsit5()
-result4 =       PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, save_positions = (false,true), callback_algo = true);
+Random.seed!(1234)
+result4 =       PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,true, n_jumps = 2,ode = ode, callback_algo = true);
 println(result4[1].time)
 
 Random.seed!(1234)
-result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, save_positions = (false,true), callback_algo = true);
+result4 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = true);
 
-Random.seed!(1234)
 println(" ----> DiffEq - without callback")
-ode = Tsit5()
-result4 =   PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, save_positions = (false,true), callback_algo = false);
-println(result4[1].time)
+Random.seed!(1234)
+result5 =   PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = ode, callback_algo = false);
+println(result5[1].time)
 
 Random.seed!(1234)
-result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
-                F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, save_positions = (false,true), callback_algo = false);
+result5 =  @time PDMP.chv_diffeq!(xc0,xd0,F_tcp!,R_tcp!,PDMP.Delta_dummy,
+                nu_tcp,parms,0.0,tf,false, n_jumps = nj,ode = ode, callback_algo = false);
 
 
 # sxc0 = @SVector [x for x in xc0]
