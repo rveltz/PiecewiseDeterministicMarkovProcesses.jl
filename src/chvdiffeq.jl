@@ -16,9 +16,7 @@ function (prob::PDMPProblem)(integrator)
 	t = integrator.u[end]
 	prob.sim.lastjumptime = t
 
-	# state of the continuous variable right before the jump
-
-	# put the current continuous state variable in prob.xc
+	# state of the continuous variable right before the jump in prob.xc
 	@inbounds for ii in eachindex(prob.xc)
 		prob.xc[ii] = integrator.u[ii]
 	end
@@ -27,14 +25,14 @@ function (prob::PDMPProblem)(integrator)
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
 		prob.verbose && printstyled(color=:green,"----> save pre-jump\n")
-		push!(prob.Xc,integrator.u[1:end-1])
-		push!(prob.Xd,copy(prob.xd))
+		push!(prob.Xc, copy(prob.xc))
+		push!(prob.Xd, copy(prob.xd))
 		push!(prob.time,t)
 	end
 
 	# execute the jump
 	prob.pdmpFunc.R(prob.rate,prob.xc,prob.xd,t,prob.parms, false)
-	if (t < prob.tf) # THIS PART ALLOCATE 1.4 times THIS BLOCK
+	if (t < prob.tf)
 		# Update event
 		ev = pfsample(prob.rate,sum(prob.rate),length(prob.rate))
 
@@ -50,9 +48,9 @@ function (prob::PDMPProblem)(integrator)
 		prob.pdmpFunc.Delta(prob.xc,prob.xd,t,prob.parms,ev)
 	end
 	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",prob.xd,"\n")
-	# we register the next time interval to solve ode
+	# we register the next time interval to solve the extended ode
 	prob.sim.njumps += 1
-	prob.sim.tstop_extended -= log(rand())
+	prob.sim.tstop_extended += -log(rand())
 	add_tstop!(integrator, prob.sim.tstop_extended)
 	prob.verbose && printstyled(color=:green,"--> End jump\n\n")
 end
@@ -64,10 +62,11 @@ function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::
 	tau = x[end]
 	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
 	@assert(sr > 0.0, "Total rate must be positive")
+	isr = min(1.0e9,1.0 / sr)
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-	xdot[end] = 1
+	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] / sr
+		xdot[i] = xdot[i] * isr
 	end
 	nothing
 end
@@ -105,6 +104,8 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 	# vector to hold the state space for the extended system
 # ISSUE FOR USING WITH STATIC-ARRAYS
 	X_extended = similar(problem.xc,length(problem.xc)+1)
+	X_extended[1:end-1] .= problem.xc
+	X_extended[end] = ti
 
 	# definition of the callback structure passed to DiffEq
 	cb = DiscreteCallback(problem, problem, save_positions = (false,false))

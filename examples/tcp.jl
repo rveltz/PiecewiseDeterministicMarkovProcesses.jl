@@ -11,25 +11,27 @@ function F_tcp!(ẋ, xc, xd, t, parms)
     nothing
 end
 
+rate_tcp(x) = 5.0/(1.0 + exp(-x*1 + 5.0)) + 0.1
+
 function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
     # rate fonction
     if sum_rate==false
-        rate[1] = 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1
+        rate[1] = rate_tcp(xc[1])
         rate[2] = parms[1]
         return 0.
     else
-        return 5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1 + parms[1]
+        return rate_tcp(xc[1]) + parms[1]
     end
 end
 
-xc0 = vec([0.05])
+xc0 = vec([0.0])
 xd0 = vec([0, 1])
 
 nu_tcp = [[1 0];[0 -1]]
-parms = vec([0.1]) # sampling rate
+parms = vec([0.]) # sampling rate
 tf = 100000.
 
-println("--> inplace implementation,\n ----> cvode")
+println("\n\n--> inplace implementation,\n ----> cvode")
 # more efficient way, inplace modification
 Random.seed!(1234)
 result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
@@ -49,13 +51,13 @@ println(" ----> DiffEq")
 
 result4 =        PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = Tsit5(), save_positions = (false,true))
+                nu_tcp,parms,0.0,tf,false, n_jumps = 2,ode = Tsit5())
 println(result4[1].time)
 
 Random.seed!(1234)
 result4 =  @time PDMP.chv_diffeq!(xc0,xd0,
                 F_tcp!,R_tcp!,PDMP.Delta_dummy,
-                nu_tcp,parms,0.0,tf,false, n_jumps = 10000,ode = Tsit5(), save_positions = (false,true))
+                nu_tcp,parms,0.0,tf,false, n_jumps = 10000,ode = Tsit5())
 
 
 # sxc0 = @SVector [x for x in xc0]
