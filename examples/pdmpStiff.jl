@@ -1,4 +1,4 @@
-using Revise, PDMP, LinearAlgebra, Random, DifferentialEquations
+using PDMP, LinearAlgebra, Random, DifferentialEquations
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
     xch = [xc0[1]]

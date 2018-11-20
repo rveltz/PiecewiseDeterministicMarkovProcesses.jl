@@ -37,6 +37,21 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
 end
 
+# callable struct
+function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(
+	xdot,
+	x,
+	data,t::Tc) where {Tc,Td,vectype_xc,vectype_xd,Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+	tau = x[end]
+	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
+	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
+	xdot[end] = 1.0
+	@inbounds for i in eachindex(xdot)
+		xdot[i] = xdot[i] / sr
+	end
+	nothing
+end
+
 """
 This type stores the output, and comprises of:
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.

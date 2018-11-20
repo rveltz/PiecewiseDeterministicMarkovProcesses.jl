@@ -2,7 +2,6 @@
 ###################################################################################################
 ###################################################################################################
 ### implementation of the CHV algo using DiffEq
-
 # callable struct
 function (prob::PDMPProblem)(u,t,integrator)
     (t == prob.sim.tstop_extended)
@@ -55,18 +54,6 @@ function (prob::PDMPProblem)(integrator)
 	prob.verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
-# callable struct
-function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot::vectype_xc,x::vectype_xc,data,t::Tc) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
-	tau = x[end]
-	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-	xdot[end] = 1.0
-	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] / sr
-	end
-	nothing
-end
-
 """
 Implementation of the CHV method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
 """
@@ -75,14 +62,14 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				nu::Tnu,parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(),ind_save_d=-1:1,ind_save_c=-1:1,save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD,
+				ode = Tsit5(),save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD,
 				vecc <: AbstractVector{Tc},
 				vecd <:  AbstractVector{Td}}
 
 				# custom type to collect all parameters in one structure
-				problem  = PDMPProblem{Tc,Td,typeof(xc0),typeof(xd0),Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+				problem  = PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 
-				chv_diffeq!(problem,ti,tf;ode = ode,ind_save_c = ind_save_c, ind_save_d = ind_save_d, save_positions = save_positions,n_jumps = n_jumps)
+				chv_diffeq!(problem,ti,tf;ode = ode, save_positions = save_positions,n_jumps = n_jumps)
 end
 
 function PDMPPb(xc0::vecc,xd0::vecd,
@@ -92,17 +79,13 @@ function PDMPPb(xc0::vecc,xd0::vecd,
 				verbose::Bool = false;
 				save_positions=(false,true)) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	# custom type to collect all parameters in one structure
-	return PDMPProblem{Tc,Td,typeof(xc0),typeof(xd0),Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+	return PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 end
 
 
-function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD},
+function chv_diffeq!(problem::PDMPProblem,
 				ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),
-				ind_save_d = -1:1,ind_save_c = -1:1,
-				save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td,
-				vectype_xc<:AbstractVector{Tc},
-				vectype_xd<:AbstractVector{Td},
-				Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+				save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
@@ -110,7 +93,11 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 
 	# vector to hold the state space for the extended system
 # ISSUE FOR USING WITH STATIC-ARRAYS
-	X_extended = similar(problem.xc,length(problem.xc)+1)
+	# if typeof(problem.xc) <: MArray{Tuple{2}, Tc}
+	# 	X_extended = similar(problem.xc,Size(length(problem.xc)+1))
+	# else
+		X_extended = similar(problem.xc,length(problem.xc)+1)
+	# end
 	for ii in eachindex(problem.xc)
 		X_extended[ii] = problem.xc[ii]
 	end
@@ -121,12 +108,13 @@ function chv_diffeq!(problem::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.0,1000_000_000.0))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false,reltol=1e-7,abstol=1e-9,advance_to_tstop=true)
+	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback=cb, save_everystep = false, reltol=1e-7, abstol=1e-9, advance_to_tstop=true)
+
+	# current jump number
 	njumps = 0
 
-
 	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended - integrator.t)
+		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
 		step!(integrator)
 		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime)")
 		t = problem.sim.lastjumptime
