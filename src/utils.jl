@@ -37,7 +37,7 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
 end
 
-# callable struct
+# callable struct for the CHV method
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(
 	xdot,
 	x,
@@ -127,7 +127,7 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 	t_hist[1] = ti
 	xc_hist[:,1] .= copy(xc0)[ind_save_c]
 	xd_hist[:,1] .= copy(Xd)[ind_save_d]
-	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
+return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 
 """

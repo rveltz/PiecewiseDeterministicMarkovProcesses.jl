@@ -7,10 +7,11 @@ println("== start pdmp examples")
 println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
 
-println(result2.time[end],", ",result2.xd[1,end])
-# @test isequal(result2.time[end],403.4606902370968)
-# @test isequal(result2.xd[1,end],61)
-# @test isapprox(result2.time,result3.time)
+println("\n\n==== Example pdmp explosion ")
+include("../examples/pdmpExplosion.jl")
+
+println("\n\n==== Example pdmp stiff ")
+include("../examples/pdmpStiff.jl")
 
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")

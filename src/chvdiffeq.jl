@@ -10,10 +10,10 @@ end
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function (prob::PDMPProblem)(integrator)
-	prob.verbose && printstyled(color=:green,"--> Jump detected!!\n")
 	# find the next jump time
 	t = integrator.u[end]
 	prob.sim.lastjumptime = t
+	prob.verbose && printstyled(color=:green,"--> Jump detected at t = $t !!\n")
 
 	# state of the continuous variable right before the jump in prob.xc
 	@inbounds for ii in eachindex(prob.xc)
@@ -116,7 +116,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	while (t < tf) && problem.sim.njumps < n_jumps-1
 		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
 		step!(integrator)
-		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime)")
+		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime),\n solver = $ode")
 		t = problem.sim.lastjumptime
 
 		# the previous step was a jump!
@@ -139,5 +139,5 @@ function chv_diffeq!(problem::PDMPProblem,
 		push!(problem.Xd,copy(problem.xd))
 		push!(problem.time,sol.t[end])
 	end
-	return PDMPResult(problem.time,problem.Xc,problem.Xd)#, problem
+	return PDMPResult(problem.time,problem.Xc,problem.Xd)
 end

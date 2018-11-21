@@ -47,7 +47,7 @@ module PDMP
 					DX::Base.Callable,
 					nu::AbstractArray{Int64},parms,
 					ti::Float64, tf::Float64;
-					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps = 1000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
+					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol
@@ -56,7 +56,7 @@ module PDMP
 
 		@assert algo in [:chv,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 		if algo==:chv
-			return PDMP.chv!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,save_at = save_at)
+			return PDMP.chv!(xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,n_max = n_jumps)
 		elseif algo==:rejection
 			return PDMP.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 		elseif algo==:rejection_exact
