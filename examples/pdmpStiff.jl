@@ -53,7 +53,9 @@ nu = [[1 0];[0 -1]]
 parms = vec([0.0])
 ti = 0.322156
 tf = 100000.
-nj = 10
+nj = 50
+
+errors = Float64[]
 
 Random.seed!(8)
     res_a = AnalyticalSample(xc0,xd0,ti,nj)
@@ -63,6 +65,7 @@ println("\n\nComparison of solvers")
     Random.seed!(8)
     res =  PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
     println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
+    push!(errors,norm(res.time - res_a[1],Inf64))
 end
 
 # using Plots

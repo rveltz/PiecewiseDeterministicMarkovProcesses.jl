@@ -1,5 +1,26 @@
 using PDMP, LinearAlgebra, Random, DifferentialEquations
 
+function AnalyticalSample(xc0,xd0,ti,nj::Int64)
+    xch = [xc0[1]]
+    xdh = [xd0[1]]
+    th  = [ti]
+    t = ti
+    while length(th)<nj
+        xc = xch[end]
+        xd = xdh[end]
+        S = -log(rand())
+        a = mod(xd[1],2)==0 ? -1 : 1
+        dt = (exp(a*S)-1)*exp(-a*S)/(a*xc)
+        t += dt
+        push!(th, t)
+        push!(xch,xc * exp(a*S) )
+        push!(xdh,xd .+ 1 )
+        S = -log(rand())
+    end
+    return th,xch,xdh
+end
+
+
 function F_tcp!(ẋ, xc, xd, t, parms)
     # vector field used for the continuous variable
     if mod(xd[1],2)==0
@@ -10,7 +31,7 @@ function F_tcp!(ẋ, xc, xd, t, parms)
     nothing
 end
 
-rate_tcp(x) = 5.0/(1.0 + exp(-x*1 + 5.0)) + 0.1
+rate_tcp(x) = 1/x
 
 function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
     if sum_rate==false
@@ -22,34 +43,30 @@ function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
     end
 end
 
-xc0 = vec([0.0])
+xc0 = vec([1.0])
 xd0 = vec([0, 1])
 
 nu_tcp = [[1 0];[0 -1]]
-parms = vec([0.])
+parms = vec([0.0])
 tf = 100000.
-
-println("\n\n--> inplace implementation,\n ----> cvode")
-# more efficient way, inplace modification
-Random.seed!(1234)
-result2 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 2,   ode = :cvode)
-println(result2.time)
-Random.seed!(1234)
-result2 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 10000, ode = :cvode)
+nj = 100
 
 Random.seed!(1234)
-println(" ----> lsoda")
-result3 =        PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 2)
-println(result3.time)
-Random.seed!(1234)
-result3 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode=:lsoda, n_jumps = 10000)
+    res_a = AnalyticalSample(xc0,xd0,0.,nj)
 
-Random.seed!(1234)
-println(" ----> DiffEq")
-ode = Tsit5()
-ode = AutoTsit5(Rosenbrock23())
-result4 =  PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = ode, n_jumps = 2, save_positions = (false,false))
-println(result4.time)
+errors = Float64[]
 
-Random.seed!(1234)
-result4 =  @time PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, ode = ode, n_jumps = 10000,save_positions = (false,false))
+println("\n\nComparison of solvers")
+    for ode in [(:cvode,:cvode),(:lsoda,:lsoda),(CVODE_BDF(),:CVODEBDF),(Tsit5(),:tsit5),(AutoTsit5(Rosenbrock23()),:tsit5RS23),(Rodas4P(autodiff=false),:rodas4p)]
+    Random.seed!(1234)
+    res =  PDMP.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = ode[1])
+    println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
+    push!(errors,norm(res.time - res_a[1],Inf64))
+end
+
+#
+# using Plots
+# plot(result2.time,result2.xc[1,:])
+# plot!(result3.time,result3.xc[1,:])
+# plot!(result4.time,result4.xc[1,:])
+#
