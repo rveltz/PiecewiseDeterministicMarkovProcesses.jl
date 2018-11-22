@@ -6,11 +6,11 @@ println("== start pdmp examples")
 
 println("\n\n==== Example tcp ")
 include("../examples/tcp.jl")
-@test prod(isless.(errors[4:end],1e-4))
+@test prod(isless.(errors[6:end],1e-4))
 
 println("\n\n==== Example pdmp explosion ")
 include("../examples/pdmpExplosion.jl")
-@test prod(isless.(errors,1e-4))
+@test prod(isless.(errors[1:6],1e-4))
 
 println("\n\n==== Example pdmp stiff ")
 include("../examples/pdmpStiff.jl")

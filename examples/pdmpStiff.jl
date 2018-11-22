@@ -46,11 +46,11 @@ function R!(rate, xc, xd, t, parms, sum_rate::Bool)
     end
 end
 
-xc0 = vec([1.0])
-xd0 = vec([0,0])
+xc0 = [1.0]
+xd0 = [0,0]
 
 nu = [[1 0];[0 -1]]
-parms = vec([0.0])
+parms = [0.0]
 ti = 0.322156
 tf = 100000.
 nj = 50
@@ -61,7 +61,7 @@ Random.seed!(8)
     res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
 println("\n\nComparison of solvers")
-    for ode in [(:cvode,:cvode),(:lsoda,:lsoda),(Tsit5(),:tsit5),(AutoTsit5(Rosenbrock23()),:tsit5RS23),(Rodas4P(autodiff=false),:rodas4p),(CVODE_BDF(),:CVODEBDF)]#,(Rodas5(autodiff=false),:rodas5)]:dp5)]
+    for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
     Random.seed!(8)
     res =  PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
     println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])

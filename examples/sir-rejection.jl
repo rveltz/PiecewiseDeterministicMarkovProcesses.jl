@@ -16,8 +16,8 @@ function R_sir_rej!(rate,xc,xd,t,parms,sum_rate::Bool)
   end
 end
 
-xc0 = vec([0.0])
-xd0 = vec([99,10,0,0])
+xc0 = [0.0]
+xd0 = [99,10,0,0]
 nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
 tf = 150.0
