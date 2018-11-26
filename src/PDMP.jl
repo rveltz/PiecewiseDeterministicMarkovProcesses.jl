@@ -25,6 +25,8 @@ module PDMP
 	"""
 	This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
 	It takes the following arguments:
+	
+`pdmp!(xc0,xd0,F!,R!,DX,nu,parms,ti,tf;verbose::Bool = false,ode = :cvode,algo=:chv, n_jumps = 1_000,save_positions = (false,true))`	
 
 	- **xc0**: a `Vector` of `Float64`, representing the initial states of the continuous variable.
 	- **xd0**: a `Vector` of `Int64`, representing the initial states of the discrete variable.
@@ -33,21 +35,22 @@ module PDMP
 	- **DX**: a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous/discrete variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump. `DX(xc,xd,t,parms,ind_rec)` returns `nothing`
 	- **nu**: a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
 	- **parms** : data for the parameters of the system. It is passed to `F!`,`R!` and `DX`.
+	- **ti**: the initial simulation time (`Float64`)
 	- **tf**: the final simulation time (`Float64`)
 	- **verbose**: a `Bool` for printing verbose.
-	- **ode**: ode time stepper :cvode or :lsoda.
+	- **ode**: ode time stepper `:cvode`, `:lsoda` or any solver from `DifferentialEquations.jl`, like `CVODE_BDF()`.
 	- **n_jumps**: an `Int64` representing the maximum number of jumps to be computed.
 	- **ind_save_d**: a range to hold the indices of the discrete variable to be saved
 	- **ind_save_c**: a range to hold the indices of the continuous variable to be saved
 	"""
-	function pdmp!(xc0::AbstractVector{Float64},
-					xd0::AbstractVector{Int64},
+	function pdmp!(xc0::vecc,
+					xd0::vecd,
 					F::Base.Callable,
 					R::Base.Callable,
 					DX::Base.Callable,
 					nu::AbstractArray{Int64},parms,
 					ti::Float64, tf::Float64;
-					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true))# where {Talg <: OrdinaryDiffEqAlgorithm}
+					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true)) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}}
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol

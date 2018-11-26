@@ -62,7 +62,7 @@ function chv_diffeq!(xc0::vecc,xd0::vecd,
 				nu::Tnu,parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(),save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Int64}, Tp, TF ,TR ,TD,
+				ode = Tsit5(),save_positions=(false,true),n_jumps::Int64 = Inf64) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 				vecc <: AbstractVector{Tc},
 				vecd <:  AbstractVector{Td}}
 

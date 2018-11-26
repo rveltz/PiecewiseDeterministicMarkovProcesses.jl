@@ -75,7 +75,7 @@ end
 """
 Dummy vector field to be used in gillespie algo
 """
-function Delta_dummy(xc, xd, t, parms::Ty, ind_reaction::Int64) where Ty
+function Delta_dummy(xc, xd, t, parms::Ty, ind_reaction) where Ty
 	return true
 end
 
@@ -139,14 +139,14 @@ function save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
     end
 end
 
-"
+"""
 Function copied from Gillespie.jl and StatsBase
 
 This function is a substitute for `StatsBase.sample(wv::WeightVec)`, which avoids recomputing the sum and size of the weight vector, as well as a type conversion of the propensity vector. It takes the following arguments:
 - **w** : an `Array{Float64,1}`, representing propensity function weights.
 - **s** : the sum of `w`.
 - **n** : the length of `w`.
-"
+"""
 function pfsample(w::Array{Float64,1},s::Float64,n::Int64)
     t = rand() * s
     i = 1
