@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
 function F_eva!(xcdot, xc, xd, t::Float64, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -50,24 +50,24 @@ parms = [0.1,0.01]
 tf = 100.
 
 println("--> Case simple chv:")
-dummy_t =  PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=1)
+dummy_t =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=1)
 Random.seed!(1234)
-dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=200000)
+dummy_t =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=200000)
 
 println("For simulations (lsoda):")
-result = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1)
+result = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1)
 Random.seed!(1234)
-result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200000)
+result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200000)
 
 
 # using Profile, ProfileView
 # Profile.clear()
 #
-# Random.seed!(1234);@time PDMP.chv!(200000,xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
+# Random.seed!(1234);@time PiecewiseDeterministicMarkovProcesses.chv!(200000,xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 #
 # ProfileView.view()
 
 println("--> Case tauleap:")
-resultt = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
+resultt = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
 Random.seed!(1234)
-resultt = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
+resultt = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)

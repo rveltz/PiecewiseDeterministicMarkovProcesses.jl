@@ -1,5 +1,5 @@
 using LSODA
-using PDMP, Plots, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, Plots, LinearAlgebra, Random
 
 function n∞(v,v₃,v₄)
   ξ=(v-v₃)/v₄

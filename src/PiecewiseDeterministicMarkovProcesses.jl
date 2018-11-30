@@ -25,8 +25,8 @@ module PiecewiseDeterministicMarkovProcesses
 	"""
 	This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
 	It takes the following arguments:
-	
-`pdmp!(xc0,xd0,F!,R!,DX,nu,parms,ti,tf;verbose::Bool = false,ode = :cvode,algo=:chv, n_jumps = 1_000,save_positions = (false,true))`	
+
+`pdmp!(xc0,xd0,F!,R!,DX,nu,parms,ti,tf;verbose::Bool = false,ode = :cvode,algo=:chv, n_jumps = 1_000,save_positions = (false,true))`
 
 	- **xc0**: a `Vector` of `Float64`, representing the initial states of the continuous variable.
 	- **xd0**: a `Vector` of `Int64`, representing the initial states of the discrete variable.
@@ -59,23 +59,20 @@ module PiecewiseDeterministicMarkovProcesses
 
 		@assert algo in [:chv,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
 		if algo==:chv
-			return PDMP.chv!(xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,n_max = n_jumps)
+			return PiecewiseDeterministicMarkovProcesses.chv!(xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,n_max = n_jumps)
 		elseif algo==:rejection
-			return PDMP.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+			return PiecewiseDeterministicMarkovProcesses.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 		elseif algo==:rejection_exact
-			return PDMP.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
+			return PiecewiseDeterministicMarkovProcesses.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
 		elseif algo==:tauleap
-			return PDMP.tauleap(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose=verbose,ode=ode,dt=dt)
+			return PiecewiseDeterministicMarkovProcesses.tauleap(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose=verbose,ode=ode,dt=dt)
 		end
 	end
 
-	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
+	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
 
-	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PDMP.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
+	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
 
-	pdmp!(xd0,R,nu,parms,ti,tf;kwargs...) = PDMP.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
-	#
-	# pdmp!(xc0,xd0,F::Base.Callable,R::Base.Callable,DX::Base.Callable,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64;verbose::Bool = false,ode=Tsit5(),algo=:chv, n_jumps::Int64 = Inf64,ind_save_d=-1:1,ind_save_c=-1:1,save_jumps = (false,true),dt = 0.01)	= (@show ode; chv_diffeq!(xc0,xd0,F,R,DX,	nu,parms,ti, tf,verbose;ode = ode,save_positions=save_jumps,n_jumps = n_jumps))
-	#
-	# pdmp!(xc0,xd0,F::Base.Callable,R::Base.Callable,nu::AbstractArray{Int64},parms,ti::Float64, tf::Float64;verbose::Bool = false,ode=Tsit5(),algo=:chv, n_jumps::Int64 = Inf64,ind_save_d=-1:1,ind_save_c=-1:1,save_jumps = (false,true),dt = 0.01)	=  chv_diffeq!(xc0,xd0,F,R,Delta_dummy, nu,parms,ti, tf,verbose; ode = ode,save_positions=save_jumps,n_jumps = n_jumps)
+	pdmp!(xd0,R,nu,parms,ti,tf;kwargs...) = PiecewiseDeterministicMarkovProcesses.pdmp!([0.],xd0,F_dummy,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
+
 end # module

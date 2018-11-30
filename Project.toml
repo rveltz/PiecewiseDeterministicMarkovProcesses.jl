@@ -1,7 +1,9 @@
-name = "PDMP"
-uuid = "ddd15e80-e4be-11e8-272b-c1c647be5ca8"
+name = "PiecewiseDeterministicMarkovProcesses"
+uuid = "62ad7784-f4d8-11e8-073f-ef106f503bc7"
 authors = ["Romain Veltz <rveltz@salk.edu>", " Simon Frost <sdf22@cam.ac.uk>"]
 version = "0.1.0"
+
+
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

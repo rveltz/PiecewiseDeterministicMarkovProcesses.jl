@@ -21,12 +21,12 @@ library(latexreadme)
 
 ```{r}
 md = file.path("README_unparse.md")
-download.file("https://raw.githubusercontent.com/sdwfrost/PDMP.jl/master/README_unparse.md",destfile = md, method = "curl")
+download.file("https://raw.githubusercontent.com/sdwfrost/PiecewiseDeterministicMarkovProcesses.jl/master/README_unparse.md",destfile = md, method = "curl")
 new_md = file.path("README.md")
 parse_latex(md,
             new_md,
             git_username = "sdwfrost",
-            git_reponame = "PDMP.jl")
+            git_reponame = "PiecewiseDeterministicMarkovProcesses.jl")
 library(knitr)
 new_html = pandoc(new_md, format = "html")
 ```

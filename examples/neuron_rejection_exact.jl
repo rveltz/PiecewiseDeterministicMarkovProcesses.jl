@@ -1,5 +1,5 @@
 # Example of neural network
-using PDMP, LinearAlgebra, Random, SparseArrays, Dates
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, SparseArrays, Dates
 
 const N       = 100
 const lambda_ = 0.24
@@ -53,5 +53,5 @@ parms = [0.1]
 tf = 10_050.
 
 println("--> Computing... (",string(Dates.now())[end-7:end],")")
-result = @time PDMP.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
-result = @time PDMP.rejection_exact(40_000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false,ind_save_d = 1:2,ind_save_c = 1:2)
+result = @time PiecewiseDeterministicMarkovProcesses.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
+result = @time PiecewiseDeterministicMarkovProcesses.rejection_exact(40_000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false,ind_save_d = 1:2,ind_save_c = 1:2)

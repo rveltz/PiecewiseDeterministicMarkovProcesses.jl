@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
 function R_sir!(rate,xc,xd,t::Float64,parms,sum_rate::Bool)
   (S,I,R,~) = xd
@@ -31,12 +31,12 @@ tf = 150.0
 
 
 Random.seed!(1234)
-dummy = PDMP.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1)
-result = @time PDMP.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1000)
+dummy = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1)
+result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_sir!,R_sir!,nu,parms,0.0,tf,n_jumps=1000)
 # this should throw an error:
-# result = @time PDMP.pdmp(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,algo=:rejection)
+# result = @time PiecewiseDeterministicMarkovProcesses.pdmp(1000,xc0,xd0,F_sir,R_sir,nu,parms,0.0,tf,algo=:rejection)
 
 Random.seed!(1234)
 # automatic determination of algorithm, here CHV for SSA
-result = PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1)
-result = @time PDMP.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1000)
+result = PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1)
+result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir!,nu,parms,0.0,tf,n_jumps=1000)

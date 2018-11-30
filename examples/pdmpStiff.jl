@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
     xch = [xc0[1]]
@@ -63,7 +63,7 @@ Random.seed!(8)
 println("\n\nComparison of solvers")
     for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
     Random.seed!(8)
-    res =  PDMP.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
+    res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
     println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
     push!(errors,norm(res.time - res_a[1],Inf64))
 end

@@ -1,6 +1,6 @@
-using PDMP, Test, LinearAlgebra, Random, Pkg
+using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, Pkg
 
-cd(Pkg.dir("PDMP")*"/examples")
+cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/examples")
 
 println("== start pdmp examples")
 

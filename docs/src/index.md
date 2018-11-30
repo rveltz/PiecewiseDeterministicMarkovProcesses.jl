@@ -1,7 +1,7 @@
-# PDMP.jl 
+# PiecewiseDeterministicMarkovProcesses.jl 
 
 
-PDMP.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.
+PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.
 
 We provide several methods for the simulation:
 
@@ -19,21 +19,21 @@ We briefly recall facts about a simple class of PDMPs. They are described by a c
 To install this (unregistered) package, run the command 
 
 ```julia
-add https://github.com/rveltz/PDMP.jl.git
+add https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git
 ```
 
 ## Basic example with CHV method
 
 **A strong requirement for the CHV method is that the total rate (*i.e.* sum(rate)) must be positive. This can be easily achieved by adding a dummy Poisson process with very low intensity (see next section).**
 
-See also the [examples directory](https://github.com/rveltz/PDMP.jl/tree/master/examples) for more involved examples. 
+See also the [examples directory](https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl/tree/master/examples) for more involved examples. 
 
 A simple example of jump process is given below. More precisely, we look at the following process of switching dynamics where $$X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.$$ In between jumps, $x_c$ evolves according to $$\dot x_c(t) = x_d(t)x_c(t).$$  
 
 We first need to load the library.  
 
 ```julia
-using PDMP
+using PiecewiseDeterministicMarkovProcesses
 ```
 We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE. Hence, we need to define a function that, given continuous state $x_c$ and discrete state $x_d$ at time $t$, returns the vector field. In addition some parameters can be passed with the variable `parms`.
 
@@ -92,11 +92,11 @@ parms = [0.]
 tf = 25.
 
 # compile the program:
-dummy =  PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=1)
+dummy =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=1)
 
 # compute a trajectory, in this case 100 jumps
 srand(123)
-result =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=100)
+result =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_tcp!,R_tcp!,nu,parms,0.0,tf,n_jumps=100)
 
 # plotting
 using Plots
@@ -153,7 +153,7 @@ function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
 end
 
 srand(123)  
-result2 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
+result2 =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000)
 Plots.plot(result2.time, result2.xc',title = string("#Jumps = ",length(result2.time)),label="Xc2")
 ```
 
@@ -204,7 +204,7 @@ We can now simulate this process as follows
 
 ```julia
 srand(123)
-result3 =  @time PDMP.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000,algo=:rejection)
+result3 =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_tcp!,R_tcp2!,nu2,parms,0.0,tf,n_jumps=10000,algo=:rejection)
 Plots.plot(result3.time, result3.xc',title = string("#Jumps = ",length(result3.time)),label="rejection")
 ```
 

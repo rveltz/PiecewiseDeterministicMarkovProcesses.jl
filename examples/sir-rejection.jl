@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
 function R_sir_rej!(rate,xc,xd,t,parms,sum_rate::Bool)
   (S,I,R,~) = xd
@@ -24,13 +24,13 @@ tf = 150.0
 
 Random.seed!(1234)
 println("--> rejection algorithm for SSA")
-dummy = PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1)
-result = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1000)
+dummy = PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1)
+result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:rejection, n_jumps = 1000)
 
 Random.seed!(1234)
 println("--> CHV algorithm for SSA")
-dummy =PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1)
-result_chv = @time PDMP.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1000)
+dummy =PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1)
+result_chv = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xd0,R_sir_rej!,nu,parms,0.0,tf,algo=:chv, n_jumps = 1000)
 # using Plots
 # gr()
 # plot(result.time,result.xd[1,:])

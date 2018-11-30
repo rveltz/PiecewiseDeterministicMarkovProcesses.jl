@@ -1,4 +1,4 @@
-using JSON, PDMP, LinearAlgebra, Random
+using JSON, PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
 const p0  = convert(Dict{AbstractString,Float64}, JSON.parsefile("../examples/ml.json")["type II"])
 const p1  = ( JSON.parsefile("../examples/ml.json"))

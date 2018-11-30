@@ -1,4 +1,4 @@
-using Documenter, PDMP
+using Documenter, PiecewiseDeterministicMarkovProcesses
 
 makedocs(
 	# format = :html,
@@ -6,11 +6,11 @@ makedocs(
 	)
 
 # ENV["DOCUMENTER_DEBUG"] = true
-# ENV["TRAVIS_REPO_SLUG"] = "github.com/rveltz/PDMP.jl.git"
+# ENV["TRAVIS_REPO_SLUG"] = "github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git"
 
 deploydocs(
 	deps   = Deps.pip("mkdocs", "python-markdown-math", "mkdocs-cinder", "pygments"),
-	repo   = "github.com/rveltz/PDMP.jl.git",
+	repo   = "github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git",
 	julia  = "0.6",
 	osname = "linux",
 )

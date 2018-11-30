@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 
 function F_tcp!(ẋ, xc, xd, t, parms)
     if mod(xd[1],2)==0

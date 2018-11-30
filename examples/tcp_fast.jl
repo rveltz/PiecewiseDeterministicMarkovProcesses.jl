@@ -1,4 +1,4 @@
-using PDMP, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
 function F_tcpf(xcdot, xc, xd, t, parms::Vector{Float64})
   # vector field used for the continuous variable
@@ -27,17 +27,17 @@ parms = vec([0.1]) # sampling rate
 tf = 250.
 
 println("--> Case chv:")
-  dummy_f =  PDMP.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
+  dummy_f =  PiecewiseDeterministicMarkovProcesses.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
   Random.seed!(1234)
-  dummy_f =  @time PDMP.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
+  dummy_f =  @time PiecewiseDeterministicMarkovProcesses.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
   println("--> Case optimised:")
-  dummy_t =  PDMP.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
+  dummy_t =  PiecewiseDeterministicMarkovProcesses.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
   Random.seed!(1234)
-  dummy_t =  @time PDMP.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
+  dummy_t =  @time PiecewiseDeterministicMarkovProcesses.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
 
 println("For simulations:")
 Random.seed!(1234)
 tf = 250.
 parms[1] = 10.0
-result = @time PDMP.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
+result = @time PiecewiseDeterministicMarkovProcesses.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
 println("#jumps = ", length(result.time))
