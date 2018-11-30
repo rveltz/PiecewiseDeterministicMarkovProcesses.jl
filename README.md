@@ -11,7 +11,7 @@ PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulati
 To install this (unregistered) package, run the command 
 
 ```julia
-add https://github.com/rveltz/PDMP.jl.git
+add https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git
 ```
 
 
