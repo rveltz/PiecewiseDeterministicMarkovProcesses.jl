@@ -1,4 +1,4 @@
-module PDMP
+module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
 	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
 
