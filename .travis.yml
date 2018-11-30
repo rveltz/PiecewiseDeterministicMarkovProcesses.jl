@@ -22,5 +22,5 @@ matrix:
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("PiecewiseDeterministicMarkovProcesses");include(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/test/ci_setup.jl"); Pkg.test("PiecewiseDeterministicMarkovProcesses"; coverage=true)'
 after_success:
   - julia -e 'using Pkg;cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
-  - julia -e 'using Pkg;Pkg.add("Documenter");ENV["DOCUMENTER_DEBUG"] = true;'
+  - julia -e 'using Pkg; ps=PackageSpec(name="Documenter", version="0.19"); Pkg.add(ps); Pkg.pin(ps)'
   - julia -e 'using Pkg;cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")); include(joinpath("docs", "make.jl"))'
