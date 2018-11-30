@@ -11,7 +11,7 @@ makedocs(
 deploydocs(
 	deps   = Deps.pip("mkdocs", "python-markdown-math", "mkdocs-cinder", "pygments"),
 	repo   = "github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git",
-	julia  = "0.6",
+	julia  = "1.0",
 	osname = "linux",
 )
 
