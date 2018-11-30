@@ -15,7 +15,7 @@ matrix:
 # uncomment the following lines to override the default test script
 script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("PiecewiseDeterministicMarkovProcesses");include(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/test/ci_setup.jl"); Pkg.test("PiecewiseDeterministicMarkovProcesses"; coverage=true)'
+- julia -e 'using Pkg;Pkg.clone(pwd()); Pkg.build("PiecewiseDeterministicMarkovProcesses");include(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/test/runtests.jl"); Pkg.test("PiecewiseDeterministicMarkovProcesses"; coverage=true)'
 after_success:
   - julia -e 'using Pkg;cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'using Pkg; ps=PackageSpec(name="Documenter", version="0.19"); Pkg.add(ps); Pkg.pin(ps)'
