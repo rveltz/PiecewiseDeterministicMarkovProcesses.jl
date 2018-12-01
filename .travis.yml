@@ -18,6 +18,6 @@ script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #- julia -e 'using Pkg;Pkg.clone(pwd()); Pkg.build("PiecewiseDeterministicMarkovProcesses");include(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/test/runtests.jl"); Pkg.test("PiecewiseDeterministicMarkovProcesses"; coverage=true)'
 after_success:
-  - julia -e 'using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg;Pkg.add("Coverage");using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'using Pkg; ps=PackageSpec(name="Documenter", version="0.19"); Pkg.add(ps); Pkg.pin(ps)'
   - julia -e 'using Pkg;cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")); include(joinpath("docs", "make.jl"))'
