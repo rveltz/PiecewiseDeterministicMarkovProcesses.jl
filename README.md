@@ -6,10 +6,10 @@
 
 PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator. A lot of care has been devoted to reduce allocations as much as possible.
 
-To install this (unregistered) package, run the command 
+To install this package, run the command 
 
 ```julia
-add https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git
+add PiecewiseDeterministicMarkovProcesses
 ```
 
 
