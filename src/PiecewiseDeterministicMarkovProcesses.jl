@@ -50,11 +50,11 @@ module PiecewiseDeterministicMarkovProcesses
 					DX::Base.Callable,
 					nu::AbstractArray{Int64},parms,
 					ti::Float64, tf::Float64;
-					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true)) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}}
+					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true),saverate = false) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}}
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol
-			return chv_diffeq!(xc0,xd0,F,R,DX,	nu,parms,ti, tf,verbose;ode = ode,save_positions = save_positions,n_jumps = n_jumps)
+			return chv_diffeq!(xc0,xd0,F,R,DX,	nu,parms,ti, tf,verbose;ode = ode,save_positions = save_positions,n_jumps = n_jumps,saverate = saverate)
 		end
 
 		@assert algo in [:chv,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."

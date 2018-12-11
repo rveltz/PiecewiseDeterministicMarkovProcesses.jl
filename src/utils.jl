@@ -25,12 +25,24 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 	Xc::VectorOfArray{Tc,2,Array{vectype_xc,1}}		# continuous variable history
 	Xd::VectorOfArray{Td,2,Array{vectype_xd,1}}		# discrete variable history
 	verbose::Bool					# print message?
-	PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
+
+	save_rate::Bool					# boolean for saving rates
+	rate_hist::Vector{Tc}		# to save the rates for debugging purposes
+
+	function PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
 			xc0::vectype_xc,xd0::vectype_xd,
 			F::TF,R::TR,DX::TD,
 			nu::Tnu,parms::Tp,
-			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD} = new(copy(xc0),copy(xd0),PDMPFunctions(F,R,DX),nu,
-			parms,tf,zeros(Tc,size(nu,1)),PDMPsimulation{Tc,Td}(-log(rand()),ti,0),[ti],savepre,VectorOfArray([copy(xc0)]),VectorOfArray([copy(xd0)]),verbose)
+			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool,saverate = false) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD}
+			return new(copy(xc0),
+						copy(xd0),
+						PDMPFunctions(F,R,DX),nu,parms,tf,
+						zeros(Tc,size(nu,1)),
+						PDMPsimulation{Tc,Td}(-log(rand()),ti,0),
+						[ti],savepre,
+						VectorOfArray([copy(xc0)]),
+						VectorOfArray([copy(xd0)]),verbose,saverate,Tc[])
+		end
 end
 
 # callable struct for the CHV method
@@ -58,6 +70,7 @@ struct PDMPResult{Tc,vectype_xc,vectype_xd}
 	time::Vector{Tc}
 	xc::vectype_xc
 	xd::vectype_xd
+	rates::Vector{Tc}
 end
 
 """

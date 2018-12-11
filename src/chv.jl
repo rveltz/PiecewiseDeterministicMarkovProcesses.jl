@@ -91,7 +91,12 @@ function chv!(xc0::vecc,xd0::vecd,
 	# Set up initial simulation time
 	t = ti
 
-	X0 = copy(xc0); push!(X0,ti)
+	X0 = similar(xc0,length(xc0)+1)
+	for ii in eachindex(xc0)
+		X0[ii] = xc0[ii]
+	end
+	X0[end] = ti
+
 	t_hist  = [ti]
 	Xd     = copy(xd0)
 	if ind_save_c[1] == -1
@@ -183,5 +188,5 @@ function chv!(xc0::vecc,xd0::vecd,
 	end
 	verbose && println("-->Done")
 	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
-	return PDMPResult(t_hist,xc_hist,xd_hist)
+	return PDMPResult(t_hist,xc_hist,xd_hist,Float64[])
 end
