@@ -48,8 +48,8 @@ end
 # callable struct for the CHV method
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, x, data, t) where {Tc,Td,vectype_xc,vectype_xd,Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	tau = x[end]
-	rate = similar(x,length(prob.rate)) #This is to use autodiff
-	sr = prob.pdmpFunc.R(rate,x,prob.xd,tau,prob.parms,true)[1]
+	# rate = similar(x,length(prob.rate)) #This is to use autodiff
+	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
