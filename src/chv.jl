@@ -28,7 +28,7 @@ function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
 	return Sundials.CV_SUCCESS
 end
 
-function f_CHV!(F::Function,R::Function,t::Float64, x::Vector{Float64}, xdot::Vector{Float64}, xd::Vector{Int64}, parms,rate)
+function f_CHV!(F::Function,R::Function,t::Float64, x, xdot, xd, parms,rate)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]

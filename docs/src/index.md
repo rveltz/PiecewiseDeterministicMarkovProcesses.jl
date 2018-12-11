@@ -16,10 +16,10 @@ We briefly recall facts about a simple class of PDMPs. They are described by a c
 
 ## Installation
 
-To install this (unregistered) package, run the command 
+To install this package, run the command 
 
 ```julia
-add https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git
+add PiecewiseDeterministicMarkovProcesses
 ```
 
 ## Basic example with CHV method

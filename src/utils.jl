@@ -1,7 +1,3 @@
-"""
-A type storing the call.
-"""
-
 struct PDMPFunctions{TF,TR,TD}
 	F::TF						# vector field for ODE between jumps
 	R::TR			    		# rate function for jumps
@@ -40,7 +36,8 @@ end
 # callable struct for the CHV method
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, x, data, t) where {Tc,Td,vectype_xc,vectype_xd,Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
 	tau = x[end]
-	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
+	rate = similar(x,length(prob.rate)) #This is to use autodiff
+	sr = prob.pdmpFunc.R(rate,x,prob.xd,tau,prob.parms,true)[1]
 	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
@@ -57,10 +54,10 @@ This type stores the output, and comprises of:
 - **stats** : an instance of `PDMPStats`.
 - **args** : arguments passed.
 """
-struct PDMPResult
-	time::Vector{Float64}
-	xc::Matrix{Float64}
-	xd::Matrix{Int64}
+struct PDMPResult{Tc,vectype_xc,vectype_xd}
+	time::Vector{Tc}
+	xc::vectype_xc
+	xd::vectype_xd
 end
 
 """
