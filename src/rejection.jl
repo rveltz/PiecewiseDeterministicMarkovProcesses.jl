@@ -98,7 +98,7 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	end
 	if verbose println("-->Done") end
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = PDMPResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps])
+	result = PDMPResult(t_hist[1:nsteps],xc_hist[:,1:nsteps],xd_hist[:,1:nsteps],Float64[])
 	return(result)
 end
 
@@ -199,7 +199,7 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	if verbose println("-->Done") end
 
 	# if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = PDMPResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps])
+	result = PDMPResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps],Float64[])
 	return(result)
 end
 

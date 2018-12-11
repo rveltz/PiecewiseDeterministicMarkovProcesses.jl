@@ -1,6 +1,8 @@
 using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, Pkg
 
 cd(Pkg.dir("PiecewiseDeterministicMarkovProcesses")*"/examples")
+# import PiecewiseDeterministicMarkovProcesses; joinpath(dirname(pathof(PiecewiseD
+# eterministicMarkovProcesses)), "..", paths...)
 
 println("== start pdmp examples")
 
