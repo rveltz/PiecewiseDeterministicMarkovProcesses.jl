@@ -1,8 +1,7 @@
 name = "PiecewiseDeterministicMarkovProcesses"
-uuid = "62ad7784-f4d8-11e8-073f-ef106f503bc7"
+uuid = "86206cdf-4603-54e0-bd58-22a2dcbf57aa"
 authors = ["Romain Veltz <rveltz@salk.edu>", " Simon Frost <sdf22@cam.ac.uk>"]
-version = "0.1.0"
-
+version = "0.0.1"
 
 
 [deps]
