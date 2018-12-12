@@ -1,6 +1,4 @@
-using Revise, PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
-
-# using LabelledArrays
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
     xch = [xc0[1]]
@@ -46,8 +44,6 @@ end
 
 xc0 = [ 1.0 ]
 
-# xc0 = @LArray [1.0] (:x)
-
 xd0 = [0, 1]
 
 nu_tcp = [[1 0];[0 -1]]
@@ -67,23 +63,3 @@ println("\n\nComparison of solvers")
     printstyled(color=:green,"--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2],"\n\n")
     push!(errors,norm(res.time - res_a[1],Inf64))
 end
-
-#
-# using Plots
-# plot(result2.time,result2.xc[1,:])
-# plot!(result3.time,result3.xc[1,:])
-# plot!(result4.time,result4.xc[1,:])
-#
-
-# ode = Rodas5()
-#     Random.seed!(1234)
-#     res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = ode)
-#
-#
-# Random.seed!(1234)
-#     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = Tsit5(), save_positions=(false,false))
-#
-#
-# using Plots
-#
-# plot(res.rates)
