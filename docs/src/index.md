@@ -217,7 +217,7 @@ More precisely, if the total rate function does not vary much in between jumps, 
 In all other cases, one should try the CHV method where no a priori knowledge of the rate function is requied.
 
 
-# Advance uses
+# Advanced uses
 ## Specify a jump with a function
 to be done
 
