@@ -1,33 +1,3 @@
-# """
-# This is a wrapper implementing the change of variable method to simulate the PDMP.
-# see https://arxiv.org/abs/1504.06873
-# """
-
-"""
-This is a wrapper implementing the change of variable method to simulate the PDMP.
-This wrapper is meant to be called by Sundials.CVode
-see https://arxiv.org/abs/1504.06873
-"""
-function cvode_ode_wrapper(t, x_nv, xdot_nv, user_data)
-	# Reminder: user_data = [F R Xd params]
-	x    = convert(Vector, x_nv)
-	xdot = convert(Vector, xdot_nv)
-
-	tau = x[end]
-	# the first x is a dummy variable, it will be seen as the rate vector but it
-	# must not be modified
-	sr = user_data[2](user_data[5], x, user_data[3], tau, user_data[4], true)[1]::Float64
-	@assert sr > 0.0 "Total rate must be positive"
-
-	isr = min(1.0e9,1.0 / sr)
-	user_data[1](xdot, x, user_data[3], tau, user_data[4])
-	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] * isr
-	end
-	xdot[end] = isr
-	return Sundials.CV_SUCCESS
-end
-
 function f_CHV!(F::Function,R::Function,t::Float64, x, xdot, xd, parms,rate)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
@@ -41,20 +11,6 @@ function f_CHV!(F::Function,R::Function,t::Float64, x, xdot, xd, parms,rate)
 		xdot[i] = xdot[i] * isr
 	end
 	nothing
-end
-
-function euler(rhs!::Function,x0,dt,ti,tf)
-	t = ti
-	xdot = similar(x0)
-	x = Matrix{Float64}(undef,2,length(x0))
-	x[2,:] .= x0
-	while t<tf
-		rhs!(t,x[2,:],xdot)
-		x[2,:] .= x[2,:] .+ dt .* xdot
-		t = t + dt
-	end
-	return x
-	return hcat(x0,x)
 end
 
 """
