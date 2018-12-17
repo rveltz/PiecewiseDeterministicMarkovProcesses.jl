@@ -1,3 +1,4 @@
+# using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 const r = 10.
 
@@ -33,9 +34,9 @@ function R!(rate, xc, xd, t, parms, sum_rate::Bool)
     if sum_rate==false
         rate[1] = R(xc[1])
         rate[2] = 0.0
-        return 0.
+        return R(xc[1]),40.
     else
-        return R(xc[1])
+        return R(xc[1]),40.
     end
 end
 
@@ -54,14 +55,9 @@ Random.seed!(8)
 errors = Float64[]
 
 println("\n\nComparison of solvers")
-for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
-    Random.seed!(8)
-    res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
-    println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
-    push!(errors,norm(res.time - res_a[1],Inf64))
-end
-
-# using Plots
-# plot(res.time,res.xc[1,:],label = "CHV",marker=:d)
-# plot!(res_a[1],res_a[2])
-# plot(res.time - res_a[1])
+    for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+        Random.seed!(8)
+        res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
+        println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
+        push!(errors,norm(res.time - res_a[1],Inf64))
+    end

@@ -1,3 +1,4 @@
+# using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
@@ -36,9 +37,9 @@ function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
     if sum_rate==false
         rate[1] = rate_tcp(xc[1])
         rate[2] = 0.0
-        return 0.
+        return 0., 100.
     else
-        return rate_tcp(xc[1])
+        return rate_tcp(xc[1]), 100.
     end
 end
 
@@ -63,3 +64,20 @@ println("\n\nComparison of solvers")
     printstyled(color=:green,"--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2],"\n\n")
     push!(errors,norm(res.time - res_a[1],Inf64))
 end
+
+#
+# # case with no allocations  0.000719 seconds (672 allocations: 57.250 KiB)
+# Random.seed!(1234)
+#     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
+
+# case with no allocations  0.000719 seconds (675 allocations: 57.297 KiB)
+# Random.seed!(1234)
+#     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
+#     res.time[1:10] |> println
+#
+# Random.seed!(1234)
+#     using PiecewiseDeterministicMarkovProcesses
+#     println("\n"*"+"^40)
+#     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 10,   ode =Tsit5(), algo=:rejection, verbose=true)
+#
+#     res.time |> println
