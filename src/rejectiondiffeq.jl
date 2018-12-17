@@ -100,9 +100,9 @@ function rejection_diffeq!(problem::PDMPProblem,
 	problem.sim.lambda_star = 0	# this is the bound for the rejection method
 	problem.sim.ppf .= problem.pdmpFunc.R(problem.rate,X0,problem.xd,t,problem.parms,true)
 
-	@assert problem.sim.ppf[2] == problem.pdmpFunc.R(problem.rate,X0+0.1*rand(length(X0)),problem.xd,t+rand(),problem.parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
-	problem.rate .*= 0;problem.sim.ppf .= problem.pdmpFunc.R(problem.rate,X0,problem.xd,t,problem.parms,true)
-	@assert sum(problem.rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
+	# @assert problem.sim.ppf[2] == problem.pdmpFunc.R(problem.rate,X0+0.1265987*cumsum(ones(length(X0))),problem.xd,t+0.124686489,problem.parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
+	# problem.rate .*= 0;problem.sim.ppf .= problem.pdmpFunc.R(problem.rate,X0,problem.xd,t,problem.parms,true)
+	# @assert sum(problem.rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
 
 	problem.sim.tstop_extended = problem.sim.tstop_extended / problem.sim.ppf[2] + ti
 	problem.sim.reject = true

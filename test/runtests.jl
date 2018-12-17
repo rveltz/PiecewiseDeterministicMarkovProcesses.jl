@@ -18,6 +18,10 @@ println("\n\n==== Example pdmp stiff ")
 include("../examples/pdmpStiff.jl")
 @test prod(isless.(errors,1e-3))
 
+println("\n\n==== Example pdmp rejection ")
+include("../examples/tcp_rejection.jl")
+@test prod(isless.(errors,1e-5))
+
 println("\n\n==== Simple example of neuron model")
 include("../examples/pdmp_example_eva.jl")
 @test isequal(result.time[end],100.)
