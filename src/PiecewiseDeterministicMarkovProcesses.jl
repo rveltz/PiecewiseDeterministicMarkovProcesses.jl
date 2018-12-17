@@ -2,25 +2,27 @@ module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
 	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
 
+	include("utils.jl")
+	include("cvode.jl")
+	include("lsoda.jl")
+	include("chv.jl")
+	include("chvdiffeq.jl")
+	include("rejectiondiffeq.jl")
+
+	include("rejection.jl")
+	include("tau-leap.jl")
+
 	export pdmp!,
 		ssa,
 		chv!,chv,
 		rejection!,
 		rejection_exact,
 		chv_diffeq!,
+		rejection_diffeq!,
 		pdmpArgs,
 		pdmpResult,
 		pdmp_data,
 		tauleap
-
-	include("utils.jl")
-	include("cvode.jl")
-	include("lsoda.jl")
-	include("chv.jl")
-	include("chvdiffeq.jl")
-
-	include("rejection.jl")
-	include("tau-leap.jl")
 
 	"""
 	This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
@@ -52,12 +54,18 @@ module PiecewiseDeterministicMarkovProcesses
 					ti::Float64, tf::Float64;
 					verbose::Bool = false,ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode,algo=:chv, n_jumps::Int64 = 1_000,ind_save_d=-1:1,ind_save_c=-1:1,dt=1.,save_at = [],save_positions = (false,true),saverate = false) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}}
 
+		@assert algo in [:chv,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
+
 		# hack to call DiffEq solver
-		if typeof(ode) != Symbol
-			return chv_diffeq!(xc0,xd0,F,R,DX,	nu,parms,ti, tf,verbose;ode = ode,save_positions = save_positions,n_jumps = n_jumps,saverate = saverate)
+		if typeof(ode) != Symbol && algo==:chv
+			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode,save_positions = save_positions,n_jumps = n_jumps,saverate = saverate)
 		end
 
-		@assert algo in [:chv,:rejection,:tauleap] "Call $algo() directly please, without passing by pdmp(). Indded, the algo $algo() is specialized for speed and requires a particuliar interface."
+		if typeof(ode) != Symbol && algo==:rejection
+			return rejection_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose;ode = ode,save_positions = save_positions,n_jumps = n_jumps,saverate = saverate)
+		end
+
+		# old solvers
 		if algo==:chv
 			return PiecewiseDeterministicMarkovProcesses.chv!(xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,n_max = n_jumps)
 		elseif algo==:rejection

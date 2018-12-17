@@ -68,7 +68,7 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 			if t == tf
 				reject = false
 			else
-				reject = rand() < (1. - ppf[1] / ppf[2])
+				reject = rand() < (1 - ppf[1] / ppf[2])
 			end
 		end
 

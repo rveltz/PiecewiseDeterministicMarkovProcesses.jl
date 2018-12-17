@@ -8,6 +8,12 @@ mutable struct PDMPsimulation{Tc <: Real,Td}
 	tstop_extended::Tc
 	lastjumptime::Tc
 	njumps::Td
+
+	#variables required to sample using rejection method
+	lambda_star::Tc					# bound on the total rate
+	ppf::Vector{Tc}
+	reject::Bool					#boolean to know whether to reject or not the step
+	fictitous_jumps::Td
 end
 
 struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
@@ -26,8 +32,9 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 	Xd::VectorOfArray{Td,2,Array{vectype_xd,1}}		# discrete variable history
 	verbose::Bool					# print message?
 
+	# variables for debugging
 	save_rate::Bool					# boolean for saving rates
-	rate_hist::Vector{Tc}		# to save the rates for debugging purposes
+	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
 	function PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
 			xc0::vectype_xc,xd0::vectype_xd,
@@ -38,22 +45,42 @@ struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVect
 						copy(xd0),
 						PDMPFunctions(F,R,DX),nu,parms,tf,
 						zeros(Tc,size(nu,1)),
-						PDMPsimulation{Tc,Td}(-log(rand()),ti,0),
+						PDMPsimulation{Tc,Td}(-log(rand()),ti,0,Tc(0),Vector{Tc}([0, 0]),false,0),
 						[ti],savepre,
 						VectorOfArray([copy(xc0)]),
-						VectorOfArray([copy(xd0)]),verbose,saverate,Tc[])
+						VectorOfArray([copy(xd0)]),verbose,
+						saverate,Tc[])
 		end
+end
+
+function PDMPPb(xc0::vecc,xd0::vecd,
+				F::TF,R::TR,DX::TD,
+				nu::Tnu,parms::Tp,
+				ti::Tc, tf::Tc,
+				verbose::Bool = false;
+				save_positions=(false,true)) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	# custom type to collect all parameters in one structure
+	return PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+end
+
+# callable struct
+function (prob::PDMPProblem)(u,t,integrator)
+    (t == prob.sim.tstop_extended)
 end
 
 # callable struct for the CHV method
 function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, x, data, t) where {Tc,Td,vectype_xc,vectype_xd,Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
-	tau = x[end]
-	# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
-	sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-	prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-	xdot[end] = 1.0
-	@inbounds for i in eachindex(xdot)
-		xdot[i] = xdot[i] / sr
+	if length(x) == length(prob.xc) + 1 # this is to simulate with the CHV method
+		tau = x[end]
+		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
+		sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
+		prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
+		xdot[end] = 1.0
+		@inbounds for i in eachindex(xdot)
+			xdot[i] = xdot[i] / sr
+		end
+	else # this is to simulate with rejection method
+		prob.pdmpFunc.F(xdot,x,prob.xd,t,prob.parms)
 	end
 	nothing
 end
