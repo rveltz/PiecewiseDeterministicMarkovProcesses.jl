@@ -124,8 +124,8 @@ function chv!(xc0::vecc,xd0::vecd,
 
 			# save state, post-jump
 			push!(t_hist,t)
-			push!(xc_hist, (X0[1:end-1]))
-			push!(xd_hist, copy(Xd))
+			push!(xc_hist, X0[ind_save_c])
+			push!(xd_hist, Xd[ind_save_d])
 
 		else
 			if ode in [:cvode,:bdf,:adams]
