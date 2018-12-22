@@ -77,6 +77,7 @@ module PiecewiseDeterministicMarkovProcesses
 		end
 	end
 
+	# simplified calls when not all options are passed
 	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)
 
 	pdmp!(xc0,xd0,F,R,nu,parms,ti,tf;kwargs...) = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F,R,Delta_dummy,nu,parms,ti, tf;kwargs...)

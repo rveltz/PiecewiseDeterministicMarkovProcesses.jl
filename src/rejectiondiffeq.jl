@@ -12,28 +12,23 @@ function rejectionjump(integrator,prob::PDMPProblem)
 	prob.sim.lastjumptime = t
 	prob.verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",prob.sim.fictitous_jumps," !!\n")
 
-	# state of the continuous variable right before the jump in prob.xc
-	@inbounds for ii in eachindex(prob.xc)
-		prob.xc[ii] = integrator.u[ii]
-	end
-
-	prob.sim.ppf .= prob.pdmpFunc.R(prob.rate,prob.xc,prob.xd,t,prob.parms,true)
-	@assert prob.sim.ppf[1] < prob.sim.ppf[2] "Error, your bound on the rates is not high enough!"
+	prob.sim.ppf .= prob.pdmpFunc.R(prob.rate,integrator.u,prob.xd,t,prob.parms,true)
+	@assert prob.sim.ppf[1] < prob.sim.ppf[2] "Error, your bound on the rates is not high enough!, $(prob.sim.ppf)"
 	prob.sim.reject = rand() < (1 - prob.sim.ppf[1] / prob.sim.ppf[2])
 
 	prob.verbose && printstyled(color=:green,"----> xc = ",prob.xc ,", xd = ",prob.xd,", reject = ",prob.sim.reject,", rates = ",prob.sim.ppf,"\n")
-
-	if (prob.save_pre_jump) && (t <= prob.tf)
-		prob.verbose && printstyled(color=:green,"----> save pre-jump\n")
-		push!(prob.Xc, copy(prob.xc))
-		push!(prob.Xd, copy(prob.xd))
-		push!(prob.time,t)
-	end
 
 	# execute the jump
 	if t < prob.tf && prob.sim.reject == false
 		prob.verbose && printstyled(color=:blue,"--> TRUE jump!\n")
 		prob.sim.ppf .= prob.pdmpFunc.R(prob.rate,prob.xc,prob.xd,t,prob.parms, false)
+
+		if (prob.save_pre_jump) && (t <= prob.tf)
+			prob.verbose && printstyled(color=:green,"----> save pre-jump\n")
+			push!(prob.Xc, copy(prob.xc))
+			push!(prob.Xd, copy(prob.xd))
+			push!(prob.time,t)
+		end
 
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rate))
@@ -50,7 +45,11 @@ function rejectionjump(integrator,prob::PDMPProblem)
 		end
 
 		# Xc = Xc .+ deltaxc
-		prob.pdmpFunc.Delta(prob.xc,prob.xd,t,prob.parms,ev)
+		prob.pdmpFunc.Delta(integrator.u,prob.xd,t,prob.parms,ev)
+		u_modified!(integrator,true)
+		@inbounds for ii in eachindex(prob.xc)
+			prob.xc[ii] = integrator.u[ii]
+		end
 
 		prob.sim.njumps += 1
 	else

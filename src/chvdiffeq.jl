@@ -11,11 +11,6 @@ function chvjump(integrator,prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	prob.sim.lastjumptime = t
 	prob.verbose && printstyled(color=:green,"--> Jump detected at t = $t !!\n")
 
-	# state of the continuous variable right before the jump in prob.xc
-	@inbounds for ii in eachindex(prob.xc)
-		prob.xc[ii] = integrator.u[ii]
-	end
-
 	prob.verbose && printstyled(color=:green,"--> jump not yet performed, xd = ",prob.xd,"\n")
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
@@ -26,7 +21,7 @@ function chvjump(integrator,prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	end
 
 	# execute the jump
-	prob.pdmpFunc.R(prob.rate,prob.xc,prob.xd,t,prob.parms, false)
+	prob.pdmpFunc.R(prob.rate, integrator.u, prob.xd, t, prob.parms, false)
 	if (t < prob.tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rate))
@@ -43,7 +38,11 @@ function chvjump(integrator,prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 		end
 
 		# Xc = Xc .+ deltaxc
-		prob.pdmpFunc.Delta(prob.xc,prob.xd,t,prob.parms,ev)
+		prob.pdmpFunc.Delta(integrator.u,prob.xd,t,prob.parms,ev)
+		u_modified!(integrator,true)
+		@inbounds for ii in eachindex(prob.xc)
+			prob.xc[ii] = integrator.u[ii]
+		end
 	end
 	prob.verbose && printstyled(color=:green,"--> jump effectued, xd = ",prob.xd,"\n")
 	# we register the next time interval to solve the extended ode
@@ -100,7 +99,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	while (t < tf) && problem.sim.njumps < n_jumps-1
 		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
 		step!(integrator)
-		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime),\n solver = $ode")
+		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime),\n solver = $ode. dt = $(t - problem.sim.lastjumptime)")
 		t = problem.sim.lastjumptime
 
 		# the previous step was a jump!

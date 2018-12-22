@@ -65,19 +65,19 @@ println("\n\nComparison of solvers")
     push!(errors,norm(res.time - res_a[1],Inf64))
 end
 
-#
+# #
 # # case with no allocations  0.000719 seconds (672 allocations: 57.250 KiB)
 # Random.seed!(1234)
 #     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
-
-# case with no allocations  0.000719 seconds (675 allocations: 57.297 KiB)
+#
+# # case with no allocations  0.000719 seconds (675 allocations: 57.297 KiB)
 # Random.seed!(1234)
 #     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
 #     res.time[1:10] |> println
 #
-# Random.seed!(1234)
-#     using PiecewiseDeterministicMarkovProcesses
-#     println("\n"*"+"^40)
-#     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 10,   ode =Tsit5(), algo=:rejection, verbose=true)
-#
-#     res.time |> println
+# # Random.seed!(1234)
+# #     using PiecewiseDeterministicMarkovProcesses
+# #     println("\n"*"+"^40)
+# #     res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = 10,   ode =Tsit5(), algo=:rejection, verbose=true)
+# #
+# #     res.time |> println

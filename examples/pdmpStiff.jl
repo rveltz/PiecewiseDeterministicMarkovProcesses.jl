@@ -68,6 +68,29 @@ println("\n\nComparison of solvers")
     push!(errors,norm(res.time - res_a[1],Inf64))
 end
 
+
+# here, we wrote the jump problem with a function
+using SparseArrays
+nusp = spzeros(Int64,2,2)
+
+function Delta!(xc,xd,t,parms,ind_reaction::Int64)
+    if ind_reaction == 1
+        xd[1] += 1
+    else
+        xd[2] -=1
+    end
+    return
+end
+
+println("\n\nComparison of solvers, with function Delta")
+    for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+    Random.seed!(8)
+    res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, Delta!, nusp, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
+    println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
+    push!(errors,norm(res.time - res_a[1],Inf64))
+end
+
+
 # using Plots
 # plot(res.time,res.xc[1,:],label = "CHV",marker=:d)
 #     plot!(res_a[1],res_a[2])

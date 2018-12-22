@@ -137,8 +137,8 @@ function chv!(xc0::vecc,xd0::vecd,
 
 			# save state
 			push!(t_hist,tf)
-			push!(xc_hist, (res_ode_last[end,:]))
-			push!(xd_hist, (Xd))
+			push!(xc_hist, res_ode_last[end,ind_save_c])
+			push!(xd_hist, Xd[ind_save_d])
 		end
 		nsteps += 1
 	end

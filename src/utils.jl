@@ -74,6 +74,8 @@ function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, 
 		tau = x[end]
 		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
 		sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
+		# @assert sr > 0.0 "Total rate must be positive"
+		# isr = min(1.0e9,1.0 / sr)
 		prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 		xdot[end] = 1.0
 		@inbounds for i in eachindex(xdot)
