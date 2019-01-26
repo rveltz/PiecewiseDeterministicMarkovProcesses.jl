@@ -39,9 +39,6 @@ function rejection!(n_max::Int64,xc0::AbstractVector{Float64},xd0::AbstractVecto
 	rate    = zeros(numpf)  # vector of rates
 	tp = [ti, tf]           # vector to hold the time interval over which to integrate the flow
 
-	# Main loop
-	termination_status = "finaltime"
-
 	#variables for rejection algorithm
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
@@ -140,11 +137,8 @@ function rejection_exact(n_max::Int64,xc0::AbstractVector{Float64},xd0::Abstract
 	rate_vector = zeros(numpf)#vector of rates
 	tp = [0., 1.]
 
-	# Main loop
-	termination_status = "finaltime"
-
 	reject = true
-	nb_rejet::Int = 0
+	nb_rejet = 0
 	lambda_star = 0.0 # this is the bound for the rejection method
 	tp = [0.,0.]
 	lambda_star = R(rate_vector,X0,Xd,t,parms,true)[2]

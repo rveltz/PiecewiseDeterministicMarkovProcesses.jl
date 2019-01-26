@@ -13,6 +13,10 @@ These methods require solving stiff ODEs (for CHV ) in an efficient manner. [```
 
 We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a jump process with rates $R(x_c,x_d,t)$. At each jump of $x_d$, a jump can also be added to the continuous variable $x_c$.
 
+!!! note "ODE Solvers"
+    A lot of care have been used to be sure that the algorithms do not allocate and hence are fast. This is based on an iterator interface of `DifferentialEquations`. If you chose `save_positions = (false,false)`, the allocations should be independent from the requested jump number. However, the iterator solution is not yet available for `LSODA` in `DifferentialEquations`. Hence you can pass `ode = :lsoda` to access an old version of the algo (which allocates) or any other solver like `ode = Tsit5()` to access the new solver.
+
+
 
 ## Installation
 
