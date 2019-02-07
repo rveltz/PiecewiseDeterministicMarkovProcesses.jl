@@ -90,10 +90,9 @@ end
 """
 This type stores the output, and comprises of:
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.
-- **xc** : a `Matrix` of `Float64`, containing the simulated states for the continuous variable.
-- **xd** : a `Matrix` of `Int	64`, containing the simulated states for the continuous variable.
-- **stats** : an instance of `PDMPStats`.
-- **args** : arguments passed.
+- **xc** : containing the simulated states for the continuous variable.
+- **xd** : containing the simulated states for the continuous variable.
+- **rates** : containing the rates used during the simulation
 """
 struct PDMPResult{Tc <: Real,vectype_xc,vectype_xd}
 	time::Vector{Tc}

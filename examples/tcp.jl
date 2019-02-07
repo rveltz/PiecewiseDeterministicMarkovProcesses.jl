@@ -1,5 +1,5 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
     xch = [xc0[1]]
