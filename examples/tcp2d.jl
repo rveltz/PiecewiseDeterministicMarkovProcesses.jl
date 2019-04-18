@@ -1,5 +1,5 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
-
+const PDMP = PiecewiseDeterministicMarkovProcesses
 function F_tcp!(ẋ, xc, xd, t, parms)
     if mod(xd[1],2)==0
          ẋ[1] =  1.0

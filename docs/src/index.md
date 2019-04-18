@@ -11,7 +11,7 @@ We provide several methods for the simulation:
 - **rejection methods** for which the user is asked to provide a bound on the reaction rates. These last methods are the most "exact" but not the fastest if the reaction rate bound is not tight. In case the flow is known analytically, a method is also provided.
 
 
-These methods require solving stiff ODEs (for CHV ) in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) and [```LSODA.jl```](https://github.com/rveltz/LSODA.jl) are great, but other solvers can also be considered (see [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml)). Hence, the current package allow the use of all solvers in `DifferentialEquations.jl` thereby giving access to a wide range of solvers. In particular, we can test different solvers to see how precise they are. Here is an example from `examples/pdmpStiff.jl` for which an analytical expression is available which allows computation of the errors
+These methods require solving stiff ODEs (for CHV ) in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) and [```LSODA.jl```](https://github.com/rveltz/LSODA.jl) are great, but other solvers can also be considered (see [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml)). Hence, the current package allows the use of all solvers in `DifferentialEquations.jl` thereby giving access to a wide range of solvers. In particular, we can test different solvers to see how precise they are. Here is an example from `examples/pdmpStiff.jl` for which an analytical expression is available which allows computation of the errors
 
 ```julia
 Comparison of solvers
@@ -27,7 +27,7 @@ Comparison of solvers
 ```
 
 !!! note "ODE Solvers"
-    A lot of care have been used to be sure that the algorithms do not allocate and hence are fast. This is based on an iterator interface of `DifferentialEquations`. If you chose `save_positions = (false, false)`, the allocations should be independent from the requested jump number. However, the iterator solution is not yet available for `LSODA` in `DifferentialEquations`. Hence you can pass `ode = :lsoda` to access an old version of the algo (which allocates) or any other solver like `ode = Tsit5()` to access the new solver.
+    A lot of care have been taken to be sure that the algorithms do not allocate and hence are fast. This is based on an iterator interface of `DifferentialEquations`. If you chose `save_positions = (false, false)`, the allocations should be independent from the requested jump number. However, the iterator solution is not yet available for `LSODA` in `DifferentialEquations`. Hence you can pass `ode = :lsoda` to access an old version of the algo (which allocates) or any other solver like `ode = Tsit5()` to access the new solver.
 
 
 
@@ -131,7 +131,7 @@ This produces the following graph:
 ![TCP](xc.png)
 
 ## Adding more sampling points in between jumps
-The current interface "only" returns the jumping times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
+The current interface "only" returns the jump times. On may want to resolve the trajectory in between jumps. For example, in the previous example, in between two jumps, the trajectory should be exponential and not linear as shown. 
 
 A simple trick to do this is to add a Poisson process to the reactions set with a given sampling rate. We have to modify `nu, xcd0` and `R_tcp!` for this. The set of reactions is now the following
 
