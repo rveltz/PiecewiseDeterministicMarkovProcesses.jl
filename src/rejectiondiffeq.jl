@@ -65,12 +65,12 @@ end
 """
 Implementation of the rejection method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
 """
-function rejection_diffeq!(xc0::vecc,xd0::vecd,
-				F::TF,R::TR,DX::TD,
-				nu::Tnu,parms::Tp,
+function rejection_diffeq!(xc0::vecc, xd0::vecd,
+				F::TF, R::TR, DX::TD,
+				nu::Tnu, parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(),save_positions=(false,true),n_jumps::Int64 = Inf64, saverate = false) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+				ode = Tsit5(), save_positions=(false,true), n_jumps::Int64 = Inf64, saverate = false) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 				vecc <: AbstractVector{Tc},
 				vecd <:  AbstractVector{Td}}
 
@@ -81,8 +81,8 @@ function rejection_diffeq!(xc0::vecc,xd0::vecd,
 end
 
 function rejection_diffeq!(problem::PDMPProblem,
-				ti::Tc,tf::Tc, verbose = false;ode=Tsit5(),
-				save_positions=(false,true),n_jumps::Td = Inf64) where {Tc,Td}
+				ti::Tc, tf::Tc, verbose = false;ode=Tsit5(),
+				save_positions = (false,true), n_jumps::Td = Inf64) where {Tc,Td}
 	problem.verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET

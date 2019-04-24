@@ -254,6 +254,9 @@ See `examples/pdmp_example_eva.jl` for an example.
 pdmp!
 ```
 
+```@docs
+chv_diffeq!
+```
 
 ```@docs
 chv!

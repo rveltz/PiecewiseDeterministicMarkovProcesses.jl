@@ -1,10 +1,10 @@
-struct PDMPFunctions{TF,TR,TD}
+struct PDMPFunctions{TF, TR, TD}
 	F::TF						# vector field for ODE between jumps
 	R::TR			    		# rate function for jumps
 	Delta::TD		    		# function to implement
 end
 
-mutable struct PDMPsimulation{Tc <: Real,Td}
+mutable struct PDMPsimulation{Tc <: Real, Td}
 	tstop_extended::Tc
 	lastjumptime::Tc
 	njumps::Td
@@ -16,56 +16,55 @@ mutable struct PDMPsimulation{Tc <: Real,Td}
 	fictitous_jumps::Td
 end
 
-struct PDMPProblem{Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, Tnu <: AbstractArray{Td}, Tp, TF, TR, TD}
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
-	pdmpFunc::PDMPFunctions{TF,TR,TD}
+	pdmpFunc::PDMPFunctions{TF, TR, TD}
 	nu::Tnu
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
 	rate::vectype_xc				# to hold the rate vector for inplace computations
-	sim::PDMPsimulation{Tc,Td}
-	# space to save result
+	sim::PDMPsimulation{Tc, Td}		# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump?
-	Xc::VectorOfArray{Tc,2,Array{vectype_xc,1}}		# continuous variable history
-	Xd::VectorOfArray{Td,2,Array{vectype_xd,1}}		# discrete variable history
-	verbose::Bool					# print message?
+	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
+	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}		# discrete variable history
+	verbose::Bool					# print message during simulation?
 
 	# variables for debugging
 	save_rate::Bool					# boolean for saving rates
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
-	function PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD}(
+	function PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tnu, Tp, TF, TR, TD}(
 			xc0::vectype_xc,xd0::vectype_xd,
 			F::TF,R::TR,DX::TD,
 			nu::Tnu,parms::Tp,
-			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool,saverate = false) where {Tc,Td,vectype_xc<:AbstractVector{Tc},vectype_xd<:AbstractVector{Td},Tnu <: AbstractArray{Td},Tp,TF ,TR ,TD}
-			return new(copy(xc0),
-						copy(xd0),
-						PDMPFunctions(F,R,DX),nu,parms,tf,
-						zeros(Tc,size(nu,1)),
-						PDMPsimulation{Tc,Td}(-log(rand()),ti,0,Tc(0),Vector{Tc}([0, 0]),false,0),
-						[ti],savepre,
-						VectorOfArray([copy(xc0)]),
-						VectorOfArray([copy(xd0)]),verbose,
-						saverate,Tc[])
+			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool,saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD}
+		return new(copy(xc0),
+					copy(xd0),
+					PDMPFunctions(F,R,DX),nu,parms,tf,
+					zeros(Tc,size(nu,1)),
+					PDMPsimulation{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+					[ti], savepre,
+					VectorOfArray([copy(xc0)]),
+					VectorOfArray([copy(xd0)]), verbose,
+					saverate,Tc[])
 		end
 end
 
-function PDMPPb(xc0::vecc,xd0::vecd,
-				F::TF,R::TR,DX::TD,
-				nu::Tnu,parms::Tp,
+function PDMPPb(xc0::vecc, xd0::vecd,
+				F::TF, R::TR, DX::TD,
+				nu::Tnu, parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				save_positions=(false,true)) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				save_positions = (false,true)) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	# custom type to collect all parameters in one structure
 	return PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 end
 
 # callable struct
 function (prob::PDMPProblem)(u,t,integrator)
-    (t == prob.sim.tstop_extended)
+	(t == prob.sim.tstop_extended)
 end
 
 # callable struct for the CHV method
@@ -88,7 +87,7 @@ function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, 
 end
 
 """
-This type stores the output, and comprises of:
+This type stores the output composed of:
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.
 - **xc** : containing the simulated states for the continuous variable.
 - **xd** : containing the simulated states for the continuous variable.
@@ -101,7 +100,7 @@ struct PDMPResult{Tc <: Real,vectype_xc,vectype_xd}
 	rates::Vector{Tc}
 end
 
-PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc,vectype_xc,vectype_xd} = PDMPResult{Tc,vectype_xc,vectype_xd}(time,xc,xd,Tc[])
+PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc, vectype_xc, vectype_xd} = PDMPResult{Tc, vectype_xc, vectype_xd}(time, xc, xd, Tc[])
 
 """
 Dummy vector field to be used in gillespie algo
@@ -119,22 +118,21 @@ function Delta_dummy(xc, xd, t, parms::Ty, ind_reaction) where Ty
 	return true
 end
 
-
 """
 Dummy flow to be used in gillespie algo
 """
 function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms::Ty) where Ty
-    # vector field used for the continuous variable
-    # trivial dynamics
-    out[1,:] .= xc
-    out[2,:] .= xc
-    nothing
+	# vector field used for the continuous variable
+	# trivial dynamics
+	out[1,:] .= xc
+	out[2,:] .= xc
+	nothing
 end
 
 """
 Function to pre-allocate arrays contening the result.
 """
-function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind_save_d=-1:1)
+function allocate_arrays(ti	,xc0, xd0, n_max, rejection = false; ind_save_c=-1:1, ind_save_d=-1:1)
 	if ind_save_c[1] == -1
 		ind_save_c = 1:length(xc0)
 	end
@@ -151,7 +149,7 @@ function allocate_arrays(ti	,xc0,xd0,n_max,rejection = false;ind_save_c=-1:1,ind
 		X0 = copy(xc0); push!(X0,ti)
 		Xc = copy(xc0)
 	end
-	Xd     = copy(xd0)
+	Xd	 = copy(xd0)
 
 	# arrays for storing history, pre-allocate storage
 	t_hist  = zeros(n_max)
@@ -170,13 +168,13 @@ end
 """
 function to save data
 """
-function save_data(nsteps,X0,Xd,xc_hist,xd_hist,ind_save_d, ind_save_c)
+function save_data(nsteps, X0, Xd, xc_hist, xd_hist, ind_save_d, ind_save_c)
 	@inbounds for ii in eachindex(ind_save_c)
 		xc_hist[ii,nsteps] = X0[ind_save_c[ii]]
-    end
-    @inbounds for ii in eachindex(ind_save_d)
+	end
+	@inbounds for ii in eachindex(ind_save_d)
 		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
-    end
+	end
 end
 
 """
@@ -187,13 +185,20 @@ This function is a substitute for `StatsBase.sample(wv::WeightVec)`, which avoid
 - **s** : the sum of `w`.
 - **n** : the length of `w`.
 """
-function pfsample(w::Array{Float64,1},s::Float64,n::Int64)
-    t = rand() * s
-    i = 1
-    cw = w[1]
-    while cw < t && i < n
-        i += 1
-        @inbounds cw += w[i]
-    end
-    return i
+function pfsample(w::Array{Float64,1}, s::Float64, n::Int64)
+	t = rand() * s
+	i = 1
+	cw = w[1]
+	while cw < t && i < n
+		i += 1
+		@inbounds cw += w[i]
+	end
+	return i
+end
+
+function filter_saveat!(save_at, ti, tf)
+	filter!(x -> (x >= ti)*(x <= tf), save_at)
+	if isempty(save_at) || save_at[end] < tf
+		push!(save_at, tf)
+	end
 end

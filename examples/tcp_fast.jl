@@ -27,13 +27,13 @@ parms = vec([0.1]) # sampling rate
 tf = 250.
 
 println("--> Case chv:")
-  dummy_f =  PiecewiseDeterministicMarkovProcesses.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
+  dummy_f =  PiecewiseDeterministicMarkovProcesses.pdmp!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
   Random.seed!(1234)
-  dummy_f =  @time PiecewiseDeterministicMarkovProcesses.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
+  dummy_f =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf,ode=:cvode)
   println("--> Case optimised:")
-  dummy_t =  PiecewiseDeterministicMarkovProcesses.sample!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
+  dummy_t =  PiecewiseDeterministicMarkovProcesses.pdmp!(2,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
   Random.seed!(1234)
-  dummy_t =  @time PiecewiseDeterministicMarkovProcesses.sample!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
+  dummy_t =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(200,xc0,xd0,F_tcpf,R_tcpf,nu_tcpf,parms,0.0,tf, algo=:chv_optim)
 
 println("For simulations:")
 Random.seed!(1234)

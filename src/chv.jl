@@ -5,7 +5,7 @@ function f_CHV!(F::Function,R::Function,t::Float64, x, xdot, xd, parms,rate)
 	sr = R(rate,x,xd,tau,parms,true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9,1.0 / sr)
-	F(xdot,x,xd,tau,parms)
+	F(xdot, x, xd, tau, parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] * isr

@@ -3,7 +3,7 @@ using PiecewiseDeterministicMarkovProcesses,DifferentialEquations, LinearAlgebra
 
 function F_eva!(xcdot, xc, xd, t::Float64, parms::Vector{Float64})
 	# vector field used for the continuous variable
-	xcdot[1] = -xc[1]+1.5
+	xcdot[1] = -xc[1] + 1.5
 	nothing
 end
 
@@ -13,13 +13,13 @@ end
 
 function R_eva(rate,xc, xd, t::Float64, parms, sum_rate::Bool)
 	# rate function
-	rate_print = 1.
+	rate_print = parms[1]
 	if sum_rate == false
 		if xd[1] == 0
 			rate[1] = R(xc[1])
 			rate[2] = 0.0
 			rate[3] = rate_print
-			return 0.0,4.95 #transition 0->1
+			return 0.0, 4.95 #transition 0->1
 		else
 			rate[1] = 0.0
 			rate[2] = 1.0
@@ -47,7 +47,7 @@ xc0 = vec([0.0])
 xd0 = vec([0, 1])
 
 nu_eva = [[1 0];[-1 0];[0 1]]
-parms = [0.1,0.01]
+parms = [1.]
 tf = 100.
 
 println("--> Case simple chv:")
@@ -79,9 +79,8 @@ println("--> Case tauleap:")
 	resultt = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
 
 
-
 # @assert 1==0
-println("For simulations (Tsit5):")
+println("--> For simulations (Tsit5):")
 	result1 = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
 	Random.seed!(1234)
 	result1 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200)
@@ -90,7 +89,7 @@ println("For simulations (Tsit5):")
 	# plot(result1.time,result1.xc[1,:])
 	# plot!(result.time,result.xc[1,:],label=":adams")
 
-println("For simulations rejection (Tsit5):")
+println("--> For simulations rejection (Tsit5):")
 	result1 = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1,algo=:rejection)
 	Random.seed!(1234)
 	result1 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200,saverate=true,algo=:rejection)
@@ -98,3 +97,13 @@ println("For simulations rejection (Tsit5):")
 	# using Plots
 	# plot(result1.time,result1.xc[1,:])
 	# plot!(result.time,result.xc[1,:],label=":adams")
+
+
+println("--> Simulation using save_at to see sampling behaviour")
+	Random.seed!(1234)
+	result3 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,[0.0001],0.0,tf,ode=Tsit5(),n_jumps=10, save_positions = (false,true))
+
+	Random.seed!(1234)
+	result4 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,[0.0001],0.0,5.,ode=Tsit5(),n_jumps=1000, save_at = LinRange(0., 5., 10) |> collect)
+	# plot(result3.time, result3.xc')
+	# plot!(result4.time, result4.xc')
