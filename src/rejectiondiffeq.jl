@@ -25,7 +25,7 @@ function rejectionjump(integrator,prob::PDMPProblem)
 
 		if (prob.save_pre_jump) && (t <= prob.tf)
 			prob.verbose && printstyled(color=:green,"----> save pre-jump\n")
-			push!(prob.Xc, copy(prob.xc))
+			push!(prob.Xc, (integrator.u[1:end-1]))
 			push!(prob.Xd, copy(prob.xd))
 			push!(prob.time,t)
 		end
