@@ -1,9 +1,9 @@
 # Example of neural network
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, SparseArrays, Dates
 
-const N       = 100
+const N	   = 100
 const lambda_ = 0.24
-const J       = 0.98
+const J	   = 0.98
 
 function f(x)
   return  x.^8
@@ -22,23 +22,23 @@ function R_mf_rejet(rate::Vector{Float64},xc::Vector{Float64},xd::Array{Int64},t
   bound = N * f(1.201)#1.5 works well
   # rate function
   if sum_rate == false
-    for i=1:N
-      rate[i] = f(xc[i])
-    end
-    return 0., bound
+	for i=1:N
+	  rate[i] = f(xc[i])
+	end
+	return 0., bound
   else
-    res = 0.
-    for i=1:N
-      res+=f(xc[i])
-    end
-    return res, bound
+	res = 0.
+	for i=1:N
+	  res+=f(xc[i])
+	end
+	return res, bound
   end
 end
 
 function Delta_xc_mf(xc::Array{Float64,1},xd::Array{Int64},t::Float64,parms::Vector{Float64},ind_reaction::Int64)
   # this function return the jump in the continuous component
   for i=1:N
-    xc[i] += J/N
+	xc[i] += J/N
   end
   xc[ind_reaction] = 0.0
   xd[ind_reaction] += 1

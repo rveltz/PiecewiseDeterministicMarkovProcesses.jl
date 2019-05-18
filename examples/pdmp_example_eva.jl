@@ -1,5 +1,6 @@
 # using Revise
 using PiecewiseDeterministicMarkovProcesses,DifferentialEquations, LinearAlgebra, Random
+const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_eva!(xcdot, xc, xd, t::Float64, parms::Vector{Float64})
 	# vector field used for the continuous variable
@@ -51,56 +52,56 @@ parms = [1.]
 tf = 100.
 
 println("--> Case simple chv:")
-	dummy_t =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=1)
+	dummy_t =  PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=1)
 	Random.seed!(1234)
-	dummy_t =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=200000)
+	dummy_t =  @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,n_jumps=200000)
 
 println("For simulations (lsoda):")
-	result = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1)
+	result = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1)
 	Random.seed!(1234)
-	result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200000)
+	result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200000)
 
 # println("For simulations Tsit5:")
-# 	result = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
+# 	result = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
 # 	Random.seed!(1234)
-# 	result = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200000)
+# 	result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200000)
 
 
 # using Profile, ProfileView
 # Profile.clear()
 #
-# Random.seed!(1234);@time PiecewiseDeterministicMarkovProcesses.chv!(200000,xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
+# Random.seed!(1234);@time PDMP.chv!(200000,xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
 #
 # ProfileView.view()
 
 println("--> Case tauleap:")
-	resultt = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
+	resultt = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
 	Random.seed!(1234)
-	resultt = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
+	resultt = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
 
 
 # @assert 1==0
 println("--> For simulations (Tsit5):")
-	result1 = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
+	result1 = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
 	Random.seed!(1234)
-	result1 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200)
+	result1 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200)
 
 println("--> For simulations rejection (Tsit5):")
-	result1 = PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1,algo=:rejection)
+	result1 = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1,algo=:rejection)
 	Random.seed!(1234)
-	result1 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200,saverate=true,algo=:rejection)
+	result1 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200,saverate=true,algo=:rejection)
 
 println("--> Simulation using save_at to see sampling behaviour")
 	nj = 51
 	parms = [10.0]
 	Random.seed!(1234)
-	result3 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (false,true))
+	result3 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (false,true))
 
 	Random.seed!(1234)
-	result4 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (true,false))
+	result4 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (true,false))
 
 	Random.seed!(1234)
-	result5 = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (true,true))
+	result5 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (true,true))
 
 
 	# plot(result3.time, result3.xc',marker=:dot,label="post")

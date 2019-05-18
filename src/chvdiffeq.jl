@@ -10,11 +10,11 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	t = integrator.u[end]
 	prob.sim.lastjumptime = t
 
-	prob.verbose && printstyled(color=:green,"--> Jump detected at t = $t !!\n")
-	prob.verbose && printstyled(color=:green,"--> jump not yet performed, xd = ",prob.xd,"\n")
+	prob.verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
+	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", prob.xd,"\n")
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
-		prob.verbose && printstyled(color=:green,"----> saving pre-jump\n")
+		prob.verbose && printstyled(color=:green, "----> saving pre-jump\n")
 		push!(prob.Xc, (integrator.u[1:end-1]))
 		push!(prob.Xd, copy(prob.xd))
 		push!(prob.time,t)
@@ -60,14 +60,14 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		nu::Tnu, parms::Tp,
 		ti::Tc, tf::Tc,
 		verbose::Bool = false;
-		ode = Tsit5(), n_jumps::Int64 = Inf64, save_at::vecc = [], save_positions = (false, true), saverate = false) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+		ode = Tsit5(), n_jumps::Int64 = Inf64, save_positions = (false, true), saverate = false) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td}}
 
 	# custom type to collect all parameters in one structure
 	problem  = PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
-	chv_diffeq!(problem, ti, tf, save_at, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+	chv_diffeq!(problem, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
 end
 
 
@@ -125,24 +125,24 @@ function chv_diffeq!(problem::PDMPProblem,
 	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
 end
 
-function chv_diffeq!(problem::PDMPProblem,
-				ti::Tc, tf::Tc, save_at::vecc, verbose = false; ode = Tsit5(),
-				save_positions = (false,true), n_jumps::Td = Inf64) where {Tc, Td, vecc <: AbstractVector{Tc}}
-	# if isempty(save_at)
-		return chv_diffeq!(problem, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
-	# end
-
-	# filter_saveat!(save_at, ti, tf)
-	# t = ti
-	#
-	# for tnext in save_at
-	# 	@show (t, tnext) length(problem.time)
-	# 	res = chv_diffeq!(problem, t, tnext, verbose, ode = ode,	save_positions = save_positions, n_jumps = n_jumps)
-	# 	problem.xc .= res.xc[:, end]
-	# 	problem.xd .= res.xd[:, end]
-	# 	problem.sim.lastjumptime = tnext
-	# 	# problem.sim.tstop_extended += log(rand())
-	# 	t = tnext
-	# end
-	# return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
-end
+# function chv_diffeq!(problem::PDMPProblem,
+# 				ti::Tc, tf::Tc, save_at::vecc, verbose = false; ode = Tsit5(),
+# 				save_positions = (false,true), n_jumps::Td = Inf64) where {Tc, Td, vecc <: AbstractVector{Tc}}
+# 	# if isempty(save_at)
+# 		return chv_diffeq!(problem, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+# 	# end
+#
+# 	# filter_saveat!(save_at, ti, tf)
+# 	# t = ti
+# 	#
+# 	# for tnext in save_at
+# 	# 	@show (t, tnext) length(problem.time)
+# 	# 	res = chv_diffeq!(problem, t, tnext, verbose, ode = ode,	save_positions = save_positions, n_jumps = n_jumps)
+# 	# 	problem.xc .= res.xc[:, end]
+# 	# 	problem.xd .= res.xd[:, end]
+# 	# 	problem.sim.lastjumptime = tnext
+# 	# 	# problem.sim.tstop_extended += log(rand())
+# 	# 	t = tnext
+# 	# end
+# 	# return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
+# end

@@ -71,7 +71,7 @@ Let's consider a stochastic process with following transitions:
 We implement these jumps using a 2x1 matrix `nu` of Integers, such that the jumps on each discrete component of `xd` is given by `nu * xd`. Hence, we have `nu = reshape([[2];[-2]],2,1)`.	
 
 !!! note "Implementing jumps"
-    There are two ways to implement jumps. The first one is to provide a transition matrix `nu` to the solver but this will only implement jumps on the discrete variable `xd` and leaves `xc` unafected. The more general way is to implement a function `Delta!(xc, xd, t::Float64, parms, ind_reaction::Int64)` in which you write the jump. See `examples/pdmp_example_eva.jl` for an example.
+    There are two ways to implement jumps. The first one is to provide a transition matrix `nu` to the solver but this will only implement jumps on the discrete variable `xd` and leaves `xc` unaffected. The more general way is to implement a function `Delta!(xc, xd, t::Float64, parms, ind_reaction::Int64)` in which you write the jump. See `examples/pdmp_example_eva.jl` for an example.
 
 
 	

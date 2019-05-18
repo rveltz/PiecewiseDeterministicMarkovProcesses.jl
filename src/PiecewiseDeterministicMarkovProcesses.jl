@@ -57,7 +57,7 @@ It takes the arguments:
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol && algo==:chv
-			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, save_at = save_at)
+			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate)
 		end
 
 		if typeof(ode) != Symbol && algo==:rejection

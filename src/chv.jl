@@ -84,11 +84,10 @@ function chv!(xc0::vecc,xd0::vecd,
 	elseif ode==:euler
 		Flow = (X0_,Xd_,Δt,r_)->euler( (tt,x,xdot)->f_CHV!(F,R,tt,x,xdot,Xd_,parms,r_), X0_, dt, 0., Δt)
 	end
+	δt = - log(rand())
 
 	# Main loop
 	while (t < tf) && (nsteps < n_max)
-
-		δt = - log(rand())
 
 		verbose && println("--> t = ",t," - δt = ",δt, ",nstep =  ",nsteps)
 
@@ -126,6 +125,8 @@ function chv!(xc0::vecc,xd0::vecd,
 			push!(t_hist,t)
 			push!(xc_hist, X0[ind_save_c])
 			push!(xd_hist, Xd[ind_save_d])
+
+			δt = - log(rand())
 
 		else
 			if ode in [:cvode,:bdf,:adams]
