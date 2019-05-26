@@ -70,12 +70,13 @@ function rejection_diffeq!(xc0::vecc, xd0::vecd,
 				nu::Tnu, parms::Tp,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
-				ode = Tsit5(), save_positions=(false,true), n_jumps::Int64 = Inf64, saverate = false) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+				ode = Tsit5(), save_positions=(false,true), n_jumps::Int64 = Inf64, saverate = false, rate::vecrate = zeros(Tc, size(nu,1))) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 				vecc <: AbstractVector{Tc},
-				vecd <:  AbstractVector{Td}}
+				vecd <:  AbstractVector{Td},
+				vecrate <: AbstractVector{Tc}}
 
 				# custom type to collect all parameters in one structure
-				problem  = PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
+				problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
 				rejection_diffeq!(problem,ti,tf;ode = ode, save_positions = save_positions,n_jumps = n_jumps)
 end

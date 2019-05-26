@@ -61,26 +61,11 @@ println("For simulations (lsoda):")
 	Random.seed!(1234)
 	result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=200000)
 
-# println("For simulations Tsit5:")
-# 	result = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
-# 	Random.seed!(1234)
-# 	result = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=200000)
-
-
-# using Profile, ProfileView
-# Profile.clear()
-#
-# Random.seed!(1234);@time PDMP.chv!(200000,xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,false,ode=:lsoda)
-#
-# ProfileView.view()
-
 println("--> Case tauleap:")
 	resultt = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=1,algo=:tauleap)
 	Random.seed!(1234)
 	resultt = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=:lsoda,n_jumps=20000,algo=:tauleap,dt=0.01)
 
-
-# @assert 1==0
 println("--> For simulations (Tsit5):")
 	result1 = PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.0,tf,ode=Tsit5(),n_jumps=1)
 	Random.seed!(1234)
@@ -102,9 +87,3 @@ println("--> Simulation using save_at to see sampling behaviour")
 
 	Random.seed!(1234)
 	result5 = @time PDMP.pdmp!(xc0,xd0,F_eva!,R_eva,Delta_xc_eva,nu_eva,parms,0.4,11.,ode=Tsit5(),n_jumps=nj, save_positions = (true,true))
-
-
-	# plot(result3.time, result3.xc',marker=:dot,label="post")
-	# plot!(result4.time, result4.xc' ,marker=:dot,label="pre")
-	# plot!(result5.time, result5.xc' ,marker=:dot,label="all")
-	#

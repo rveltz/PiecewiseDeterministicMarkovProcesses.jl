@@ -16,14 +16,18 @@ mutable struct PDMPsimulation{Tc <: Real, Td}
 	fictitous_jumps::Td
 end
 
-struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, Tnu <: AbstractArray{Td}, Tp, TF, TR, TD}
+struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
+						vectype_xd <: AbstractVector{Td},
+						vectype_rate <: AbstractVector{Tc},
+						Tnu <: AbstractArray{Td},
+						Tp, TF, TR, TD}
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
 	pdmpFunc::PDMPFunctions{TF, TR, TD}
 	nu::Tnu
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
-	rate::vectype_xc				# to hold the rate vector for inplace computations
+	rate::vectype_rate				# to hold the rate vector for inplace computations
 	sim::PDMPsimulation{Tc, Td}		# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump?
@@ -35,20 +39,20 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc}, vectype_xd <: Abstrac
 	save_rate::Bool					# boolean for saving rates
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
-	function PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tnu, Tp, TF, TR, TD}(
-			xc0::vectype_xc,xd0::vectype_xd,
-			F::TF,R::TR,DX::TD,
-			nu::Tnu,parms::Tp,
-			ti::Tc,tf::Tc,savepre::Bool,verbose::Bool,saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD}
+	function PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD}(
+			xc0::vectype_xc, xd0::vectype_xd, rate::vectype_rate,
+			F::TF, R::TR, DX::TD,
+			nu::Tnu, parms::Tp,
+			ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate <: AbstractVector{Tc}, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD}
 		return new(copy(xc0),
-					copy(xd0),
-					PDMPFunctions(F,R,DX),nu,parms,tf,
-					zeros(Tc,size(nu,1)),
-					PDMPsimulation{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-					[ti], savepre,
-					VectorOfArray([copy(xc0)]),
-					VectorOfArray([copy(xd0)]), verbose,
-					saverate,Tc[])
+				copy(xd0),
+				PDMPFunctions(F,R,DX),nu,parms,tf,
+				copy(rate), #this is to initialise rate, can be an issue for StaticArrays
+				PDMPsimulation{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+				[ti], savepre,
+				VectorOfArray([copy(xc0)]),
+				VectorOfArray([copy(xd0)]), verbose,
+				saverate, Tc[])
 		end
 end
 
@@ -59,7 +63,7 @@ function PDMPPb(xc0::vecc, xd0::vecd,
 				verbose::Bool = false;
 				save_positions = (false,true)) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	# custom type to collect all parameters in one structure
-	return PDMPProblem{Tc,Td,vecc,vecd,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+	return PDMPProblem{Tc,Td,vecc,vecd,vecr,Tnu,Tp,TF,TR,TD}(xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 end
 
 # callable struct
@@ -68,7 +72,7 @@ function (prob::PDMPProblem)(u,t,integrator)
 end
 
 # callable struct for the CHV method
-function (prob::PDMPProblem{Tc,Td,vectype_xc,vectype_xd,Tnu,Tp,TF,TR,TD})(xdot, x, data, t) where {Tc,Td,vectype_xc,vectype_xd,Tnu<:AbstractArray{Td},Tp,TF,TR,TD}
+function (prob::PDMPProblem)(xdot, x, data, t)
 	if length(x) == length(prob.xc) + 1 # this is to simulate with the CHV method
 		tau = x[end]
 		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
@@ -185,7 +189,7 @@ This function is a substitute for `StatsBase.sample(wv::WeightVec)`, which avoid
 - **s** : the sum of `w`.
 - **n** : the length of `w`.
 """
-function pfsample(w::Array{Float64,1}, s::Float64, n::Int64)
+function pfsample(w::vec, s::Float64, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
 	t = rand() * s
 	i = 1
 	cw = w[1]

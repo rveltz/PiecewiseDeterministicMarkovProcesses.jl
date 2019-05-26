@@ -60,7 +60,7 @@ errors = Float64[]
 rnd_state = 0.
 
 println("\n\nComparison of solvers")
-	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
 		Random.seed!(8)
 		res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
 		# this is to check the state of the random generator at the end of the simulation

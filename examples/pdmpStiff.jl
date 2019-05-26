@@ -1,6 +1,6 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 
-function AnalyticalSample(xc0,xd0,ti,nj::Int64)
+function AnalyticalSample(xc0, xd0, ti, nj::Int64)
     xch = [xc0[1]]
     xdh = [xd0[1]]
     th  = [ti]
@@ -22,7 +22,7 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 
         S = -log(rand())
     end
-    return th,xch,xdh
+    return th, xch, xdh
 end
 
 function F!(ẋ, xc, xd, t, parms)
@@ -61,7 +61,7 @@ Random.seed!(8)
     res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
 println("\n\nComparison of solvers")
-    for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+    for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
     Random.seed!(8)
     res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
     println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
@@ -69,7 +69,7 @@ println("\n\nComparison of solvers")
 end
 
 
-# here, we wrote the jump problem with a function
+# here, we write the jump problem with a function
 using SparseArrays
 nusp = spzeros(Int64,2,2)
 
@@ -89,9 +89,3 @@ println("\n\nComparison of solvers, with function Delta")
     println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
     push!(errors,norm(res.time - res_a[1],Inf64))
 end
-
-
-# using Plots
-# plot(res.time,res.xc[1,:],label = "CHV",marker=:d)
-#     plot!(res_a[1],res_a[2])
-# plot(res.time - res_a[1])
