@@ -40,6 +40,7 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 		# Xc = Xc .+ deltaxc
 		prob.pdmpFunc.Delta(integrator.u, prob.xd, t, prob.parms, ev)
 		u_modified!(integrator, true)
+
 		@inbounds for ii in eachindex(prob.xc)
 			prob.xc[ii] = integrator.u[ii]
 		end
@@ -53,28 +54,33 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 end
 
 """
-Implementation of the CHV method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
+Implementation of the CHV method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method. The reason why we can pass `rate` vector and `xc0_extended` is to allow the use of `StaticArrays.jl` for which the constructs differ from Base.Array
 """
 function chv_diffeq!(xc0::vecc, xd0::vecd,
 		F::TF, R::TR, DX::TD,
 		nu::Tnu, parms::Tp,
 		ti::Tc, tf::Tc,
 		verbose::Bool = false;
-		ode = Tsit5(), n_jumps::Int64 = Inf64, save_positions = (false, true), saverate = false, rate::vecrate = zeros(Tc, size(nu,1))) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+		ode = Tsit5(), n_jumps::Int64 = Inf64,
+		save_positions		= (false, true),
+		saverate			= false,
+		rate::vecrate		= zeros(Tc, size(nu, 1)),
+		xc0_extended::vece	= zeros(Tc, length(xc0) + 1) ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td},
-		vecrate <: AbstractVector{Tc}}
+		vecrate <: AbstractVector{Tc},
+		vece <: AbstractVector{Tc}}
 
 	# custom type to collect all parameters in one structure
-	problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
+	problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(true,xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
-	chv_diffeq!(problem, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
 end
 
 
 function chv_diffeq!(problem::PDMPProblem,
-				ti::Tc, tf::Tc, verbose = false; ode = Tsit5(),
-				save_positions = (false, true), n_jumps::Td = Inf64) where {Tc, Td}
+			ti::Tc, tf::Tc, X_extended::vece,
+			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64) where {Tc, Td, vece}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
@@ -82,7 +88,9 @@ function chv_diffeq!(problem::PDMPProblem,
 	t = ti
 
 	# vector to hold the state space for the extended system
-	X_extended = similar(problem.xc, length(problem.xc) + 1)
+	# X_extended = similar(problem.xc, length(problem.xc) + 1)
+	# @show typeof(X_extended) vece
+
 	for ii in eachindex(problem.xc)
 		X_extended[ii] = problem.xc[ii]
 	end
@@ -92,7 +100,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	cb = DiscreteCallback(problem, integrator -> chvjump(integrator, problem), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt)->problem(xdot,x,data,tt),X_extended,(0.0,1000_000_000.0))
+	prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
 	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback = cb, save_everystep = false, reltol=1e-7, abstol=1e-9, advance_to_tstop = true)
 
 	# current jump number

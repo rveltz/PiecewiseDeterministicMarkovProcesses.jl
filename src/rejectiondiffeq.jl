@@ -76,7 +76,7 @@ function rejection_diffeq!(xc0::vecc, xd0::vecd,
 				vecrate <: AbstractVector{Tc}}
 
 				# custom type to collect all parameters in one structure
-				problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
+				problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(false,xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
 				rejection_diffeq!(problem,ti,tf;ode = ode, save_positions = save_positions,n_jumps = n_jumps)
 end

@@ -21,6 +21,7 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 						vectype_rate <: AbstractVector{Tc},
 						Tnu <: AbstractArray{Td},
 						Tp, TF, TR, TD}
+	chv::Bool						# Do we use the chv method or the rejection
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
 	pdmpFunc::PDMPFunctions{TF, TR, TD}
@@ -40,11 +41,11 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
 	function PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD}(
-			xc0::vectype_xc, xd0::vectype_xd, rate::vectype_rate,
+			chv::Bool,xc0::vectype_xc, xd0::vectype_xd, rate::vectype_rate,
 			F::TF, R::TR, DX::TD,
 			nu::Tnu, parms::Tp,
 			ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate <: AbstractVector{Tc}, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD}
-		return new(copy(xc0),
+		return new(chv,copy(xc0),
 				copy(xd0),
 				PDMPFunctions(F,R,DX),nu,parms,tf,
 				copy(rate), #this is to initialise rate, can be an issue for StaticArrays
@@ -68,24 +69,23 @@ end
 
 # callable struct
 function (prob::PDMPProblem)(u,t,integrator)
-	(t == prob.sim.tstop_extended)
+	t == prob.sim.tstop_extended
 end
 
 # callable struct for the CHV method
 function (prob::PDMPProblem)(xdot, x, data, t)
-	if length(x) == length(prob.xc) + 1 # this is to simulate with the CHV method
+	# @show typeof(xdot) typeof(x)
+	if prob.chv # this is to simulate with the CHV method
 		tau = x[end]
 		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
 		sr = prob.pdmpFunc.R(prob.rate,x,prob.xd,tau,prob.parms,true)[1]
-		# @assert sr > 0.0 "Total rate must be positive"
-		# isr = min(1.0e9,1.0 / sr)
 		prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 		xdot[end] = 1.0
 		@inbounds for i in eachindex(xdot)
 			xdot[i] = xdot[i] / sr
 		end
 	else # this is to simulate with rejection method
-		prob.pdmpFunc.F(xdot,x,prob.xd,t,prob.parms)
+		prob.pdmpFunc.F(xdot, x, prob.xd, t, prob.parms)
 	end
 	nothing
 end
@@ -189,7 +189,7 @@ This function is a substitute for `StatsBase.sample(wv::WeightVec)`, which avoid
 - **s** : the sum of `w`.
 - **n** : the length of `w`.
 """
-function pfsample(w::vec, s::Float64, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
+function pfsample(w::vec, s::Tc, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
 	t = rand() * s
 	i = 1
 	cw = w[1]
