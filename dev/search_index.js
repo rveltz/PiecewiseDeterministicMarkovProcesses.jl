@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "PiecewiseDeterministicMarkovProcesses.jl",
     "title": "PiecewiseDeterministicMarkovProcesses.chv_diffeq!",
     "category": "function",
-    "text": "Implementation of the CHV method to sample a PDMP using the package DifferentialEquations. The advantage of doing so is to lower the number of calls to solve using an integrator method.\n\n\n\n\n\n"
+    "text": "Implementation of the CHV method to sample a PDMP using the package DifferentialEquations. The advantage of doing so is to lower the number of calls to solve using an integrator method. The reason why we can pass rate vector and xc0_extended is to allow the use of StaticArrays.jl for which the constructs differ from Base.Array\n\n\n\n\n\n"
 },
 
 {
