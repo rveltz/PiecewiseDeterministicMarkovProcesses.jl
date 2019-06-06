@@ -21,13 +21,13 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	end
 
 	# execute the jump
-	prob.pdmpFunc.R(prob.rate, integrator.u, prob.xd, t, prob.parms, false)
+	prob.pdmpFunc.R(prob.rateCache.rate, integrator.u, prob.xd, t, prob.parms, false)
 	if (t < prob.tf)
 		#save rates for debugging
-		prob.save_rate && push!(prob.rate_hist, sum(prob.rate))
+		prob.save_rate && push!(prob.rate_hist, sum(prob.rateCache.rate))
 
 		# Update event
-		ev = pfsample(prob.rate, sum(prob.rate), length(prob.rate))
+		ev = pfsample(prob.rateCache.rate, sum(prob.rateCache.rate), length(prob.rateCache.rate))
 
 		deltaxd = view(prob.nu, ev, :)
 
@@ -72,7 +72,8 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		vece <: AbstractVector{Tc}}
 
 	# custom type to collect all parameters in one structure
-	problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(true,xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
+	rateCache = DiffCache(rate)
+	problem  = PDMPProblem{Tc,Td,vecc,vecd,typeof(rateCache),Tnu,Tp,TF,TR,TD}(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
 	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
 end
@@ -86,6 +87,8 @@ function chv_diffeq!(problem::PDMPProblem,
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
 	# set up the current time as the initial time
 	t = ti
+	# previous jump time, needed because problem.sim.lastjumptime contains next jump time even if above tf
+	tprev = t
 
 	# vector to hold the state space for the extended system
 	# X_extended = similar(problem.xc, length(problem.xc) + 1)
@@ -110,7 +113,7 @@ function chv_diffeq!(problem::PDMPProblem,
 		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
 		step!(integrator)
 		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime),\n solver = $ode. dt = $(t - problem.sim.lastjumptime)")
-		t = problem.sim.lastjumptime
+		t, tprev = problem.sim.lastjumptime, t
 
 		# the previous step was a jump! should we save it?
 		if njumps < problem.sim.njumps && save_positions[2] && (t <= tf)
@@ -124,14 +127,15 @@ function chv_diffeq!(problem::PDMPProblem,
 	end
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
-		problem.verbose && println("----> LAST BIT!!, xc = ",problem.Xc[end], ", xd = ",problem.xd)
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> problem.pdmpFunc.F(xdot, x, problem.xd, tt, problem.parms), problem.Xc[end],(problem.time[end],tf))
+		problem.verbose && println("----> LAST BIT!!, xc = ",problem.xc[end], ", xd = ",problem.xd, ", t = ", problem.time[end])
+		prob_last_bit = ODEProblem((xdot,x,data,tt) -> problem.pdmpFunc.F(xdot, x, problem.xd, tt, problem.parms), copy(problem.xc),(tprev,tf))
 		sol = solve(prob_last_bit, ode)
+		problem.verbose && println("-------> xc[end] = ",sol.u[end])
 		push!(problem.Xc, sol.u[end])
 		push!(problem.Xd, copy(problem.xd))
 		push!(problem.time, sol.t[end])
 	end
-	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
+	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)#, problem
 end
 
 # function chv_diffeq!(problem::PDMPProblem,

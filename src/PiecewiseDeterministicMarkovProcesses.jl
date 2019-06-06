@@ -1,7 +1,9 @@
 module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
 	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
+	using ForwardDiff
 
+	include("utilsforwarddiff.jl")
 	include("utils.jl")
 	include("chv.jl")
 	include("chvdiffeq.jl")
