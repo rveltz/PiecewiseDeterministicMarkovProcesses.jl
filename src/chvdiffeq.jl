@@ -65,7 +65,8 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		save_positions		= (false, true),
 		saverate			= false,
 		rate::vecrate		= zeros(Tc, size(nu, 1)),
-		xc0_extended::vece	= zeros(Tc, length(xc0) + 1) ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+		xc0_extended::vece	= zeros(Tc, length(xc0) + 1),
+		return_pb::Bool		= false ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td},
 		vecrate <: AbstractVector{Tc},
@@ -75,7 +76,11 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 	rateCache = DiffCache(rate)
 	problem  = PDMPProblem{Tc,Td,vecc,vecd,typeof(rateCache),Tnu,Tp,TF,TR,TD}(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
 
-	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+	if return_pb				#TODO: remove branch when ForwardDiff works well with the package
+		return problem
+	else
+		return	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+	end
 end
 
 

@@ -3,15 +3,15 @@
 
 PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulation of *Piecewise Deterministic Markov Processes* (PDMP); these encompass hybrid systems and jump processes, comprised of continuous and discrete components, as well as processes with time-varying rates. The aim of the package is to provide methods for the simulation of these processes that are "exact" up to the ODE integrator.
 
-We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c,x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c}{dt} = F(x_c,x_d,t)$. The second component $x_d$ is a piecewise constant variable with type `Int64`. The jumps occurs at rates $R(x_c,x_d,t)$. At each jump, $x_d$ or $x_c$ can be affected.
+We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c, x_d)$ where $x_c$ is solution of the differential equation $\frac{dx_c(t)}{dt} = F(x_c(t),x_d(t),t)$. The second component $x_d$ is a piecewise constant array with type `Int64`. The jumps occur at rates $R(x_c(t),x_d(t),t)$. At each jump, $x_d$ or $x_c$ can be affected.
 
 We provide several methods for the simulation:
 
-- a recent trick, called **CHV**, explained in [paper-2015](http://arxiv.org/abs/1504.06873) which allows to implement the **True Jump Method** without the need to use event detection schemes for the ODE integrator. These event detections can be quite unstable as explained in [paper-2015](http://arxiv.org/abs/1504.06873) and CHV provide a solution to this problem.
-- **rejection methods** for which the user is asked to provide a bound on the reaction rates. These last methods are the most "exact" but not the fastest if the reaction rate bound is not tight. In case the flow is known analytically, a method is also provided.
+- a relatively recent trick, called **CHV**, explained in [paper-2015](http://arxiv.org/abs/1504.06873) which allows to implement the **True Jump Method** without the need to use event detection schemes for the ODE integrator. These event detections can be quite unstable as explained in [paper-2015](http://arxiv.org/abs/1504.06873) and CHV provide a solution to this problem.
+- **rejection methods** for which the user is asked to provide a bound on the **total** reaction rate. These last methods are the most "exact" but not the fastest if the reaction rate bound is not tight. In case the flow is known **analytically**, a method is also provided.
 
 
-These methods require solving stiff ODEs (for CHV ) in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) and [```LSODA.jl```](https://github.com/rveltz/LSODA.jl) are great, but other solvers can also be considered (see [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml)). Hence, the current package allows the use of all solvers in `DifferentialEquations.jl` thereby giving access to a wide range of solvers. In particular, we can test different solvers to see how precise they are. Here is an example from `examples/pdmpStiff.jl` for which an analytical expression is available which allows computation of the errors
+These methods require solving stiff ODEs (for CHV) in an efficient manner. [```Sundials.jl```](https://github.com/JuliaLang/Sundials.jl) and [```LSODA.jl```](https://github.com/rveltz/LSODA.jl) are great, but other solvers can also be considered (see [stiff ode solvers](http://lh3lh3.users.sourceforge.net/solveode.shtml) and also the [solvers](http://docs.juliadiffeq.org/stable/solvers/ode_solve.html) from [DifferentialEquations.jl](https://github.com/JuliaDiffEq/DifferentialEquations.jl)). Hence, the current package allows the use of all solvers in `DifferentialEquations.jl` thereby giving access to a wide range of solvers. In particular, we can test different solvers to see how precise they are. Here is an example from `examples/pdmpStiff.jl` for which an analytical expression is available which allows computation of the errors
 
 ```julia
 Comparison of solvers
@@ -27,7 +27,7 @@ Comparison of solvers
 ```
 
 !!! note "ODE Solvers"
-    A lot of care have been taken to be sure that the algorithms do not allocate and hence are fast. This is based on an iterator interface of `DifferentialEquations`. If you chose `save_positions = (false, false)`, the allocations should be independent from the requested jump number. However, the iterator solution is not yet available for `LSODA` in `DifferentialEquations`. Hence you can pass `ode = :lsoda` to access an old version of the algo (which allocates) or any other solver like `ode = Tsit5()` to access the new solver.
+    A lot of [care](https://discourse.julialang.org/t/help-reduce-large-gc-time/17215) have been taken to be sure that the algorithms do not allocate and hence are fast. This is based on an iterator interface of `DifferentialEquations`. If you chose `save_positions = (false, false)`, the allocations should be independent from the requested jump number. However, the iterator solution is not yet available for `LSODA` in `DifferentialEquations`. Hence, you can pass `ode = :lsoda` to access an old version of the algorithm (which allocates), or any other solver like `ode = Tsit5()` to access the **new** solver.
 
 
 
@@ -68,15 +68,15 @@ Let's consider a stochastic process with following transitions:
 |$x_d\to x_d-2$ if $x_d>0$ | 1 | 1 | [-2] |
 |$x_d\to x_d+2$ if $x_d<0$ | 1 | 2 | [2] |
 
-We implement these jumps using a 2x1 matrix `nu` of Integers, such that the jumps on each discrete component of `xd` is given by `nu * xd`. Hence, we have `nu = reshape([[2];[-2]],2,1)`.	
+We implement these jumps using a 2x1 matrix `nu` of Integers, such that the jumps on each discrete component `xd` are given by `nu * xd`. Hence, we have `nu = reshape([[2];[-2]],2,1)`.	
 
 !!! note "Implementing jumps"
-    There are two ways to implement jumps. The first one is to provide a transition matrix `nu` to the solver but this will only implement jumps on the discrete variable `xd` and leaves `xc` unaffected. The more general way is to implement a function `Delta!(xc, xd, t::Float64, parms, ind_reaction::Int64)` in which you write the jump. See `examples/pdmp_example_eva.jl` for an example.
+    There are two ways to implement jumps. The first one is to provide a transition matrix `nu` but this will only implement jumps on the discrete variable `xd` and leaves `xc` unaffected. The more general way is to implement a function `Delta!(xc, xd, t::Float64, parms, ind_reaction::Int64)` in which you write the jump. See `examples/pdmp_example_eva.jl` for an example.
 
 
 	
 	
-These reactions with their rate are encoded in the following function.
+The rates of these reactions are encoded in the following function.
 
 
 ```julia
@@ -147,7 +147,7 @@ Hence, we implement these jumps with the following matrix: `nu2 = [[2 0];[-2 0];
 
 ```julia
 nu2 = [[2 0];[-2 0];[0 1]]
-# the second component is the Poisson process
+# the last component is the Poisson process used for plotting purposes
 xd0 = vec([1, 0])
 
 function R_tcp2!(rate, xc, xd, t, parms, sum_rate::Bool)
@@ -186,7 +186,7 @@ This gives the following result:
 ## Basic example with the rejection method
 The previous method is useful when the total rate function varies a lot. In the case where the total rate is mostly constant in between jumps, the **rejection method** is more appropriate. 
 
-The **rejection method** assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between jump. To use this method, one needs to return `sum(rate), bound_rejection` in the above function `R_tcp!`. Note that this means that in between jumps, one have:
+The **rejection method** assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between the jumps. To use this method, one needs to return `sum(rate), bound_rejection` in the above function `R_tcp!`. Note that this means that in between jumps, one has:
 
 
 `sum(rate)(t) <= bound_rejection `
@@ -236,7 +236,7 @@ The choice of the method CHV vs Rejection only depends on how much you know abou
 
 More precisely, if the total rate function does not vary much in between jumps, use the rejection method. For example, if the rate is $R(x_c(t)) = 1+0.1\cos(t)$,  then $1+0.1$ will provide a tight bound to use for the rejection method and almost no (fictitious) jumps will be rejected. 
 
-In all other cases, one should try the CHV method where no a priori knowledge of the rate function is requied.
+In all other cases, one should try the CHV method where no a priori knowledge of the rate function is needed.
 
 
 # Advanced uses
