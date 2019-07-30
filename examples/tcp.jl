@@ -67,7 +67,7 @@ end
 
 
 Random.seed!(1234)
-	res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = Tsit5())
+	res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = Tsit5(), save_positions = (false, false))
 
 # plot(res_a[1],res_a[2])
 # plot!(res.time,res.xc[:,1])
