@@ -66,7 +66,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		saverate			= false,
 		rate::vecrate		= zeros(Tc, size(nu, 1)),
 		xc0_extended::vece	= zeros(Tc, length(xc0) + 1),
-		return_pb::Bool		= false ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+		return_pb::Bool		= false, reltol=1e-7, abstol=1e-9 ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td},
 		vecrate <: AbstractVector{Tc},
@@ -79,14 +79,14 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 	if return_pb				#TODO: remove branch when ForwardDiff works well with the package
 		return problem
 	else
-		return	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
+		return	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol)
 	end
 end
 
 
 function chv_diffeq!(problem::PDMPProblem,
 			ti::Tc, tf::Tc, X_extended::vece,
-			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64) where {Tc, Td, vece}
+			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td, vece}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
@@ -109,7 +109,7 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback = cb, save_everystep = false, reltol=1e-7, abstol=1e-9, advance_to_tstop = true)
+	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number
 	njumps = 0

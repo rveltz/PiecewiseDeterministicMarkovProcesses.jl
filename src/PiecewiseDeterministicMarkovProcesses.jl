@@ -47,19 +47,23 @@ It takes the arguments:
 - `save_positions = (false,true)` indicates whether to save the pre-jump (resp. post-jump) state
 - `save_at`: an ordered list of times at which the user want to save the state. Work in progress: not available for every algorithm.
 - `saverate::Bool` indicates whether the total rates at each jump is saved. Useful to study how to tidy the bound on the rates in the rejection algorithm.
+- `return_pb::Bool` indicates if you want the solver to return the `struct` used to solve the problem
+- `abstol = 1e-9`
+- `restol = 1e-7`
 """
 	function pdmp!(xc0::vecc, xd0::vecd,
 					F, R, DX, nu::AbstractArray{Int64},
 					parms, ti::Float64, tf::Float64;
 					verbose::Bool = false,
 					ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode, algo=:chv, n_jumps::Int64 = 30_000, ind_save_d=-1:1, ind_save_c=-1:1, dt=1.,
-					save_at::vecc = Float64[], save_positions = (false,true), saverate = false, return_pb = false) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}}
+					save_at::vecc = Float64[], save_positions = (false,true), saverate = false, return_pb = false,reltol=1e-7, abstol=1e-9) where {vecc <: AbstractVector{Float64},
+											  vecd <: AbstractVector{Int64}}
 
 		@assert algo in [:chv, :rejection, :tauleap] "Call $algo() directly please, without passing by pdmp(). Indeed, the algo $algo() is specialized for speed and requires a particuliar interface."
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol && algo==:chv
-			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, return_pb = return_pb)
+			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, return_pb = return_pb, reltol = reltol, abstol = abstol)
 		end
 
 		if typeof(ode) != Symbol && algo==:rejection
