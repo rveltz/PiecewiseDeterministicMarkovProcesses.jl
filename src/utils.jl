@@ -79,13 +79,13 @@ function (prob::PDMPProblem)(xdot, x, data, t)
 	if prob.chv # this is to simulate with the CHV method
 		tau = x[end]
 		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
-		if 1==1
+		if 1==0
 			tmp = get_rate(prob.rateCache, eltype(x))
 			@show tmp x
 			_tmp = reinterpret(eltype(x), tmp)
-			sr = prob.pdmpFunc.R(prob.rateCache.rate,x,prob.xd,tau,prob.parms,true)[1]
-		else
 			sr = prob.pdmpFunc.R(_tmp,x,prob.xd,tau,prob.parms,true)[1]
+		else
+			sr = prob.pdmpFunc.R(prob.rateCache.rate,x,prob.xd,tau,prob.parms,true)[1]
 		end
 		prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
 		xdot[end] = 1.0

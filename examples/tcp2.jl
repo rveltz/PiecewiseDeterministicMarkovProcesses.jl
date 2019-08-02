@@ -62,6 +62,9 @@ errors = Float64[]
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
+Random.seed!(8) #0.000688 seconds (369 allocations: 28.906 KiB)
+	res = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf; n_jumps = nj, ode = Tsit5(), save_positions = (false, false))
+
 # build a PDMP Problem
 prob = PDMP.PDMPProblem(F!, R!, nu)
 

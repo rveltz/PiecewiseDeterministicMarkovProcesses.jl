@@ -23,6 +23,8 @@ module PiecewiseDeterministicMarkovProcesses
 		pdmp_data,
 		tauleap
 
+	export PDMPProblem, solve
+
 """
 This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
 	It takes the following arguments:
