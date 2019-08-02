@@ -1,3 +1,12 @@
+function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
+	ẋ[1] = 0.
+	nothing
+end
+
+function Delta_dummy(xc, xd, t, parms, ind_reaction)
+	return nothing
+end
+
 struct PDMPFunctions{TF, TR, TD}
 	F::TF						# vector field for ODE between jumps
 	R::TR			    		# rate function for jumps

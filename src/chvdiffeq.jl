@@ -1,7 +1,44 @@
 ###################################################################################################
-function PDMPProblem(F, R, nu::Tnu) where {Tnu <: AbstractMatrix}
-	
+include("jumps.jl")
+include("utils.jl")
+
+abstract type AbstractPDMPAlgorithm end
+abstract type AbstractCHVIterator <: AbstractPDMPAlgorithm end
+# abstract type AbstractCHVIteratorCache <: AbstractPDMPAlgorithmCache end
+
+struct CHV{Tode <: DiffEqBase.DEAlgorithm} <: AbstractCHVIterator
+	ode::Tode	# ODE solver to use for the flow in between jumps
 end
+
+struct PDMPProblem2{TF, TJ, vecc, vecd, vecrate, Tparms}
+	pdmpfunc::TF
+	pmdpjump::TJ
+	xc::vecc
+	xd::vecd
+	ratecache::vecrate
+	parms::Tparms
+
+	function PDMPProblem2(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+						vecc <: AbstractVector{Tc},
+						vecd <: AbstractVector{Td}}
+		func = PDMPFunctions(F, R, Delta_dummy) #TODO remove Delta_dummy
+		jump = RateJump(nu, Delta_dummy)
+		rate = zeros(Tc, size(nu, 1))
+		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump, xc0, xd0, rate, parms)
+	end
+end
+
+function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPProblem2}
+	tau = x[end]
+	sr = prob.pdmpfunc.R(prob.ratecache, x, prob.xd, tau, prob.parms, true)[1]
+	prob.pdmpfunc.F(xdot, x, prob.xd, tau, prob.parms)
+	xdot[end] = 1.0
+	@inbounds for i in eachindex(xdot)
+		xdot[i] = xdot[i] / sr
+	end
+	return nothing
+end
+
 
 ###################################################################################################
 ###################################################################################################

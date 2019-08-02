@@ -1,6 +1,6 @@
 module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
-	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools
+	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools, DiffEqBase
 	using ForwardDiff
 
 	include("utilsforwarddiff.jl")
@@ -23,7 +23,7 @@ module PiecewiseDeterministicMarkovProcesses
 		pdmp_data,
 		tauleap
 
-	export PDMPProblem, solve
+	export PDMPProblem2, solve
 
 """
 This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
