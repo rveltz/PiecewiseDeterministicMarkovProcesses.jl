@@ -29,7 +29,7 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
-						Tp, TF, TR, TD, Talg}
+						Tp, TF, TR, TD, Talg, Tpdmp}
 	chv::Bool						# Do we use the chv method or the rejection
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
@@ -51,7 +51,7 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 
 	# structs for algorithm
 	algo::Talg
-	# pdmp2::PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
+	pdmp2::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
 
 	### TODO TODO IL FAUT ENLEVER CES SPEC ICI et faire {...}new(chv,...)
 	function PDMPProblem(chv::Bool,
@@ -61,7 +61,8 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 			F::TF, R::TR, DX::TD,
 			nu::Tnu, parms::Tp,
 			ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
-		return new{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD, Talg}(chv,
+		pb2 = PDMPProblem2(F,R,nu,xc0,xd0,parms)
+		return new{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD, Talg, typeof(pb2)}(chv,
 				copy(xc0),
 				copy(xd0),
 				PDMPFunctions(F,R,DX),nu,parms,tf,
@@ -71,8 +72,8 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 				VectorOfArray([copy(xc0)]),
 				VectorOfArray([copy(xd0)]), verbose,
 				saverate, Tc[],
-				alg)#,
-				# PDMPProblem2(F,R,nu,xc0,xd0,parms))
+				alg,
+				pb2)
 		end
 end
 

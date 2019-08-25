@@ -62,7 +62,7 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	end
 
 	# execute the jump
-	prob.pdmpFunc.R(prob.rateCache.rate, integrator.u, prob.xd, t, prob.parms, false)
+	prob.pdmp2.R(prob.rateCache.rate, integrator.u, prob.xd, t, prob.parms, false)
 	if (t < prob.tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rateCache.rate))
@@ -79,7 +79,7 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 		end
 
 		# Xc = Xc .+ deltaxc
-		prob.pdmpFunc.Delta(integrator.u, prob.xd, t, prob.parms, ev)
+		prob.pdmp2.Delta(integrator.u, prob.xd, t, prob.parms, ev)
 		u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(prob.xc)
@@ -116,7 +116,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 
 	# custom type to collect all parameters in one structure
 	rateCache = DiffCache(rate)
-	problem  = PDMPProblem{Tc,Td,vecc,vecd,typeof(rateCache),Tnu,Tp,TF,TR,TD,typeof(alg)}(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
+	problem  = PDMPProblem(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
 
 	if return_pb				#TODO: remove branch when ForwardDiff works well with the package
 		return problem
@@ -130,6 +130,9 @@ function chv_diffeq!(problem::PDMPProblem,
 			ti::Tc, tf::Tc, X_extended::vece,
 			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td, vece}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
+
+	algopdmp = CHV(ode)
+	@show algopdmp
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
 	# set up the current time as the initial time
@@ -150,7 +153,8 @@ function chv_diffeq!(problem::PDMPProblem,
 	cb = DiscreteCallback(problem, integrator -> chvjump(integrator, problem), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
+	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
+	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, problem.pdmp2, tt), X_extended, (0.0, 1e9))
 	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number
@@ -175,7 +179,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
 		problem.verbose && println("----> LAST BIT!!, xc = ",problem.xc[end], ", xd = ",problem.xd, ", t = ", problem.time[end])
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> problem.pdmpFunc.F(xdot, x, problem.xd, tt, problem.parms), copy(problem.xc),(tprev,tf))
+		prob_last_bit = ODEProblem((xdot,x,data,tt) -> problem.pdmp2.F(xdot, x, problem.xd, tt, problem.parms), copy(problem.xc),(tprev,tf))
 		sol = solve(prob_last_bit, ode)
 		problem.verbose && println("-------> xc[end] = ",sol.u[end])
 		push!(problem.Xc, sol.u[end])
