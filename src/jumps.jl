@@ -1,6 +1,6 @@
-# Dummy Jump function
 abstract type AbstractJump end
 
+# Dummy Jump function
 function Delta_dummy(xc, xd, t, parms, ind_reaction)
 	return nothing
 end

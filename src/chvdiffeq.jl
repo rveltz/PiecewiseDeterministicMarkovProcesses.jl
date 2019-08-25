@@ -6,10 +6,6 @@ abstract type AbstractPDMPAlgorithm end
 abstract type AbstractCHVIterator <: AbstractPDMPAlgorithm end
 # abstract type AbstractCHVIteratorCache <: AbstractPDMPAlgorithmCache end
 
-struct CHV{Tode <: DiffEqBase.DEAlgorithm} <: AbstractCHVIterator
-	ode::Tode	# ODE solver to use for the flow in between jumps
-end
-
 struct PDMPProblem2{TF, TJ, vecc, vecd, vecrate, Tparms}
 	pdmpfunc::TF
 	pmdpjump::TJ
@@ -26,6 +22,10 @@ struct PDMPProblem2{TF, TJ, vecc, vecd, vecrate, Tparms}
 		rate = zeros(Tc, size(nu, 1))
 		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump, xc0, xd0, rate, parms)
 	end
+end
+
+struct CHV{Tode <: DiffEqBase.DEAlgorithm} <: AbstractCHVIterator
+	ode::Tode	# ODE solver to use for the flow in between jumps
 end
 
 function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPProblem2}
@@ -107,7 +107,8 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		saverate			= false,
 		rate::vecrate		= zeros(Tc, size(nu, 1)),
 		xc0_extended::vece	= zeros(Tc, length(xc0) + 1),
-		return_pb::Bool		= false, reltol=1e-7, abstol=1e-9 ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
+		return_pb::Bool		= false, reltol=1e-7, abstol=1e-9,
+		alg = Tsit5() ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td},
 		vecrate <: AbstractVector{Tc},
@@ -115,7 +116,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 
 	# custom type to collect all parameters in one structure
 	rateCache = DiffCache(rate)
-	problem  = PDMPProblem{Tc,Td,vecc,vecd,typeof(rateCache),Tnu,Tp,TF,TR,TD}(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
+	problem  = PDMPProblem{Tc,Td,vecc,vecd,typeof(rateCache),Tnu,Tp,TF,TR,TD,typeof(alg)}(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
 
 	if return_pb				#TODO: remove branch when ForwardDiff works well with the package
 		return problem

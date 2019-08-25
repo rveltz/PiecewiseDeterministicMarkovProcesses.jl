@@ -49,9 +49,9 @@ function R!(rate, xc, xd, t, parms, sum_rate::Bool)
 end
 
 xc0 = [1.0]
-xd0 = [0,0]
+xd0 = [0, 0]
 
-nu = [[1 0];[0 -1]]
+nu = [1 0; 0 -1]
 parms = [0.0]
 ti = 0.322156
 tf = 100000.
@@ -62,7 +62,7 @@ errors = Float64[]
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
-Random.seed!(8) #0.000688 seconds (369 allocations: 28.906 KiB)
+Random.seed!(8) #0.000712 seconds (372 allocations: 28.953 KiB)
 	res = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf; n_jumps = nj, ode = Tsit5(), save_positions = (false, false))
 
 ##########################################
