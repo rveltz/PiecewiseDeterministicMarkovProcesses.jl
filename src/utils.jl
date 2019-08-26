@@ -1,4 +1,4 @@
-function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
+function F_dummy(ẋ, xc, xd, t, parms)
 	ẋ[1] = 0.
 	nothing
 end
@@ -7,13 +7,32 @@ function Delta_dummy(xc, xd, t, parms, ind_reaction)
 	return nothing
 end
 
-struct PDMPFunctions{TF, TR, TD}
-	F::TF						# vector field for ODE between jumps
-	R::TR			    		# rate function for jumps
-	Delta::TD		    		# function to implement
+struct PDMPVectorField
+	F						# vector field for ODE between jumps
+	R			    		# rate function for jumps
 end
 
-mutable struct PDMPsimulation{Tc <: Real, Td}
+struct PDMPFunctions#{TF, TJ, vecc, vecd, vecrate, Tparms}
+	pdmpfunc
+	pmdpjump
+	# xc::vecc
+	# xd::vecd
+	# ratecache::vecrate
+	# parms::Tparms
+
+	function PDMPFunctions(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+						vecc <: AbstractVector{Tc},
+						vecd <: AbstractVector{Td}}
+		func = PDMPVectorField(F, R)
+		jump = RateJump(nu, Delta_dummy)
+		rate = zeros(Tc, size(nu, 1))
+		return new(func, jump)
+		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump)#, xc0, xd0, rate, parms)
+	end
+end
+
+
+mutable struct PDMPJumpTime{Tc <: Real, Td}
 	tstop_extended::Tc
 	lastjumptime::Tc
 	njumps::Td
@@ -29,16 +48,14 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
-						Tp, TF, TR, TD, Talg, Tpdmp}
-	chv::Bool						# Do we use the chv method or the rejection
+						Tp, TF, TR, TD, Tpdmp}
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
-	pdmpFunc::PDMPFunctions{TF, TR, TD}
 	nu::Tnu
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
 	rateCache::vectype_rate			# to hold the rate vector for inplace computations
-	sim::PDMPsimulation{Tc, Td}		# space to save result
+	jumptime::PDMPJumpTime{Tc, Td}		# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump?
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
@@ -50,10 +67,8 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
 	# structs for algorithm
-	algo::Talg
-	pdmp2::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
+	pdmpPb::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
 
-	### TODO TODO IL FAUT ENLEVER CES SPEC ICI et faire {...}new(chv,...)
 	function PDMPProblem(chv::Bool,
 			xc0::vectype_xc,
 			xd0::vectype_xd,
@@ -61,18 +76,17 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 			F::TF, R::TR, DX::TD,
 			nu::Tnu, parms::Tp,
 			ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
-		pb2 = PDMPProblem2(F,R,nu,xc0,xd0,parms)
-		return new{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD, Talg, typeof(pb2)}(chv,
+		pb2 = PDMPFunctions(F,R,nu,copy(xc0),copy(xd0),parms)
+		return new{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD, typeof(pb2)}(
 				copy(xc0),
 				copy(xd0),
-				PDMPFunctions(F,R,DX),nu,parms,tf,
-				(rate), #this is to initialise rate, can be an issue for StaticArrays
-				PDMPsimulation{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+				nu,parms,tf,
+				rate, #this is to initialise rate, can be an issue for StaticArrays
+				PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 				[ti], savepre,
 				VectorOfArray([copy(xc0)]),
 				VectorOfArray([copy(xd0)]), verbose,
 				saverate, Tc[],
-				alg,
 				pb2)
 		end
 end
@@ -89,11 +103,12 @@ end
 
 # callable struct
 function (prob::PDMPProblem)(u,t,integrator)
-	t == prob.sim.tstop_extended
+	t == prob.jumptime.tstop_extended
 end
 
 # callable struct for the CHV method
 function (prob::PDMPProblem)(xdot, x, data, t)
+	@assert 1==0 "To check it is not called"
 	# @show typeof(xdot) typeof(x)
 	if prob.chv # this is to simulate with the CHV method
 		tau = x[end]
