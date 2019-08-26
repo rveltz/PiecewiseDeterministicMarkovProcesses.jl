@@ -27,7 +27,7 @@ end
 function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
 	# final simulation time
 	tf = prob.interval[2]
-	
+
 	# find the next jump time
 	t = integrator.u[end]
 	prob.simjptimes.lastjumptime = t
@@ -38,7 +38,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
 	prob.verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
 	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", caract.xd,"\n")
 
-	if (save_pre_jump) && (t <= prob.tf)
+	if (save_pre_jump) && (t <= tf)
 		prob.verbose && printstyled(color=:green, "----> saving pre-jump\n")
 		push!(prob.Xc, (integrator.u[1:end-1]))
 		push!(prob.Xd, copy(caract.xd))
@@ -54,7 +54,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
 		# Update event
 		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
 
-		deltaxd = view(caract.pmdpjump.nu, ev, :)
+		deltaxd = view(caract.pdmpjump.nu, ev, :)
 
 		# Xd = Xd .+ deltaxd
 		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
@@ -63,7 +63,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
 		end
 
 		# Xc = Xc .+ deltaxc
-		caract.pmdpjump.Delta(integrator.u, caract.xd, t, caract.parms, ev)
+		caract.pdmpjump.Delta(integrator.u, caract.xd, t, caract.parms, ev)
 		u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
@@ -91,7 +91,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		saverate			= false,
 		rate::vecrate		= zeros(Tc, size(nu, 1)),
 		xc0_extended::vece	= zeros(Tc, length(xc0) + 1),
-		reltol=1e-7, abstol=1e-9,
+		reltol = 1e-7, abstol = 1e-9,
 		alg = Tsit5() ) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
 		vecc <: AbstractVector{Tc},
 		vecd <: AbstractVector{Td},
@@ -110,6 +110,7 @@ function chv_diffeq!(problem::PDMPProblem,
 			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td, vece}
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
+	ti, tf = problem.interval
 	algopdmp = CHV(ode)
 
 	# we declare the characteristics for convenience
@@ -175,5 +176,5 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate
 	# hack to resize the extended vector to the proper dimension
 	resize!(X_extended, length(problem.caract.xc) + 1)
 
-	return chv_diffeq!(problem, problem.simjptimes.lastjumptime, problem.tf, X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
+	return chv_diffeq!(problem, problem.interval[1], problem.interval[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
 end

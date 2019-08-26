@@ -1,4 +1,4 @@
-# Dummy functions to allow not specifying these caracteristics
+# Dummy functions to allow not specifying these characteristics
 function F_dummy(ẋ, xc, xd, t, parms)
 	fill!(ẋ, 0)
 	nothing
@@ -9,17 +9,17 @@ mutable struct PDMPJumpTime{Tc <: Real, Td}
 	lastjumptime::Tc
 	njumps::Td
 
-	#variables required to sample using rejection method
+	# fields required for the rejection method
 	lambda_star::Tc					# bound on the total rate
 	ppf::Vector{Tc}
-	reject::Bool					#boolean to know whether to reject or not the step
+	reject::Bool					# boolean to know whether to reject or not the step
 	fictitous_jumps::Td
 end
 
 struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	F::TF						# vector field for ODE between jumps
 	R::TR			    		# rate function for jumps
-	pmdpjump::TJ
+	pdmpjump::TJ
 	xc::vecc					# continuous variable
 	xd::vecd					# discrete variable
 	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as it can be an issue for StaticArrays
@@ -34,6 +34,15 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	end
 end
 
+"""
+The function allows to reset the internal variables xc and xd. Call as follows:
+	`reset!(pb, xc, xd)`
+"""
+function reset!(pb::PDMPCaracteristics, xc, xd)
+	pb.xc .= xc
+	pb.xd .= xd
+end
+
 
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
@@ -41,17 +50,16 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						Tnu <: AbstractArray{Td},
 						Tp, TF, TR, Tcar}
 	interval::Tuple{Tc, Tc}			    			# final simulation time interval
-	simjptimes::PDMPJumpTime{Tc, Td}# space to save result
+	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
 	time::Vector{Float64}
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
 	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}		# discrete variable history
 	verbose::Bool					# print message during simulation?
-
 	# variables for debugging
 	save_rate::Bool					# boolean for saving rates
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
-	# structs for characteristic of the PDMP
+	# structs for characteristics of the PDMP
 	caract::Tcar
 end
 
@@ -80,7 +88,7 @@ function (prob::PDMPProblem)(u,t,integrator)
 end
 
 # simplified constructors to PDMPProblem
-function PDMPProblem(F::TF, R::TR, DX::TD,nu::Tnu,
+function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				interval;
 				verbose = false, saverate = false) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
@@ -104,6 +112,14 @@ function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
 	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, interval; kwargs...)
 end
 
+"""
+The function allows to reset the internal variables xc and xd. Call as follows:
+	`reset!(pb, xc, xd)`
+"""
+function reset!(pb::PDMPProblem, xc, xd)
+	pb.caract.xc .= xc
+	pb.caract.xd .= xd
+end
 
 """
 This type stores the output composed of:
@@ -123,7 +139,7 @@ PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc, vectype_xc
 
 
 """
-Dummy flow to be used in rejection algo
+Dummy flow to be used in rejection algorithm
 """
 function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms::Ty) where Ty
 	# vector field used for the continuous variable
