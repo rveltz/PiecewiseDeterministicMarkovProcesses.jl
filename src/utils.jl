@@ -25,13 +25,20 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as it can be an issue for StaticArrays
 	parms::Tparms				# container to hold parameters to be passed to F,R,Delta
 
-	function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
-		jump = RateJump(nu, Delta_dummy)
+		jump = RateJump(nu, Delta)
 		rate = zeros(Tc, size(nu, 1))
 		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), rate, parms)
 	end
+end
+
+
+function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+					vecc <: AbstractVector{Tc},
+					vecd <: AbstractVector{Td}}
+	return PDMPCaracteristics(F, R, Delta_dummy, nu, xc0, xd0, parms)
 end
 
 """
@@ -95,7 +102,7 @@ function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 	ti, tf = interval
 	rate = zeros(Tc, size(nu, 1))
 	ratecache = copy(rate)#DiffCache(rate)
-	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
+	caract = PDMPCaracteristics(F,R,DX,nu,xc0,xd0,parms)
 	# custom type to collect all parameters in one structure
 	return PDMPProblem{Tc, Td, vecc, vecd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
 			interval,

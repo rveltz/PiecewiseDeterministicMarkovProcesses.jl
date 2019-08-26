@@ -48,10 +48,10 @@ function R!(rate, xc, xd, t, parms, sum_rate::Bool)
 end
 
 xc0 = [1.0]
-	xd0 = [0,0]
+	xd0 = [0, 0]
 
-	nu = [[1 0];[0 -1]]
-	parms = [0.0]
+	nu = [1 0;0 -1]
+	parms = [.0]
 	ti = 0.322156
 	tf = 100000.
 	nj = 50
@@ -60,10 +60,6 @@ errors = Float64[]
 
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
-
-# Random.seed!(8)
-# 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-# 	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)
 
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
@@ -83,7 +79,7 @@ function Delta!(xc, xd, t, parms, ind_reaction::Int64)
 	if ind_reaction == 1
 		xd[1] += 1
 	else
-		xd[2] -=1
+		xd[2] -= 1
 	end
 	nothing
 end
@@ -97,3 +93,8 @@ println("\n\nComparison of solvers, with function Delta")
 	println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ", ode[2])
 	push!(errors, norm(res.time - res_a[1], Inf64))
 end
+
+
+Random.seed!(8)
+	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, verbose = true)

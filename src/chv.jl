@@ -37,6 +37,7 @@ It takes the following arguments:
 - **save_at**: array of ordered time at which the solution is required
 """
 function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64) where {Tode <: Symbol}
+	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf, :euler]
 
@@ -50,11 +51,11 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	# Set up initial simulation time
 	t = ti
 
-	X0 = similar(xc0, length(xc0) + 1)
+	X_extended = similar(xc0, length(xc0) + 1)
 	for ii in eachindex(xc0)
-		X0[ii] = xc0[ii]
+		X_extended[ii] = xc0[ii]
 	end
-	X0[end] = ti
+	X_extended[end] = ti
 
 	t_hist  = [ti]
 	Xd = copy(xd0)
@@ -67,7 +68,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	end
 	xc_hist = VectorOfArray([copy(xc0)[ind_save_c]])
 	xd_hist = VectorOfArray([copy(xd0)[ind_save_d]])
-	res_ode = zeros(2,length(X0))
+	res_ode = zeros(2,length(X_extended))
 
 	nsteps += 1
 
@@ -95,19 +96,19 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 
 		verbose && println("--> t = ", t," - δt = ", δt, ",nstep =  ", nsteps)
 
-		res_ode .= Flow(X0, Xd, δt, rate)
+		res_ode .= Flow(X_extended, Xd, δt, rate)
 
 		verbose && println("--> ode solve is done!")
 
 		# this holds the new state of the continuous component
-		@inbounds for ii in eachindex(X0)
-			X0[ii] = res_ode[end, ii]
+		@inbounds for ii in eachindex(X_extended)
+			X_extended[ii] = res_ode[end, ii]
 		end
 
 		# this is the next jump time
 		t = res_ode[end, end]
 
-		problem.caract.R(rate, X0, Xd, t, problem.caract.parms, false)
+		problem.caract.R(rate, X_extended, Xd, t, problem.caract.parms, false)
 
 		# jump time:
 		if (t < tf) && nsteps < n_jumps
@@ -121,20 +122,21 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			end
 
 			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X0, Xd, t, problem.caract.parms, ev)
+			problem.caract.pdmpjump.Delta(X_extended, Xd, t, problem.caract.parms, ev)
 
 			verbose && println("--> Which reaction? => ", ev)
+			verbose && println("--> xd = ", Xd)
 
 			# save state, post-jump
 			push!(t_hist, t)
-			push!(xc_hist, X0[ind_save_c])
+			push!(xc_hist, X_extended[ind_save_c])
 			push!(xd_hist, Xd[ind_save_d])
 
 			δt = - log(rand())
 
 		else
-			if ode in [:cvode,:bdf,:adams]
-				res_ode_last =   Sundials.cvode((tt, x, xdot)->problem.F(xdot, x, Xd, tt, problem.parms), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
+			if ode in [:cvode, :bdf, :adams]
+				res_ode_last = Sundials.cvode((tt, x, xdot)->problem.F(xdot, x, Xd, tt, problem.parms), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
 			else#if ode==:lsoda
 				res_ode_last = LSODA.lsoda((tt, x, xdot, data)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
 			end
