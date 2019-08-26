@@ -4,6 +4,10 @@ module PiecewiseDeterministicMarkovProcesses
 	using ForwardDiff
 	import DiffEqBase: solve
 
+	abstract type AbstractPDMPAlgorithm end
+	abstract type AbstractCHV <: AbstractPDMPAlgorithm end
+	abstract type AbstractCHVIterator <: AbstractCHV end
+
 	include("utilsforwarddiff.jl")
 	include("utils.jl")
 	include("chv.jl")

@@ -1,3 +1,7 @@
+include("chvdiffeq.jl")
+
+### WARNING This is an old ODE solver which is not based on an iterator implementation. We keep it until LSODA has an iterator implementation
+
 function f_CHV!(F::Function,R::Function,t::Float64, x, xdot, xd, parms,rate)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
@@ -34,7 +38,7 @@ It takes the following arguments:
 """
 function chv!(xc0::vecc,xd0::vecd,
 				F::Function,R::Function,DX::Function,
-				nu::Tnu,parms,
+				nu::Tnu, parms,
 				ti::Float64, tf::Float64,
 				verbose::Bool = false;
 				ode=:cvode,ind_save_d=-1:1,ind_save_c=-1:1,dt=0.001,n_max::Int64 = Inf64) where {vecc <: AbstractVector{Float64}, vecd <: AbstractVector{Int64}, Tnu <:AbstractArray{Int64}}
@@ -146,4 +150,8 @@ function chv!(xc0::vecc,xd0::vecd,
 	verbose && println("-->Done")
 	verbose && println("--> xc = ",xd_hist[:,1:nsteps-1])
 	return PDMPResult(t_hist,xc_hist,xd_hist,Float64[])
+end
+
+function solve(problem::PDMPProblem, algo::CHV{Tode}) where {Tode <: Symbol}
+	@show Tode, algo
 end

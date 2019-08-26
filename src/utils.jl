@@ -1,10 +1,7 @@
+# Dummy functions to allow not specifying these caracteristics
 function F_dummy(ẋ, xc, xd, t, parms)
-	ẋ[1] = 0.
+	fill!(ẋ, 0)
 	nothing
-end
-
-function Delta_dummy(xc, xd, t, parms, ind_reaction)
-	return nothing
 end
 
 mutable struct PDMPJumpTime{Tc <: Real, Td}
@@ -43,7 +40,7 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
 						Tp, TF, TR, Tcar}
-	tf::Tc			    			# final simulation time
+	interval::Tuple{Tc, Tc}			    			# final simulation time interval
 	simjptimes::PDMPJumpTime{Tc, Td}# space to save result
 	time::Vector{Float64}
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
@@ -63,17 +60,23 @@ function PDMPProblem(xc0::vectype_xc,
 		rate::vectype_rate,
 		F::TF, R::TR, DX::TD,
 		nu::Tnu, parms::Tp,
-		ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
+		interval::Tuple{Tc, Tc}, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
+	ti, tf = interval
 	ratecache = DiffCache(rate)
 	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
 	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
-			tf,
-			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			interval,
+			PDMPJumpTime{Tc, Td}(-log(rand()), interval[1], 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]),
 			VectorOfArray([copy(xd0)]), verbose,
 			saverate, Tc[],
 			caract)
+end
+
+# callable struct used in the iterator interface
+function (prob::PDMPProblem)(u,t,integrator)
+	t == prob.simjptimes.tstop_extended
 end
 
 # simplified constructors to PDMPProblem
@@ -87,7 +90,7 @@ function PDMPProblem(F::TF, R::TR, DX::TD,nu::Tnu,
 	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
 	# custom type to collect all parameters in one structure
 	return PDMPProblem{Tc, Td, vecc, vecd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
-			tf,
+			interval,
 			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
@@ -101,35 +104,6 @@ function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
 	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, interval; kwargs...)
 end
 
-# callable struct
-function (prob::PDMPProblem)(u,t,integrator)
-	t == prob.simjptimes.tstop_extended
-end
-
-# callable struct for the CHV method
-function (prob::PDMPProblem)(xdot, x, data, t)
-	# @show typeof(xdot) typeof(x)
-	if prob.chv # this is to simulate with the CHV method
-		tau = x[end]
-		# rate = similar(x,length(prob.rate)) #This is to use autodiff but it slows things down
-		if 1==0
-			tmp = get_rate(prob.rateCache, eltype(x))
-			@show tmp x
-			_tmp = reinterpret(eltype(x), tmp)
-			sr = prob.pdmpFunc.R(_tmp,x,prob.xd,tau,prob.parms,true)[1]
-		else
-			sr = prob.pdmpFunc.R(prob.rateCache.rate,x,prob.xd,tau,prob.parms,true)[1]
-		end
-		prob.pdmpFunc.F(xdot,x,prob.xd,tau,prob.parms)
-		xdot[end] = 1.0
-		@inbounds for i in eachindex(xdot)
-			xdot[i] = xdot[i] / sr
-		end
-	else # this is to simulate with rejection method
-		prob.pdmpFunc.F(xdot, x, prob.xd, t, prob.parms)
-	end
-	nothing
-end
 
 """
 This type stores the output composed of:
@@ -147,24 +121,9 @@ end
 
 PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc, vectype_xc, vectype_xd} = PDMPResult{Tc, vectype_xc, vectype_xd}(time, xc, xd, Tc[])
 
-"""
-Dummy vector field to be used in gillespie algo
-"""
-function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
-	# vector field used for the continuous variable
-	ẋ[1] = 0.
-	nothing
-end
 
 """
-Dummy vector field to be used in gillespie algo
-"""
-function Delta_dummy(xc, xd, t, parms::Ty, ind_reaction) where Ty
-	return true
-end
-
-"""
-Dummy flow to be used in gillespie algo
+Dummy flow to be used in rejection algo
 """
 function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms::Ty) where Ty
 	# vector field used for the continuous variable

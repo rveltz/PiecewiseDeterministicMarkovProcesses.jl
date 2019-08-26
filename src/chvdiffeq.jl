@@ -2,12 +2,7 @@
 include("jumps.jl")
 include("utils.jl")
 
-abstract type AbstractPDMPAlgorithm end
-abstract type AbstractCHVIterator <: AbstractPDMPAlgorithm end
-# abstract type AbstractCHVIteratorCache <: AbstractPDMPAlgorithmCache end
-
-
-struct CHV{Tode <: DiffEqBase.DEAlgorithm} <: AbstractCHVIterator
+struct CHV{Tode} <: AbstractCHVIterator
 	ode::Tode	# ODE solver to use for the flow in between jumps
 end
 
@@ -30,6 +25,9 @@ end
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
+	# final simulation time
+	tf = prob.interval[2]
+	
 	# find the next jump time
 	t = integrator.u[end]
 	prob.simjptimes.lastjumptime = t
@@ -49,7 +47,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump)
 
 	# execute the jump
 	caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, false)
-	if (t < prob.tf)
+	if (t < tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rateCache.rate))
 
@@ -101,7 +99,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		vece <: AbstractVector{Tc}}
 
 	# custom type to collect all parameters in one structure
-	problem  = PDMPProblem(xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
+	problem  = PDMPProblem(xc0,xd0,rate,F,R,DX,nu,parms,(ti,tf),save_positions[1],verbose,alg,saverate)
 
 	return	chv_diffeq!(problem, ti, tf, copy(xc0_extended), verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol)
 end
@@ -173,10 +171,9 @@ function chv_diffeq!(problem::PDMPProblem,
 end
 
 
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, X_extended = zeros(Tc, 1 + 1), save_positions = (false, true), reltol = 1e-7, abstol = 1e-9) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode}
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, X_extended = zeros(Tc, 1 + 1), save_positions = (false, true), reltol = 1e-7, abstol = 1e-9) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
 	# hack to resize the extended vector to the proper dimension
 	resize!(X_extended, length(problem.caract.xc) + 1)
 
 	return chv_diffeq!(problem, problem.simjptimes.lastjumptime, problem.tf, X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
-
 end
