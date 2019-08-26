@@ -34,39 +34,42 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	t = integrator.u[end]
 	prob.simjptimes.lastjumptime = t
 
+	# we declare the characteristics for convenience
+	caract = prob.caract
+
 	prob.verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
-	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", prob.caract.xd,"\n")
+	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", caract.xd,"\n")
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
 		prob.verbose && printstyled(color=:green, "----> saving pre-jump\n")
 		push!(prob.Xc, (integrator.u[1:end-1]))
-		push!(prob.Xd, copy(prob.caract.xd))
+		push!(prob.Xd, copy(caract.xd))
 		push!(prob.time,t)
 	end
 
 	# execute the jump
-	prob.caract.R(prob.caract.ratecache, integrator.u, prob.caract.xd, t, prob.caract.parms, false)
+	caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, false)
 	if (t < prob.tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rateCache.rate))
 
 		# Update event
-		ev = pfsample(prob.caract.ratecache, sum(prob.caract.ratecache), length(prob.caract.ratecache))
+		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
 
-		deltaxd = view(prob.caract.pmdpjump.nu, ev, :)
+		deltaxd = view(caract.pmdpjump.nu, ev, :)
 
 		# Xd = Xd .+ deltaxd
 		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
-		@inbounds for ii in eachindex(prob.caract.xd)
-			prob.caract.xd[ii] += deltaxd[ii]
+		@inbounds for ii in eachindex(caract.xd)
+			caract.xd[ii] += deltaxd[ii]
 		end
 
 		# Xc = Xc .+ deltaxc
-		prob.caract.pmdpjump.Delta(integrator.u, prob.caract.xd, t, prob.caract.parms, ev)
+		caract.pmdpjump.Delta(integrator.u, caract.xd, t, caract.parms, ev)
 		u_modified!(integrator, true)
 
-		@inbounds for ii in eachindex(prob.caract.xc)
-			prob.caract.xc[ii] = integrator.u[ii]
+		@inbounds for ii in eachindex(caract.xc)
+			caract.xc[ii] = integrator.u[ii]
 		end
 	end
 	prob.verbose && printstyled(color=:green,"--> jump computed, xd = ",prob.xd,"\n")
@@ -114,7 +117,8 @@ function chv_diffeq!(problem::PDMPProblem,
 	problem.verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
 	algopdmp = CHV(ode)
-	@show algopdmp
+	# we declare the characteristics for convenience
+	caract = problem.caract
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
 	# set up the current time as the initial time
@@ -126,8 +130,8 @@ function chv_diffeq!(problem::PDMPProblem,
 	# X_extended = similar(problem.xc, length(problem.xc) + 1)
 	# @show typeof(X_extended) vece
 
-	for ii in eachindex(problem.caract.xc)
-		X_extended[ii] = problem.caract.xc[ii]
+	for ii in eachindex(caract.xc)
+		X_extended[ii] = caract.xc[ii]
 	end
 	X_extended[end] = ti
 
@@ -136,7 +140,7 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# define the ODE flow, this leads to big memory saving
 	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
-	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, problem.caract, tt), X_extended, (0.0, 1e9))
+	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9))
 	integrator = init(prob_CHV, ode, tstops = problem.simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number
@@ -151,8 +155,8 @@ function chv_diffeq!(problem::PDMPProblem,
 		# the previous step was a jump! should we save it?
 		if njumps < problem.simjptimes.njumps && save_positions[2] && (t <= tf)
 			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
-			push!(problem.Xc, copy(problem.xc))
-			push!(problem.Xd, copy(problem.xd))
+			push!(problem.Xc, copy(caract.xc))
+			push!(problem.Xd, copy(caract.xd))
 			push!(problem.time, t)
 			njumps +=1
 			problem.verbose && println("----> end save post-jump, ")
@@ -160,12 +164,12 @@ function chv_diffeq!(problem::PDMPProblem,
 	end
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
-		problem.verbose && println("----> LAST BIT!!, xc = ",problem.xc[end], ", xd = ",problem.xd, ", t = ", problem.time[end])
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> problem.pdmp2.F(xdot, x, problem.xd, tt, problem.parms), copy(problem.xc),(tprev,tf))
+		problem.verbose && println("----> LAST BIT!!, xc = ",caract.xc[end], ", xd = ",caract.xd, ", t = ", problem.time[end])
+		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, tt, caract.parms), copy(caract.xc),(tprev,tf))
 		sol = solve(prob_last_bit, ode)
 		problem.verbose && println("-------> xc[end] = ",sol.u[end])
 		push!(problem.Xc, sol.u[end])
-		push!(problem.Xd, copy(problem.xd))
+		push!(problem.Xd, copy(caract.xd))
 		push!(problem.time, sol.t[end])
 	end
 	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)#, problem
