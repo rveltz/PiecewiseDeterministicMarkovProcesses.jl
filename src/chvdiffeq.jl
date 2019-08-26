@@ -11,7 +11,7 @@ struct CHV{Tode <: DiffEqBase.DEAlgorithm} <: AbstractCHVIterator
 	ode::Tode	# ODE solver to use for the flow in between jumps
 end
 
-function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPProblem2}
+function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
 	tau = x[end]
 	sr = prob.pdmpfunc.R(prob.ratecache, x, prob.xd, tau, prob.parms, true)[1]
 	prob.pdmpfunc.F(xdot, x, prob.xd, tau, prob.parms)
@@ -32,7 +32,7 @@ end
 function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	# find the next jump time
 	t = integrator.u[end]
-	prob.sim.lastjumptime = t
+	prob.simjptimes.lastjumptime = t
 
 	prob.verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
 	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", prob.xd,"\n")
@@ -71,9 +71,9 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	end
 	prob.verbose && printstyled(color=:green,"--> jump computed, xd = ",prob.xd,"\n")
 	# we register the next time interval to solve the extended ode
-	prob.sim.njumps += 1
-	prob.sim.tstop_extended += -log(rand())
-	add_tstop!(integrator, prob.sim.tstop_extended)
+	prob.simjptimes.njumps += 1
+	prob.simjptimes.tstop_extended += -log(rand())
+	add_tstop!(integrator, prob.simjptimes.tstop_extended)
 	prob.verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
@@ -120,7 +120,7 @@ function chv_diffeq!(problem::PDMPProblem,
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
 	# set up the current time as the initial time
 	t = ti
-	# previous jump time, needed because problem.sim.lastjumptime contains next jump time even if above tf
+	# previous jump time, needed because problem.simjptimes.lastjumptime contains next jump time even if above tf
 	tprev = t
 
 	# vector to hold the state space for the extended system
@@ -138,19 +138,19 @@ function chv_diffeq!(problem::PDMPProblem,
 	# define the ODE flow, this leads to big memory saving
 	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
 	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, problem.pdmp2, tt), X_extended, (0.0, 1e9))
-	integrator = init(prob_CHV, ode, tstops = problem.sim.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
+	integrator = init(prob_CHV, ode, tstops = problem.simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number
 	njumps = 0
 
-	while (t < tf) && problem.sim.njumps < n_jumps-1
-		problem.verbose && println("--> n = $(problem.sim.njumps), t = $t, δt = ",problem.sim.tstop_extended)
+	while (t < tf) && problem.simjptimes.njumps < n_jumps-1
+		problem.verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ",problem.simjptimes.tstop_extended)
 		step!(integrator)
-		@assert( t < problem.sim.lastjumptime, "Could not compute next jump time $(problem.sim.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.sim.lastjumptime),\n solver = $ode. dt = $(t - problem.sim.lastjumptime)")
-		t, tprev = problem.sim.lastjumptime, t
+		@assert( t < problem.simjptimes.lastjumptime, "Could not compute next jump time $(problem.simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.simjptimes.lastjumptime),\n solver = $ode. dt = $(t - problem.simjptimes.lastjumptime)")
+		t, tprev = problem.simjptimes.lastjumptime, t
 
 		# the previous step was a jump! should we save it?
-		if njumps < problem.sim.njumps && save_positions[2] && (t <= tf)
+		if njumps < problem.simjptimes.njumps && save_positions[2] && (t <= tf)
 			problem.verbose && println("----> save post-jump, xd = ",problem.Xd)
 			push!(problem.Xc, copy(problem.xc))
 			push!(problem.Xd, copy(problem.xd))
@@ -187,8 +187,8 @@ end
 # 	# 	res = chv_diffeq!(problem, t, tnext, verbose, ode = ode,	save_positions = save_positions, n_jumps = n_jumps)
 # 	# 	problem.xc .= res.xc[:, end]
 # 	# 	problem.xd .= res.xd[:, end]
-# 	# 	problem.sim.lastjumptime = tnext
-# 	# 	# problem.sim.tstop_extended += log(rand())
+# 	# 	problem.simjptimes.lastjumptime = tnext
+# 	# 	# problem.simjptimes.tstop_extended += log(rand())
 # 	# 	t = tnext
 # 	# end
 # 	# return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
