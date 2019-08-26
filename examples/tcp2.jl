@@ -55,14 +55,14 @@ xc0 = [1.0]
 	parms = [0.0]
 	ti = 0.322156
 	tf = 100000.
-	nj = 1050
+	nj = 50
 
 	errors = Float64[]
 
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
-Random.seed!(8) #0.001096 seconds (406 allocations: 30.172 KiB)
+Random.seed!(8) #0.000681 seconds (405 allocations: 29.953 KiB)
 	res = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf; n_jumps = nj, ode = Tsit5(), save_positions = (false, false))
 
 ##########################################

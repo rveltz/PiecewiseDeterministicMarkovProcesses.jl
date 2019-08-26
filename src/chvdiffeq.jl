@@ -13,8 +13,8 @@ end
 
 function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
 	tau = x[end]
-	sr = prob.pdmpfunc.R(prob.ratecache, x, prob.xd, tau, prob.parms, true)[1]
-	prob.pdmpfunc.F(xdot, x, prob.xd, tau, prob.parms)
+	sr = prob.R(prob.ratecache, x, prob.xd, tau, prob.parms, true)[1]
+	prob.F(xdot, x, prob.xd, tau, prob.parms)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] / sr
@@ -35,38 +35,38 @@ function chvjump(integrator, prob::PDMPProblem)#(prob::PDMPProblem)(integrator)
 	prob.simjptimes.lastjumptime = t
 
 	prob.verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
-	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", prob.xd,"\n")
+	prob.verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", prob.caract.xd,"\n")
 
 	if (prob.save_pre_jump) && (t <= prob.tf)
 		prob.verbose && printstyled(color=:green, "----> saving pre-jump\n")
 		push!(prob.Xc, (integrator.u[1:end-1]))
-		push!(prob.Xd, copy(prob.xd))
+		push!(prob.Xd, copy(prob.caract.xd))
 		push!(prob.time,t)
 	end
 
 	# execute the jump
-	prob.pdmp2.pdmpfunc.R(prob.rateCache.rate, integrator.u, prob.xd, t, prob.parms, false)
+	prob.caract.R(prob.caract.ratecache, integrator.u, prob.caract.xd, t, prob.caract.parms, false)
 	if (t < prob.tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(prob.rateCache.rate))
 
 		# Update event
-		ev = pfsample(prob.rateCache.rate, sum(prob.rateCache.rate), length(prob.rateCache.rate))
+		ev = pfsample(prob.caract.ratecache, sum(prob.caract.ratecache), length(prob.caract.ratecache))
 
-		deltaxd = view(prob.nu, ev, :)
+		deltaxd = view(prob.caract.pmdpjump.nu, ev, :)
 
 		# Xd = Xd .+ deltaxd
 		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
-		@inbounds for ii in eachindex(prob.xd)
-			prob.xd[ii] += deltaxd[ii]
+		@inbounds for ii in eachindex(prob.caract.xd)
+			prob.caract.xd[ii] += deltaxd[ii]
 		end
 
 		# Xc = Xc .+ deltaxc
-		prob.pdmp2.pmdpjump.Delta(integrator.u, prob.xd, t, prob.parms, ev)
+		prob.caract.pmdpjump.Delta(integrator.u, prob.caract.xd, t, prob.caract.parms, ev)
 		u_modified!(integrator, true)
 
-		@inbounds for ii in eachindex(prob.xc)
-			prob.xc[ii] = integrator.u[ii]
+		@inbounds for ii in eachindex(prob.caract.xc)
+			prob.caract.xc[ii] = integrator.u[ii]
 		end
 	end
 	prob.verbose && printstyled(color=:green,"--> jump computed, xd = ",prob.xd,"\n")
@@ -98,8 +98,7 @@ function chv_diffeq!(xc0::vecc, xd0::vecd,
 		vece <: AbstractVector{Tc}}
 
 	# custom type to collect all parameters in one structure
-	rateCache = DiffCache(rate)
-	problem  = PDMPProblem(true,xc0,xd0,rateCache,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
+	problem  = PDMPProblem(true,xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,alg,saverate)
 
 	if return_pb				#TODO: remove branch when ForwardDiff works well with the package
 		return problem
@@ -127,8 +126,8 @@ function chv_diffeq!(problem::PDMPProblem,
 	# X_extended = similar(problem.xc, length(problem.xc) + 1)
 	# @show typeof(X_extended) vece
 
-	for ii in eachindex(problem.xc)
-		X_extended[ii] = problem.xc[ii]
+	for ii in eachindex(problem.caract.xc)
+		X_extended[ii] = problem.caract.xc[ii]
 	end
 	X_extended[end] = ti
 
@@ -137,7 +136,7 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# define the ODE flow, this leads to big memory saving
 	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
-	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, problem.pdmp2, tt), X_extended, (0.0, 1e9))
+	prob_CHV = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, problem.caract, tt), X_extended, (0.0, 1e9))
 	integrator = init(prob_CHV, ode, tstops = problem.simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number

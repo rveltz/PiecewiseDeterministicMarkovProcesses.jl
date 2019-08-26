@@ -7,11 +7,6 @@ function Delta_dummy(xc, xd, t, parms, ind_reaction)
 	return nothing
 end
 
-struct PDMPFunctions{TF, TR}
-	F::TF						# vector field for ODE between jumps
-	R::TR			    		# rate function for jumps
-end
-
 mutable struct PDMPJumpTime{Tc <: Real, Td}
 	tstop_extended::Tc
 	lastjumptime::Tc
@@ -24,21 +19,21 @@ mutable struct PDMPJumpTime{Tc <: Real, Td}
 	fictitous_jumps::Td
 end
 
-struct PDMPCaracteristics{TF, TJ, vecc, vecd, vecrate, Tparms}
-	pdmpfunc::TF
+struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
+	F::TF						# vector field for ODE between jumps
+	R::TR			    		# rate function for jumps
 	pmdpjump::TJ
-	xc::vecc
-	xd::vecd
-	ratecache::vecrate
-	parms::Tparms
+	xc::vecc					# continuous variable
+	xd::vecd					# discrete variable
+	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as it can be an issue for StaticArrays
+	parms::Tparms				# container to hold parameters to be passed to F,R,Delta
 
 	function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
-		func = PDMPFunctions(F, R) #TODO remove Delta_dummy
 		jump = RateJump(nu, Delta_dummy)
 		rate = zeros(Tc, size(nu, 1))
-		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump, xc0, xd0, rate, parms)
+		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), rate, parms)
 	end
 end
 
@@ -47,13 +42,8 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
-						Tp, TF, TR, Tpdmp}
-	xc::vectype_xc					# continuous variable
-	xd::vectype_xd					# discrete variable
-	nu::Tnu
-	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
+						Tp, TF, TR, Tcar}
 	tf::Tc			    			# final simulation time
-	rateCache::vectype_rate			# to hold the rate vector for inplace computations
 	simjptimes::PDMPJumpTime{Tc, Td}		# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump?
@@ -66,7 +56,7 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
 	# structs for characteristic of the PDMP
-	caract::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
+	caract::Tcar
 end
 
 function PDMPProblem(chv::Bool,
@@ -76,12 +66,10 @@ function PDMPProblem(chv::Bool,
 		F::TF, R::TR, DX::TD,
 		nu::Tnu, parms::Tp,
 		ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
+	ratecache = DiffCache(rate)
 	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
-	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, typeof(caract)}(
-			copy(xc0),
-			copy(xd0),
-			nu,parms,tf,
-			rate, #this is to initialise rate, can be an issue for StaticArrays
+	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
+			tf,
 			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti], savepre,
 			VectorOfArray([copy(xc0)]),
