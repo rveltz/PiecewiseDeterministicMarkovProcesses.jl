@@ -1,4 +1,4 @@
-function F_dummy(ẋ, xc, xd, t, parms)
+function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
 	ẋ[1] = 0.
 	nothing
 end
@@ -7,32 +7,13 @@ function Delta_dummy(xc, xd, t, parms, ind_reaction)
 	return nothing
 end
 
-struct PDMPVectorField
-	F						# vector field for ODE between jumps
-	R			    		# rate function for jumps
+struct PDMPFunctions{TF, TR}
+	F::TF						# vector field for ODE between jumps
+	R::TR			    		# rate function for jumps
+	# Delta::TD		    		# function to implement
 end
 
-struct PDMPFunctions#{TF, TJ, vecc, vecd, vecrate, Tparms}
-	pdmpfunc
-	pmdpjump
-	# xc::vecc
-	# xd::vecd
-	# ratecache::vecrate
-	# parms::Tparms
-
-	function PDMPFunctions(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
-						vecc <: AbstractVector{Tc},
-						vecd <: AbstractVector{Td}}
-		func = PDMPVectorField(F, R)
-		jump = RateJump(nu, Delta_dummy)
-		rate = zeros(Tc, size(nu, 1))
-		return new(func, jump)
-		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump)#, xc0, xd0, rate, parms)
-	end
-end
-
-
-mutable struct PDMPJumpTime{Tc <: Real, Td}
+mutable struct PDMPsimulation{Tc <: Real, Td}
 	tstop_extended::Tc
 	lastjumptime::Tc
 	njumps::Td
@@ -44,18 +25,38 @@ mutable struct PDMPJumpTime{Tc <: Real, Td}
 	fictitous_jumps::Td
 end
 
+struct PDMPProblem2{TF, TJ, vecc, vecd, vecrate, Tparms}
+	pdmpfunc::TF
+	pmdpjump::TJ
+	xc::vecc
+	xd::vecd
+	ratecache::vecrate
+	parms::Tparms
+
+	function PDMPProblem2(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+						vecc <: AbstractVector{Tc},
+						vecd <: AbstractVector{Td}}
+		func = PDMPFunctions(F, R) #TODO remove Delta_dummy
+		jump = RateJump(nu, Delta_dummy)
+		rate = zeros(Tc, size(nu, 1))
+		return new{typeof(func), typeof(jump), vecc, vecd, typeof(rate), Tparms}(func, jump, xc0, xd0, rate, parms)
+	end
+end
+
+
 struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
-						Tp, TF, TR, TD, Tpdmp}
+						Tp, TF, TR, Tpdmp}
 	xc::vectype_xc					# continuous variable
 	xd::vectype_xd					# discrete variable
+	pdmpFunc::PDMPFunctions{TF, TR}
 	nu::Tnu
 	parms::Tp			    		# container to hold parameters to be passed to F,R,Delta
 	tf::Tc			    			# final simulation time
 	rateCache::vectype_rate			# to hold the rate vector for inplace computations
-	jumptime::PDMPJumpTime{Tc, Td}		# space to save result
+	sim::PDMPsimulation{Tc, Td}		# space to save result
 	time::Vector{Float64}
 	save_pre_jump::Bool				# save the pre jump?
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
@@ -66,29 +67,30 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 	save_rate::Bool					# boolean for saving rates
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
 
-	# structs for algorithm
-	pdmpPb::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
+	# structs for characteristic of the PDMP
+	pdmp2::Tpdmp#PDMPProblem2{TF, TJ, vectype_xc, vectype_xd, vectype_rate, Tp}
+end
 
-	function PDMPProblem(chv::Bool,
-			xc0::vectype_xc,
-			xd0::vectype_xd,
-			rate::vectype_rate,
-			F::TF, R::TR, DX::TD,
-			nu::Tnu, parms::Tp,
-			ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
-		pb2 = PDMPFunctions(F,R,nu,copy(xc0),copy(xd0),parms)
-		return new{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, TD, typeof(pb2)}(
-				copy(xc0),
-				copy(xd0),
-				nu,parms,tf,
-				rate, #this is to initialise rate, can be an issue for StaticArrays
-				PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-				[ti], savepre,
-				VectorOfArray([copy(xc0)]),
-				VectorOfArray([copy(xd0)]), verbose,
-				saverate, Tc[],
-				pb2)
-		end
+function PDMPProblem(chv::Bool,
+		xc0::vectype_xc,
+		xd0::vectype_xd,
+		rate::vectype_rate,
+		F::TF, R::TR, DX::TD,
+		nu::Tnu, parms::Tp,
+		ti::Tc, tf::Tc, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
+	pb2 = PDMPProblem2(F,R,nu,xc0,xd0,parms)
+	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, typeof(pb2)}(
+			copy(xc0),
+			copy(xd0),
+			PDMPFunctions(F,R),
+			nu,parms,tf,
+			rate, #this is to initialise rate, can be an issue for StaticArrays
+			PDMPsimulation{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			[ti], savepre,
+			VectorOfArray([copy(xc0)]),
+			VectorOfArray([copy(xd0)]), verbose,
+			saverate, Tc[],
+			pb2)
 end
 
 function PDMPPb(chv::Bool,xc0::vecc, xd0::vecd,
@@ -97,18 +99,18 @@ function PDMPPb(chv::Bool,xc0::vecc, xd0::vecd,
 				ti::Tc, tf::Tc,
 				verbose::Bool = false;
 				save_positions = (false,true)) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	@assert 1==0 "WIP"			
 	# custom type to collect all parameters in one structure
-	return PDMPProblem{Tc,Td,vecc,vecd,vecr,Tnu,Tp,TF,TR,TD}(chv,xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+	return PDMPProblem{Tc,Td,vecc,vecd,vecr,Tnu,Tp,TF,TR,Tpdmp}(chv,xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
 end
 
 # callable struct
 function (prob::PDMPProblem)(u,t,integrator)
-	t == prob.jumptime.tstop_extended
+	t == prob.sim.tstop_extended
 end
 
 # callable struct for the CHV method
 function (prob::PDMPProblem)(xdot, x, data, t)
-	@assert 1==0 "To check it is not called"
 	# @show typeof(xdot) typeof(x)
 	if prob.chv # this is to simulate with the CHV method
 		tau = x[end]

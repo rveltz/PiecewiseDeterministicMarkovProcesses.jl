@@ -1,6 +1,6 @@
 using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
-const PDMP = PiecewiseDeterministicMarkovProcesses
+	using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
+	const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSample(xc0, xd0, ti, nj::Int64)
 	xch = [xc0[1]]
@@ -68,7 +68,7 @@ Random.seed!(8) #0.001096 seconds (406 allocations: 30.172 KiB)
 ##########################################
 # build a PDMP Problem
 
-pb = PDMP.PDMPProblem2(F!, R!, nu, xc0, xd0, parms)
+pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms)
 
 #
 # Random.seed!(8)
