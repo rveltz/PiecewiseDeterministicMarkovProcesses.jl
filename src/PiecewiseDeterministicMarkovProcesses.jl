@@ -2,6 +2,7 @@ module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
 	using LSODA, Sundials, DifferentialEquations, RecursiveArrayTools, DiffEqBase
 	using ForwardDiff
+	import DiffEqBase: solve
 
 	include("utilsforwarddiff.jl")
 	include("utils.jl")
@@ -23,7 +24,7 @@ module PiecewiseDeterministicMarkovProcesses
 		pdmp_data,
 		tauleap
 
-	export PDMPProblem2, solve
+	export PDMPProblem, CHV
 
 """
 This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
@@ -65,7 +66,7 @@ It takes the arguments:
 
 		# hack to call DiffEq solver
 		if typeof(ode) != Symbol && algo==:chv
-			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, return_pb = return_pb, reltol = reltol, abstol = abstol)
+			return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, reltol = reltol, abstol = abstol)
 		end
 
 		if typeof(ode) != Symbol && algo==:rejection

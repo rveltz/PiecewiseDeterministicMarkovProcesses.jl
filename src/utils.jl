@@ -1,4 +1,4 @@
-function F_dummy(ẋ, xc, xd, t, parms::Ty) where Ty
+function F_dummy(ẋ, xc, xd, t, parms)
 	ẋ[1] = 0.
 	nothing
 end
@@ -38,15 +38,14 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 end
 
 
-struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
+struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
 						Tp, TF, TR, Tcar}
 	tf::Tc			    			# final simulation time
-	simjptimes::PDMPJumpTime{Tc, Td}		# space to save result
+	simjptimes::PDMPJumpTime{Tc, Td}# space to save result
 	time::Vector{Float64}
-	save_pre_jump::Bool				# save the pre jump?
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
 	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}		# discrete variable history
 	verbose::Bool					# print message during simulation?
@@ -59,8 +58,7 @@ struct PDMPProblem{Tc,Td,vectype_xc <: AbstractVector{Tc},
 	caract::Tcar
 end
 
-function PDMPProblem(chv::Bool,
-		xc0::vectype_xc,
+function PDMPProblem(xc0::vectype_xc,
 		xd0::vectype_xd,
 		rate::vectype_rate,
 		F::TF, R::TR, DX::TD,
@@ -71,22 +69,36 @@ function PDMPProblem(chv::Bool,
 	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
 			tf,
 			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-			[ti], savepre,
+			[ti],
 			VectorOfArray([copy(xc0)]),
 			VectorOfArray([copy(xd0)]), verbose,
 			saverate, Tc[],
 			caract)
 end
 
-function PDMPPb(chv::Bool,xc0::vecc, xd0::vecd,
-				F::TF, R::TR, DX::TD,
-				nu::Tnu, parms::Tp,
-				ti::Tc, tf::Tc,
-				verbose::Bool = false;
-				save_positions = (false,true)) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
-	@assert 1==0 "WIP"
+# simplified constructors to PDMPProblem
+function PDMPProblem(F::TF, R::TR, DX::TD,nu::Tnu,
+				xc0::vecc, xd0::vecd, parms::Tp,
+				interval;
+				verbose = false, saverate = false) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	ti, tf = interval
+	rate = zeros(Tc, size(nu, 1))
+	ratecache = copy(rate)#DiffCache(rate)
+	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
 	# custom type to collect all parameters in one structure
-	return PDMPProblem{Tc,Td,vecc,vecd,vecr,Tnu,Tp,TF,TR,Tpdmp}(chv,xc0,xd0,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose)
+	return PDMPProblem{Tc, Td, vecc, vecd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
+			tf,
+			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			[ti],
+			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
+			verbose,
+			saverate, Tc[],
+			caract)
+end
+
+function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
+				interval; kwargs...) where {Tc, Td, Tnu <: AbstractArray{Td}, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, interval; kwargs...)
 end
 
 # callable struct
