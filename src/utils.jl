@@ -170,7 +170,7 @@ function allocate_arrays(ti	,xc0, xd0, n_max, rejection = false; ind_save_c=-1:1
 
 	if rejection
 		X0  = copy(xc0)
-		Xc  = copy(X0)
+		Xc  = copy(xc0)
 	else
 		# for the CVH method, needs to enlarge the state space
 		X0 = copy(xc0); push!(X0,ti)
@@ -180,16 +180,16 @@ function allocate_arrays(ti	,xc0, xd0, n_max, rejection = false; ind_save_c=-1:1
 
 	# arrays for storing history, pre-allocate storage
 	t_hist  = zeros(n_max)
-	xc_hist = zeros(length(ind_save_c), n_max)
-	xd_hist = zeros(length(ind_save_d), n_max)
-	res_ode = zeros(2,length(X0))
+	xc_hist = zeros(eltype(xc0), length(ind_save_c), n_max)
+	xd_hist = zeros(eltype(xd0), length(ind_save_d), n_max)
+	res_ode = zeros(2, length(X0))
 
 
 	# initialise arrays
 	t_hist[1] = ti
 	xc_hist[:,1] .= copy(xc0)[ind_save_c]
 	xd_hist[:,1] .= copy(Xd)[ind_save_d]
-return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
+	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 
 """
@@ -223,9 +223,9 @@ function pfsample(w::vec, s::Tc, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
 	return i
 end
 
-function filter_saveat!(save_at, ti, tf)
-	filter!(x -> (x >= ti)*(x <= tf), save_at)
-	if isempty(save_at) || save_at[end] < tf
-		push!(save_at, tf)
-	end
-end
+# function filter_saveat!(save_at, ti, tf)
+# 	filter!(x -> (x >= ti)*(x <= tf), save_at)
+# 	if isempty(save_at) || save_at[end] < tf
+# 		push!(save_at, tf)
+# 	end
+# end

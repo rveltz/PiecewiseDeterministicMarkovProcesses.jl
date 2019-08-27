@@ -59,7 +59,8 @@ errors = Float64[]
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Rosenbrock23(),"RS23"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
 	Random.seed!(1234)
-	res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = ode[1])
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res =  @time PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	printstyled(color=:green,"--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2],"\n\n")
 	push!(errors,norm(res.time - res_a[1],Inf64))
 end
@@ -67,7 +68,8 @@ end
 
 
 Random.seed!(1234)
-	res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = Tsit5(), save_positions = (false, false))
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 
 # plot(res_a[1],res_a[2])
 # plot!(res.time,res.xc[:,1])

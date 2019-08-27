@@ -87,7 +87,6 @@ end
 println("\n\nComparison of solvers, with function Delta")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
 	Random.seed!(8)
-	# res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, Delta!, nusp, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
 	problem = PDMP.PDMPProblem(F!, R!,  Delta!, nusp, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ", ode[2])

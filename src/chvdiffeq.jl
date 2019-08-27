@@ -17,8 +17,6 @@ function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracte
 	return nothing
 end
 
-
-###################################################################################################
 ###################################################################################################
 ### implementation of the CHV algo using DiffEq
 

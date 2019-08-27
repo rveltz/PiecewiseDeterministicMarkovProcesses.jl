@@ -1,5 +1,10 @@
 ###################################################################################################
-###################################################################################################
+include("jumps.jl")
+include("utils.jl")
+
+struct Rejection{Tode} <: AbstractCHVIterator
+	ode::Tode	# ODE solver to use for the flow in between jumps
+end
 ###################################################################################################
 ### implementation of the rejection algo using DiffEq
 
