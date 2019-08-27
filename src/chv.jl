@@ -77,9 +77,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	rate    = zeros(numpf)  # vector of rates
 
 	# define the ODE flow, this leads to big memory saving
-	if ode == :cvode
-		Flow = (X0_,Xd_,Δt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(problem.caract.F,problem.caract.R,tt,x,xdot,Xd_,problem.caract.parms,r_), X0_, [0., Δt], abstol = abstol, reltol = reltol, integrator = :BDF)
-	elseif	ode==:bdf
+	if ode == :cvode || ode == :bdf
 		Flow = (X0_,Xd_,Δt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(problem.caract.F,problem.caract.R,tt,x,xdot,Xd_,problem.caract.parms,r_), X0_, [0., Δt], abstol = abstol, reltol = reltol, integrator = :BDF)
 	elseif	ode==:adams
 		Flow = (X0_,Xd_,Δt,r_)->Sundials.cvode(  (tt,x,xdot)->f_CHV!(problem.caract.F,problem.caract.R,tt,x,xdot,Xd_,problem.caract.parms,r_), X0_, [0., Δt], abstol = abstol, reltol = reltol, integrator = :Adams)
