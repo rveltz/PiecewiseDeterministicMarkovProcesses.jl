@@ -16,7 +16,6 @@ end
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
-	verbose && printstyled(color=:red,"--> REJECTION JUMP\n")
 	# final simulation time
 	tf = prob.interval[2]
 
@@ -26,23 +25,29 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 
 	# we declare the characteristics for convenience
 	caract = prob.caract
+	simjptimes = prob.simjptimes
 
-	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",prob.simjptimes.fictitous_jumps," !!\n")
+	verbose && printstyled(color=:red,"--> REJECTION JUMP, t = $t\n")
+	verbose && printstyled(color=:red,"----> xc = $(integrator.u)\n")
 
-	prob.simjptimes.ppf .= caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, true)
-	@assert prob.simjptimes.ppf[1] < prob.simjptimes.ppf[2] "Error, your bound on the rates is not high enough!, $(prob.simjptimes.ppf)"
-	prob.simjptimes.reject = rand() < (1 - prob.simjptimes.ppf[1] / prob.simjptimes.ppf[2])
+	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",simjptimes.fictitous_jumps," !!\n")
 
-	verbose && printstyled(color=:green,"----> xc = ",caract.xc ,", xd = ",caract.xd,", reject = ",prob.simjptimes.reject,", rates = ",prob.simjptimes.ppf,"\n")
+	simjptimes.ppf .= caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, true)
+	@assert simjptimes.ppf[1] < simjptimes.ppf[2] "Error, your bound on the rates is not high enough!, $(simjptimes.ppf)"
+
+	simjptimes.reject = rand() < 1 - simjptimes.ppf[1] / simjptimes.ppf[2]
+	δt = -log(rand()) / simjptimes.ppf[2]
+
+	verbose && printstyled(color=:green,"----> xc = ",caract.xc ,", xd = ",caract.xd,", reject = ",simjptimes.reject,", rates = ",simjptimes.ppf,"\n")
 
 	# execute the jump
-	if t < tf && prob.simjptimes.reject == false
-		verbose && printstyled(color=:blue,"--> TRUE jump!\n")
-		prob.simjptimes.ppf .= caract.R(caract.ratecache, caract.xc, caract.xd, t, caract.parms, false)
+	if t < tf && simjptimes.reject == false
+		verbose && println("----> Jump!, ratio = ", simjptimes.ppf[1] / simjptimes.ppf[2], ", xd = ", caract.xd)
+		simjptimes.ppf .= caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, false)
 
 		if (save_pre_jump) && (t <= tf)
 			verbose && printstyled(color=:green,"----> save pre-jump\n")
-			push!(prob.Xc, (integrator.u[1:end-1]))
+			push!(prob.Xc, (integrator.u))
 			push!(prob.Xd, copy(caract.xd))
 			push!(prob.time,t)
 		end
@@ -53,7 +58,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 		# Update event
 		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
 
-		deltaxd = view(caract.pdmpjump.nu,ev,:)
+		deltaxd = view(caract.pdmpjump.nu, ev, :)
 
 		# Xd = Xd .+ deltaxd
 		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
@@ -69,14 +74,15 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 			caract.xc[ii] = integrator.u[ii]
 		end
 
-		prob.simjptimes.njumps += 1
+		simjptimes.njumps += 1
 	else
-		prob.simjptimes.fictitous_jumps += 1
+		simjptimes.fictitous_jumps += 1
 	end
 	verbose && printstyled(color=:green,"----> jump effectued, xd = ",caract.xd,"\n")
+
 	# we register the next time interval to solve the extended ode
-	prob.simjptimes.tstop_extended += -log(rand()) / prob.simjptimes.ppf[2]
-	add_tstop!(integrator, prob.simjptimes.tstop_extended)
+	simjptimes.tstop_extended += δt
+	add_tstop!(integrator, simjptimes.tstop_extended)
 	verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
@@ -104,9 +110,10 @@ end
 function rejection_diffeq!(problem::PDMPProblem,
 				ti::Tc, tf::Tc, verbose = false; ode = Tsit5(),
 				save_positions = (false,true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td}
+	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
 	ti, tf = problem.interval
-	algopdmp = CHV(ode)
+	algopdmp = Rejection(ode)
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
 	# set up the current time as the initial time
@@ -117,53 +124,46 @@ function rejection_diffeq!(problem::PDMPProblem,
 	# we declare the characteristics for convenience
 	caract = problem.caract
 
-	# vector to hold the state space for the extended system
-	X0 = similar(caract.xc,length(caract.xc))
-	for ii in eachindex(caract.xc)
-		X0[ii] = caract.xc[ii]
-	end
+	# vector to hold the state space
+	X0 = copy(caract.xc)
 
 	# current jump number
 	njumps = 0
-	problem.simjptimes.lambda_star = 0	# this is the bound for the rejection method
+	problem.simjptimes.lambda_star = 0.0	# this is the bound for the rejection method
 	problem.simjptimes.ppf .= caract.R(caract.ratecache, X0, caract.xd, t, caract.parms, true)
 
-	# @assert problem.simjptimes.ppf[2] == problem.pdmpFunc.R(problem.rate,X0+0.1265987*cumsum(ones(length(X0))),problem.xd,t+0.124686489,problem.parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
-	# problem.rate .*= 0;problem.simjptimes.ppf .= problem.pdmpFunc.R(problem.rate,X0,problem.xd,t,problem.parms,true)
-	# @assert sum(problem.rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
-
 	problem.simjptimes.tstop_extended = problem.simjptimes.tstop_extended / problem.simjptimes.ppf[2] + ti
+
 	problem.simjptimes.reject = true
 
 	# definition of the callback structure passed to DiffEq
 	cb = DiscreteCallback(problem, integrator -> rejectionjump(integrator, problem, save_positions[1], verbose), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_REJ = ODEProblem((xdot,x,data,tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
+	prob_REJ = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
 	integrator = init(prob_REJ, ode, tstops = problem.simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
-
 	while (t < tf) && problem.simjptimes.njumps < n_jumps-1 #&& problem.simjptimes.fictitous_jumps < 10
-		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ",integrator.t)
+		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t -> ",problem.simjptimes.tstop_extended)
 		step!(integrator)
 		@assert( t < problem.simjptimes.lastjumptime, "Could not compute next jump time $(problem.simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.simjptimes.lastjumptime),\n solver = $ode")
 		t, tprev = problem.simjptimes.lastjumptime, t
 
 		# the previous step was a jump!
 		if njumps < problem.simjptimes.njumps && save_positions[2] && (t <= tf) && problem.simjptimes.reject == false
-			verbose && println("----> save post-jump, xd = ",problem.Xd)
+			verbose && println("----> save post-jump, xd = ", problem.Xd)
 			push!(problem.Xc, copy(caract.xc))
 			push!(problem.Xd, copy(caract.xd))
 			push!(problem.time,t)
 			njumps +=1
 			verbose && println("----> end save post-jump, ")
-			#put the flag fpr rejection
+			#put the flag for rejection
 			problem.simjptimes.reject = true
 		end
 	end
-	# we check that the last bit [t_last_jump, tf] is not missing
+	# we check whether the last bit [t_last_jump, tf] is missing
 	if t>tf
-		verbose && println("----> LAST BIT!!, xc = ",caract.xc[end], ", xd = ",caract.xd)
+		verbose && println("----> LAST BIT!!, xc = ", caract.xc[end], ", xd = ",caract.xd)
 		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, tt, caract.parms), copy(caract.xc), (tprev,tf))
 		sol = DiffEqBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ",sol.u[end])

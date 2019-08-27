@@ -41,14 +41,14 @@ function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) 
 	return PDMPCaracteristics(F, R, Delta_dummy, nu, xc0, xd0, parms)
 end
 
-"""
-The function allows to reset the internal variables xc and xd. Call as follows:
-	`reset!(pb, xc, xd)`
-"""
-function reset!(pb::PDMPCaracteristics, xc, xd)
-	pb.xc .= xc
-	pb.xd .= xd
-end
+# """
+# The function allows to reset the internal variables xc and xd. Call as follows:
+# 	`reset!(pb, xc, xd)`
+# """
+# function reset!(pb::PDMPCaracteristics, xc, xd)
+# 	pb.xc .= xc
+# 	pb.xd .= xd
+# end
 
 
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
@@ -117,14 +117,14 @@ function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
 	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, interval; kwargs...)
 end
 
-"""
-The function allows to reset the internal variables xc and xd. Call as follows:
-	`reset!(pb, xc, xd)`
-"""
-function reset!(pb::PDMPProblem, xc, xd)
-	pb.caract.xc .= xc
-	pb.caract.xd .= xd
-end
+# """
+# The function allows to reset the internal variables xc and xd. Call as follows:
+# 	`reset!(pb, xc, xd)`
+# """
+# function reset!(pb::PDMPProblem, xc, xd)
+# 	pb.caract.xc .= xc
+# 	pb.caract.xd .= xd
+# end
 
 """
 This type stores the output composed of:
@@ -193,14 +193,14 @@ end
 """
 function to save data
 """
-function save_data(nsteps, X0, Xd, xc_hist, xd_hist, ind_save_d, ind_save_c)
-	@inbounds for ii in eachindex(ind_save_c)
-		xc_hist[ii,nsteps] = X0[ind_save_c[ii]]
-	end
-	@inbounds for ii in eachindex(ind_save_d)
-		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
-	end
-end
+# function save_data(nsteps, X0, Xd, xc_hist, xd_hist, ind_save_d, ind_save_c)
+# 	@inbounds for ii in eachindex(ind_save_c)
+# 		xc_hist[ii,nsteps] = X0[ind_save_c[ii]]
+# 	end
+# 	@inbounds for ii in eachindex(ind_save_d)
+# 		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
+# 	end
+# end
 
 """
 Function copied from Gillespie.jl and StatsBase

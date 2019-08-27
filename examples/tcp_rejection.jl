@@ -1,13 +1,13 @@
-using Revise
+# using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, t, parms)
 	# vector field used for the continuous variable
-	if mod(xd[1],2)==0
-		 ẋ[1] = 1
+	if mod(xd[1],2) == 0
+		 ẋ[1] = 1.0
 	else
-		 ẋ[1] = -10xc[1]
+		 ẋ[1] = -10.0 * xc[1]
 	end
 	nothing
 end
@@ -74,7 +74,7 @@ nu_tcp = [1 0;0 -1]
 	errors = Float64[]
 
 Random.seed!(1234)
-	res_a = AnalyticalSample(xc0,xd0,0.0,nj,verbose=true)
+	res_a = AnalyticalSample(xc0, xd0, 0.0, nj, verbose=true)
 
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
@@ -91,12 +91,3 @@ println("\n\nComparison of solvers")
 # plot(res_old.time,res_old.xc',label="Old-rejection")
 #	 plot!(res.time,[x[1] for x in res.xc],label="Iterator")
 #
-
-Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 5, save_positions = (false, true), verbose = true )
-
-res.time
-
-Random.seed!(1234)
-	-log.(rand(10))

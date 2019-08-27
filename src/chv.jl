@@ -36,7 +36,7 @@ It takes the following arguments:
 - **ode**: ode time stepper, must be one of those: [:cvode,:lsoda,:Adams,:BDF]
 - **save_at**: array of ordered time at which the solution is required
 """
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, dkdt=F(k)save_positions = (false,true),) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf, :euler]
