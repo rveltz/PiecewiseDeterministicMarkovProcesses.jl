@@ -62,17 +62,15 @@ xc0 = [1.0]
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
-Random.seed!(8) #0.000646 seconds (361 allocations: 28.344 KiB)
-	res = @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf; n_jumps = nj, ode = Tsit5(), save_positions = (false, false))
+Random.seed!(8) #0.000666 seconds (329 allocations: 26.234 KiB)
+	pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+	res = @time PDMP.solve(pb, CHV(Tsit5()), n_jumps = nj, save_positions = (false, false))
 
-res_a[1]
-
-res.time
 ##########################################
 # build a PDMP Problem
 Random.seed!(8)
 	pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	res = PDMP.solve(pb, CHV(Tsit5()), n_jumps = nj)
+	res = @time PDMP.solve(pb, CHV(Tsit5()), n_jumps = nj, save_positions = (false, true))
 	norm(res.time - res_a[1],Inf64)
 
 Random.seed!(8)

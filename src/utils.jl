@@ -61,7 +61,6 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	time::Vector{Float64}
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
 	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}		# discrete variable history
-	verbose::Bool					# print message during simulation?
 	# variables for debugging
 	save_rate::Bool					# boolean for saving rates
 	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
@@ -84,7 +83,7 @@ function PDMPProblem(xc0::vectype_xc,
 			PDMPJumpTime{Tc, Td}(-log(rand()), interval[1], 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]),
-			VectorOfArray([copy(xd0)]), verbose,
+			VectorOfArray([copy(xd0)]),
 			saverate, Tc[],
 			caract)
 end
@@ -98,7 +97,7 @@ end
 function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				interval;
-				verbose = false, saverate = false) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				saverate = false) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	ti, tf = interval
 	rate = zeros(Tc, size(nu, 1))
 	ratecache = copy(rate)#DiffCache(rate)
@@ -109,7 +108,6 @@ function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
-			verbose,
 			saverate, Tc[],
 			caract)
 end

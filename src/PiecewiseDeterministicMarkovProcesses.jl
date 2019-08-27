@@ -71,24 +71,8 @@ It takes the arguments:
 
 		@assert algo in [:chv, :rejection, :tauleap] "Call $algo() directly please, without passing by pdmp(). Indeed, the algo $algo() is specialized for speed and requires a particuliar interface."
 
-		# hack to call DiffEq solver
-		# if typeof(ode) != Symbol && algo==:chv
-		# 	return chv_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate, reltol = reltol, abstol = abstol)
-		# end
-
 		if typeof(ode) != Symbol && algo==:rejection
 			return rejection_diffeq!(xc0, xd0, F, R, DX, nu, parms, ti, tf, verbose; ode = ode, save_positions = save_positions, n_jumps = n_jumps, saverate = saverate)
-		end
-
-		# old solvers. There are kept here in order to be able to use LSODA()
-		if algo==:chv
-			# return PiecewiseDeterministicMarkovProcesses.chv!(xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c,n_max = n_jumps)
-		elseif algo==:rejection
-			return PiecewiseDeterministicMarkovProcesses.rejection!(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
-		elseif algo==:rejection_exact
-			return PiecewiseDeterministicMarkovProcesses.rejection_exact(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose,ode=ode,ind_save_d=ind_save_d,ind_save_c=ind_save_c)
-		elseif algo==:tauleap
-			return PiecewiseDeterministicMarkovProcesses.tauleap(n_jumps,xc0,xd0,F,R,DX,nu,parms,ti, tf,verbose=verbose,ode=ode,dt=dt)
 		end
 	end
 

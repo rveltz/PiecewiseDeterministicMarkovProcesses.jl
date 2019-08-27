@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
@@ -94,7 +94,7 @@ println("\n\nComparison of solvers")
 
 Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res =  PDMP.solve(problem, Rejection(:lsoda); n_jumps = 5, verbose = true)
+	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 5, save_positions = (false, true), verbose = true )
 
 res.time
 

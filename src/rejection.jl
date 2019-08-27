@@ -163,7 +163,7 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 		reject = true
 		nsteps = 1
 		while (reject) && (nsteps < 10^6) && (t < tf)
-			tp = [t, min(tf, t + δt / lambda_star])  ]		# mettre un lambda_star?
+			tp = [t, min(tf, t + δt / lambda_star)] 		# mettre un lambda_star?
 			problem.caract.F(res_ode, X0, Xd, tp, parms) 	# we evolve the flow inplace
 
 			@inbounds for ii in eachindex(X0)
