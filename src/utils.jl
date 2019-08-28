@@ -157,7 +157,7 @@ end
 """
 Function to pre-allocate arrays contening the result.
 """
-function allocate_arrays(ti	,xc0, xd0, n_max, rejection = false; ind_save_c=-1:1, ind_save_d=-1:1)
+function allocate_arrays(ti	,xc0, xd0, n_max; rejection = false, ind_save_c=-1:1, ind_save_d=-1:1)
 	if ind_save_c[1] == -1
 		ind_save_c = 1:length(xc0)
 	end
@@ -185,8 +185,8 @@ function allocate_arrays(ti	,xc0, xd0, n_max, rejection = false; ind_save_c=-1:1
 
 	# initialise arrays
 	t_hist[1] = ti
-	xc_hist[:,1] .= copy(xc0)[ind_save_c]
-	xd_hist[:,1] .= copy(Xd)[ind_save_d]
+	xc_hist[:,1] .= xc0[ind_save_c]
+	xd_hist[:,1] .= Xd[ind_save_d]
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 

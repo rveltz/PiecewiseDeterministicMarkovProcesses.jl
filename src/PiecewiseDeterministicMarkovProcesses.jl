@@ -31,7 +31,7 @@ module PiecewiseDeterministicMarkovProcesses
 		pdmp_data,
 		tauleap
 
-	export PDMPProblem, CHV, Rejection, solve
+	export PDMPProblem, CHV, Rejection, RejectionExact, solve
 
 """
 This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
@@ -61,14 +61,5 @@ It takes the arguments:
 - `abstol = 1e-9`
 - `restol = 1e-7`
 """
-	function pdmp!(xc0::vecc, xd0::vecd,
-					F, R, DX, nu::AbstractArray{Int64},
-					parms, ti::Float64, tf::Float64;
-					verbose::Bool = false,
-					ode::Union{Symbol, DiffEqBase.AbstractODEAlgorithm} = :cvode, algo=:chv, n_jumps::Int64 = 30_000, ind_save_d=-1:1, ind_save_c=-1:1, dt=1.,
-					save_at::vecc = Float64[], save_positions = (false,true), saverate = false, return_pb = false,reltol=1e-7, abstol=1e-9) where {vecc <: AbstractVector{Float64},
-											  vecd <: AbstractVector{Int64}}
-	end
-
 
 end # module

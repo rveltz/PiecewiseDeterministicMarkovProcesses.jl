@@ -42,7 +42,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 
 	# Set up initial variables
 	t = ti
-	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps, true)
+	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps; rejection = true)
 
 	deltaxd = copy(problem.caract.pdmpjump.nu[1, :]) # declare this variable
 	numpf   = size(problem.caract.pdmpjump.nu,1)	 # number of reactions
@@ -138,10 +138,15 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 	n_jumps += 1 #to hold initial vector
 	nsteps = 1
 	npoints = 2 # number of points for ODE integration
+	njumps = 1
+
+	xc0 = problem.caract.xc
+	xd0 = problem.caract.xd
+
 
 	# Set up initial variables
 	t = ti
-	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps, true)
+	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps, rejection = true, ind_save_d = ind_save_d, ind_save_c = ind_save_c )
 
 	deltaxd = copy(problem.caract.pdmpjump.nu[1, :]) # declare this variable
 	numpf   = size(problem.caract.pdmpjump.nu,1)	 # number of reactions
@@ -151,20 +156,20 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 	reject = true
 	nb_rejet = 0
 	lambda_star = 0.0 # this is the bound for the rejection method
-	tp = [0.,0.]
+	tp = [0., 0.]
 	lambda_star = problem.caract.R(rate_vector, X0, Xd, t, problem.caract.parms, true)[2]
 
 	@assert lambda_star == problem.caract.R(rate_vector,X0,Xd,t+rand(),problem.caract.parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 
 	δt = problem.simjptimes.tstop_extended
 
-	while (t < tf) && (nsteps < n_jumps)
-		if verbose println("--> step : $njumps, / $n_jumps, #reject = $nsteps" ) end
+	while (t < tf) && (njumps < n_jumps)
+		verbose && printstyled(color = :red, "--> step : $njumps, / $n_jumps, #reject = $nsteps / $nb_rejet\n" )
 		reject = true
 		nsteps = 1
 		while (reject) && (nsteps < 10^6) && (t < tf)
 			tp = [t, min(tf, t + δt / lambda_star)] 		# mettre un lambda_star?
-			problem.caract.F(res_ode, X0, Xd, tp, parms) 	# we evolve the flow inplace
+			problem.caract.F(res_ode, X0, Xd, tp, problem.caract.parms) 	# we evolve the flow inplace
 
 			@inbounds for ii in eachindex(X0)
 				X0[ii] = res_ode[end, ii]
@@ -179,8 +184,11 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 				reject = rand() < 1 - ppf[1] / ppf[2]
 			end
 			δt = -log(rand())
-			nb_rejet += 1
+			nsteps += 1
 		end
+		# keep track of nb of rejections
+		nb_rejet += nsteps
+		njumps += 1
 
 		# there is a jump!
 		ppf = problem.caract.R(rate_vector, X0, Xd, t, problem.caract.parms, false)
@@ -199,18 +207,15 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 		end
 
 		nsteps += 1
-		t_hist[nsteps] = t
-		@inbounds for ii in eachindex(X0)
-			xc_hist[ii,nsteps] = X0[ii]
-		end
-		@inbounds for ii in eachindex(Xd)
-			xd_hist[ii,nsteps] = Xd[ii]
-		end
+		t_hist[njumps] = t
+		xc_hist[:,njumps] = X0[ind_save_c]
+		xd_hist[:,njumps] = Xd[ind_save_d]
+
 	end
-	println("njumps = ",nsteps, " / rejections = ", nb_rejet)
+	println("njumps = ", njumps, " / rejections = ", nb_rejet)
 	if verbose println("-->Done") end
 
-	# if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = PDMPResult(t_hist[1:njumps],xc_hist[:,1:njumps],xd_hist[:,1:njumps],Float64[])
+	if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
+	result = PDMPResult(t_hist[1:njumps], xc_hist[:,1:njumps], xd_hist[:,1:njumps], Float64[])
 	return(result)
 end

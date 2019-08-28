@@ -1,5 +1,6 @@
 # using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
+const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 	xch = [xc0[1]]
@@ -14,8 +15,8 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 		dt = (exp(a*S)-1)*exp(-a*S)/(a*xc)
 		t += dt
 		push!(th, t)
-		push!(xch,xc * exp(a*S) )
-		push!(xdh,xd .+ 1 )
+		push!(xch, xc * exp(a*S) )
+		push!(xdh, xd .+ 1 )
 		S = -log(rand())
 	end
 	return th,xch,xdh
@@ -46,7 +47,7 @@ end
 xc0 = [ 1.0 ]
 xd0 = [0, 1]
 
-nu_tcp = [[1 0];[0 -1]]
+nu_tcp = [1 0;0 -1]
 parms = [0.0]
 tf = 100000.
 nj = 100
@@ -64,12 +65,6 @@ println("\n\nComparison of solvers")
 	printstyled(color=:green,"--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2],"\n\n")
 	push!(errors,norm(res.time - res_a[1],Inf64))
 end
-
-
-
-Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 
 # plot(res_a[1],res_a[2])
 # plot!(res.time,res.xc[:,1])
