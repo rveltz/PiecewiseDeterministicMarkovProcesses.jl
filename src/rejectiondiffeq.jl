@@ -100,6 +100,9 @@ function rejection_diffeq!(problem::PDMPProblem,
 	# previous jump time, needed because problem.simjptimes.lastjumptime contains next jump time even if above tf
 	tprev = t
 
+	# initialise the problem
+	init!(problem)
+
 	# we declare the characteristics for convenience
 	caract = problem.caract
 

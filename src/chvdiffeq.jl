@@ -84,6 +84,9 @@ function chv_diffeq!(problem::PDMPProblem,
 	ti, tf = problem.tspan
 	algopdmp = CHV(ode)
 
+	# initialise the problem
+	init!(problem)
+
 	# we declare the characteristics for convenience
 	caract = problem.caract
 
@@ -116,6 +119,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	while (t < tf) && problem.simjptimes.njumps < n_jumps-1
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ",problem.simjptimes.tstop_extended)
 		step!(integrator)
+
 		@assert( t < problem.simjptimes.lastjumptime, "Could not compute next jump time $(problem.simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(problem.simjptimes.lastjumptime),\n solver = $ode. dt = $(t - problem.simjptimes.lastjumptime)")
 		t, tprev = problem.simjptimes.lastjumptime, t
 
