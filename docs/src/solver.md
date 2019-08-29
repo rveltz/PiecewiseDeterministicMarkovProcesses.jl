@@ -53,4 +53,5 @@ To simulate a PDMP, one uses `solve(prob::PDMPProblem,alg;kwargs)`. The field ar
 - `abstol`: absolute tolerance used in the ODE solver
 - `ind_save_c`: which indices of `xc` should be saved
 - `ind_save_d`: which indices of `xd` should be saved
+- `save_rate = true`: requires the solver to solve the total rate. Can be useful when estimating the rate bounds to use the Rejection algorithm.
 -  `X_extended = zeros(Tc, 1 + 1)`: (advanced use) options used to provide the shape of the extended array in the [CHV algorithm](https://arxiv.org/abs/1504.06873). Can be useful to use `StaticArrays.jl`.

@@ -15,7 +15,7 @@ end
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
-function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
+function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose)
 	# final simulation time
 	tf = prob.tspan[2]
 
@@ -53,7 +53,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 		end
 
 		#save rates for debugging
-		prob.save_rate && push!(prob.rate_hist, sum(caract.ratecache))
+		save_rate && push!(prob.rate_hist, sum(caract.ratecache))
 
 		# Update event
 		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
@@ -86,30 +86,9 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 	verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
-"""
-Implementation of the rejection method to sample a PDMP using the package `DifferentialEquations`. The advantage of doing so is to lower the number of calls to `solve` using an `integrator` method.
-"""
-#TODO The two following functions should be merged with solve
-function rejection_diffeq!(xc0::vecc, xd0::vecd,
-		F::TF, R::TR, DX::TD,
-		nu::Tnu, parms::Tp,
-		ti::Tc, tf::Tc,
-		verbose::Bool = false;
-		ode = Tsit5(), save_positions=(false,true), n_jumps::Int64 = Inf64, saverate = false, rate::vecrate = zeros(Tc, size(nu,1))) where {Tc,Td,Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD,
-		vecc <: AbstractVector{Tc},
-		vecd <:  AbstractVector{Td},
-		vecrate <: AbstractVector{Tc}}
-	@assert 1==0 "WIP, function to be removed"
-
-	# custom type to collect all parameters in one structure
-	problem  = PDMPProblem{Tc,Td,vecc,vecd,vecrate,Tnu,Tp,TF,TR,TD}(false,xc0,xd0,rate,F,R,DX,nu,parms,ti,tf,save_positions[1],verbose,saverate)
-
-	rejection_diffeq!(problem, ti, tf ; ode = ode, save_positions = save_positions, n_jumps = n_jumps)
-end
-
 function rejection_diffeq!(problem::PDMPProblem,
 				ti::Tc, tf::Tc, verbose = false; ode = Tsit5(),
-				save_positions = (false,true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td}
+				save_positions = (false,true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false) where {Tc, Td}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
 	ti, tf = problem.tspan
@@ -137,7 +116,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 	problem.simjptimes.reject = true
 
 	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, integrator -> rejectionjump(integrator, problem, save_positions[1], verbose), save_positions = (false, false))
+	cb = DiscreteCallback(problem, integrator -> rejectionjump(integrator, problem, save_positions[1], save_rate, verbose), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
 	prob_REJ = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
@@ -171,11 +150,11 @@ function rejection_diffeq!(problem::PDMPProblem,
 		push!(problem.Xd, copy(caract.xd))
 		push!(problem.time, sol.t[end])
 	end
-	return PDMPResult(problem.time,problem.Xc,problem.Xd,problem.rate_hist, save_positions)
+	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist, save_positions)
 end
 
 
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar}, algo::Rejection{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar}, algo::Rejection{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = true) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
 
-	return rejection_diffeq!(problem, problem.tspan[1], problem.tspan[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
+	return rejection_diffeq!(problem, problem.tspan[1], problem.tspan[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate )
 end

@@ -17,7 +17,7 @@ function f_CHV!(F, R, t::Float64, x, xdot, xd, parms, rate)
 	nothing
 end
 
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false,true),) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf, :euler]
@@ -49,6 +49,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	end
 	xc_hist = VectorOfArray([copy(xc0)[ind_save_c]])
 	xd_hist = VectorOfArray([copy(xd0)[ind_save_d]])
+	rate_hist = eltype(xc0)[]
+
 	res_ode = zeros(2, length(X_extended))
 
 	nsteps += 1
@@ -112,6 +114,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			push!(xc_hist, X_extended[ind_save_c])
 			push!(xd_hist, Xd[ind_save_d])
 
+			save_rate && push!(rate_hist, problem.caract.R(rate, X_extended, Xd, problem.caract.parms, t, true)[1])
+
 			δt = - log(rand())
 
 		else
@@ -131,5 +135,5 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	end
 	verbose && println("-->Done")
 	verbose && println("--> xc = ", xd_hist[:,1:nsteps-1])
-	return PDMPResult(t_hist, xc_hist, xd_hist, Float64[], save_positions)
+	return PDMPResult(t_hist, xc_hist, xd_hist, rate_hist, save_positions)
 end

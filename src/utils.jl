@@ -20,17 +20,21 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	F::TF						# vector field for ODE between jumps
 	R::TR			    		# rate function for jumps
 	pdmpjump::TJ
-	xc::vecc					# continuous variable
-	xd::vecd					# discrete variable
-	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as it can be an issue for StaticArrays
-	parms::Tparms				# container to hold parameters to be passed to F,R,Delta
+
+	xc::vecc					# current continuous variable
+	xd::vecd					# current discrete variable
+
+	xc0::vecc					# initial continuous variable
+	xd0::vecd					# initial discrete variable
+	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as this can be an issue for StaticArrays.jl
+	parms::Tparms				# container to hold parameters to be passed to F, R, Delta
 
 	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = RateJump(nu, Delta)
 		rate = zeros(Tc, size(nu, 1))
-		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), rate, parms)
+		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
 	end
 end
 
@@ -48,6 +52,10 @@ end
 # 	pb.xd .= xd
 # end
 
+function init!(pb::PDMPCaracteristics)
+	pb.xc .= pb.xc0
+	pb.xd .= pb.xd0
+end
 
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
@@ -72,13 +80,13 @@ function PDMPProblem(xc0::vectype_xc,
 		rate::vectype_rate,
 		F::TF, R::TR, DX::TD,
 		nu::Tnu, parms::Tp,
-		interval::Tuple{Tc, Tc}, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
-	ti, tf = interval
+		tspan::Tuple{Tc, Tc}, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
+	ti, tf = tspan
 	ratecache = DiffCache(rate)
 	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
 	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
 			interval,
-			PDMPJumpTime{Tc, Td}(-log(rand()), interval[1], 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]),
 			VectorOfArray([copy(xd0)]),
