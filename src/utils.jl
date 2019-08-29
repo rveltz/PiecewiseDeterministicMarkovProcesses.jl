@@ -25,7 +25,7 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as it can be an issue for StaticArrays
 	parms::Tparms				# container to hold parameters to be passed to F,R,Delta
 
-	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
+	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = RateJump(nu, Delta)
@@ -35,9 +35,7 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 end
 
 
-function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix,
-					vecc <: AbstractVector{Tc},
-					vecd <: AbstractVector{Td}}
+function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td}, vecc <: AbstractVector{Tc}, vecd <: AbstractVector{Td}}
 	return PDMPCaracteristics(F, R, Delta_dummy, nu, xc0, xd0, parms)
 end
 
@@ -56,7 +54,7 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_rate,
 						Tnu <: AbstractArray{Td},
 						Tp, TF, TR, Tcar}
-	interval::Tuple{Tc, Tc}			    			# final simulation time interval
+	tspan::Tuple{Tc, Tc}			    			# final simulation time interval
 	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
 	time::Vector{Float64}
 	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
@@ -74,7 +72,7 @@ function PDMPProblem(xc0::vectype_xc,
 		rate::vectype_rate,
 		F::TF, R::TR, DX::TD,
 		nu::Tnu, parms::Tp,
-		interval::Tuple{Tc, Tc}, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, Talg}
+		interval::Tuple{Tc, Tc}, savepre::Bool, verbose::Bool, alg::Talg, saverate = false) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
 	ti, tf = interval
 	ratecache = DiffCache(rate)
 	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
@@ -97,7 +95,7 @@ end
 function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				interval;
-				saverate = false) where {Tc, Td, Tnu <: AbstractArray{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				saverate = false) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	ti, tf = interval
 	rate = zeros(Tc, size(nu, 1))
 	ratecache = copy(rate)#DiffCache(rate)
@@ -113,8 +111,13 @@ function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 end
 
 function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
-				interval; kwargs...) where {Tc, Td, Tnu <: AbstractArray{Td}, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				interval; kwargs...) where {Tc, Td, Tnu <: AbstractMatrix{Td}, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, interval; kwargs...)
+end
+
+function PDMPProblem(F, R, Delta, reaction_number::Int64, xc0::vecc, xd0::vecd, parms,
+				interval; kwargs...) where {Tc, Td, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+	return PDMPProblem(F, R, Delta, spzeros(Int64, reaction_number, length(xd0)), xc0, xd0, parms, interval; kwargs...)
 end
 
 # """

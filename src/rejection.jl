@@ -31,7 +31,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 		Flow = (X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
 	end
 
-	ti, tf = problem.interval
+	ti, tf = problem.tspan
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_jumps  += 1 #to hold initial vector
 	nsteps  = 1
@@ -132,7 +132,7 @@ It takes the following arguments:
 - **verbose** : a `Bool` for printing verbose.
 """
 function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_rejected = false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, xd_jump::Bool=true) where {Talgo <: AbstractRejectionExact}
-	ti, tf = problem.interval
+	ti, tf = problem.tspan
 	# it is faster to pre-allocate arrays and fill it at run time
 	n_jumps += 1 #to hold initial vector
 	nsteps = 1

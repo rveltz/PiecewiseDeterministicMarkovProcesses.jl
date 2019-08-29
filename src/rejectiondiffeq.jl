@@ -17,7 +17,7 @@ end
 # callable struct
 function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 	# final simulation time
-	tf = prob.interval[2]
+	tf = prob.tspan[2]
 
 	# find the next jump time
 	t = integrator.t
@@ -112,7 +112,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 				save_positions = (false,true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9) where {Tc, Td}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
-	ti, tf = problem.interval
+	ti, tf = problem.tspan
 	algopdmp = Rejection(ode)
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
@@ -177,5 +177,5 @@ end
 
 function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar}, algo::Rejection{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
 
-	return rejection_diffeq!(problem, problem.interval[1], problem.interval[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
+	return rejection_diffeq!(problem, problem.tspan[1], problem.tspan[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol )
 end

@@ -1,6 +1,6 @@
-include("chvdiffeq.jl")
-
 ### WARNING This is an old ODE solver which is not based on an iterator implementation. We keep it until LSODA has an iterator implementation
+
+include("chvdiffeq.jl")
 
 function f_CHV!(F, R, t::Float64, x, xdot, xd, parms, rate)
 	# used for the exact method
@@ -41,7 +41,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf, :euler]
 
-	ti, tf = problem.interval
+	ti, tf = problem.tspan
 	n_jumps  += 1 # to hold initial vector
 	nsteps  = 1 # index for the current jump number
 
