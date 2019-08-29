@@ -42,7 +42,6 @@ include("../examples/sir-rejection.jl")
 
 println("\n\n==== Example neural network ")
 include("../examples/neuron_rejection_exact.jl")
-
 @test isequal(result.time[end],857.6850502747997)
 @test isequal(result.xd[1,end],98)
 @test isequal(size(result.xd)[1],2)

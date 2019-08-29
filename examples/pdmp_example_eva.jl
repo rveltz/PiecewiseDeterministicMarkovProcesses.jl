@@ -2,7 +2,7 @@
 using PiecewiseDeterministicMarkovProcesses,DifferentialEquations, LinearAlgebra, Random
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
-function F_eva!(xcdot, xc, xd, t::Float64, parms::Vector{Float64})
+function F_eva!(xcdot, xc, xd, parms::Vector{Float64}, t::Float64)
 	# vector field used for the continuous variable
 	xcdot[1] = -(xc[1] - 1.5)
 	nothing
@@ -12,10 +12,10 @@ function R(x)
 	return x^4
 end
 
-function R_eva(rate,xc, xd, t::Float64, parms, sum_rate::Bool)
+function R_eva(rate, xc, xd, parms, t::Float64, issum::Bool)
 	# rate function
 	rate_print = parms[1]
-	if sum_rate == false
+	if issum == false
 		if xd[1] == 0
 			rate[1] = R(xc[1])
 			rate[2] = 0.0
@@ -36,7 +36,7 @@ function R_eva(rate,xc, xd, t::Float64, parms, sum_rate::Bool)
 	end
 end
 
-function Delta_xc_eva(xc, xd, t::Float64, parms, ind_reaction::Int64)
+function Delta_xc_eva(xc, xd, parms, t::Float64, ind_reaction::Int64)
 	# this function return the jump in the continuous component
 	if ind_reaction == 2
 		xc[1] = 0.0

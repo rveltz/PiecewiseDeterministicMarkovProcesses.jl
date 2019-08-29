@@ -5,15 +5,15 @@ const p1  = ( JSON.parsefile("../examples/ml.json"))
 include("morris_lecar_variables.jl")
 const p_ml = ml(p0)
 
-function F_ml!(xcdot,xc,xd,t::Float64, parms::Vector)
+function F_ml!(xcdot, xc, xd, parms, t::Float64)
 	# vector field used for the continuous variable
 	#compute the current, v = xc[1]
 	xcdot[1] = xd[2] / p_ml.N * (p_ml.g_Na * (p_ml.v_Na - xc[1])) + xd[4] / p_ml.M * (p_ml.g_K  * (p_ml.v_K  - xc[1]))  + (p_ml.g_L  * (p_ml.v_L  - xc[1])) + p_ml.I_app
 	nothing
 end
 
-function R_ml!(rate,xc,xd,t, parms, sum_rate::Bool)
-	if sum_rate==false
+function R_ml!(rate, xc, xd, parms, t, issum::Bool)
+	if issum == false
 		rate[1] = p_ml.beta_na * exp(4.0 * p_ml.gamma_na * xc[1] + 4.0 * p_ml.k_na) * xd[1]
 		rate[2] = p_ml.beta_na * xd[2]
 		rate[3] = p_ml.beta_k * exp(p_ml.gamma_k * xc[1] + p_ml.k_k) * xd[3]

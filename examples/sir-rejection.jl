@@ -1,12 +1,12 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
-function R_sir_rej!(rate,xc,xd,t,parms,sum_rate::Bool)
+function R_sir_rej!(rate,xc,xd,parms,t,issum::Bool)
 	(S,I,R,~) = xd
 	(beta,mu) = parms
 	infection = beta*S*I
 	recovery = mu*I
 	rate_display = parms[1]
-	if sum_rate == false
+	if issum == false
 		rate[1] = infection
 		rate[2] = recovery
 		rate[3] = rate_display

@@ -1,12 +1,12 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
-function R_sir!(rate,xc,xd,t::Float64,parms,sum_rate::Bool)
+function R_sir!(rate,xc,xd,parms,t::Float64,issum::Bool)
 	(S,I,R,~) = xd
 	(beta,mu) = parms
 	infection = beta*S*I
 	recovery = mu*I
 	rate_display = 0.01
-	if sum_rate == false
+	if issum == false
 			rate[1] = infection
 			rate[2] = recovery
 			rate[3] = rate_display
@@ -16,7 +16,7 @@ function R_sir!(rate,xc,xd,t::Float64,parms,sum_rate::Bool)
 	end
 end
 
-function F_sir!(xdot,xc,xd,t::Float64,parms)
+function F_sir!(xdot,xc,xd,parms,t::Float64)
 	# vector field used for the continuous variable
 	xdot[1] = 0.0
 	nothing

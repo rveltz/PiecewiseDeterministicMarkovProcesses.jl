@@ -11,7 +11,7 @@ function f(x)
 	return	x.^8
 end
 
-function Phi(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Array{Float64},parms::Vector{Float64})
+function Phi(out::Array{Float64,2}, xc, xd, parms, t::Array{Float64})
 	# vector field used for the continuous variable
 	# for this particular model, the empirical mean is constant between jumps
 	xbar::Float64 = sum(xc) / N
@@ -20,10 +20,10 @@ function Phi(out::Array{Float64,2}, xc::Vector{Float64},xd::Array{Int64},t::Arra
 	nothing
 end
 
-function R_mf_rejet(rate::Vector{Float64},xc::Vector{Float64},xd::Array{Int64},t::Float64,parms::Vector{Float64}, sum_rate::Bool)
+function R_mf_rejet(rate, xc, xd, parms, t::Float64, issum::Bool)
 	bound = N * f(1.201)#1.5 works well
 	# rate function
-	if sum_rate == false
+	if issum == false
 		for i=1:N
 			rate[i] = f(xc[i])
 		end
@@ -31,13 +31,13 @@ function R_mf_rejet(rate::Vector{Float64},xc::Vector{Float64},xd::Array{Int64},t
 	else
 		res = 0.
 		for i=1:N
-			res+=f(xc[i])
+			res += f(xc[i])
 		end
 		return res, bound
 	end
 end
 
-function Delta_xc_mf(xc::Array{Float64,1},xd::Array{Int64},t::Float64,parms::Vector{Float64},ind_reaction::Int64)
+function Delta_xc_mf(xc, xd, parms, t::Float64, ind_reaction::Int64)
 	# this function return the jump in the continuous component
 	for i=1:N
 	xc[i] += J/N
@@ -56,7 +56,7 @@ parms = [0.1]
 tf = 10_050.
 
 problem = PDMP.PDMPProblem(Phi,R_mf_rejet,Delta_xc_mf,nu_neur, xc0, xd0, parms, (0.0, tf))
-	result = PDMP.solve(problem, PDMP.RejectionExact(); n_jumps = 10_000, ind_save_d = 1:2,ind_save_c = 1:2, verbose = false)
+	result = PDMP.solve(problem, PDMP.RejectionExact(); n_jumps = 10_000, ind_save_d = 1:2, ind_save_c = 1:2, verbose = false)
 
 # result = @time PiecewiseDeterministicMarkovProcesses.rejection_exact(1,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false)
 # result = @time PiecewiseDeterministicMarkovProcesses.rejection_exact(40_000,xc0,xd0,Phi,R_mf_rejet,Delta_xc_mf,nu_neur,parms,0.0,tf,false,false,ind_save_d = 1:2,ind_save_c = 1:2)

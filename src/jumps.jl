@@ -1,7 +1,7 @@
 abstract type AbstractJump end
 
 # Dummy Jump function
-function Delta_dummy(xc, xd, t, parms, ind_reaction)
+function Delta_dummy(xc, xd, parms, t, ind_reaction)
 	return nothing
 end
 
@@ -32,6 +32,6 @@ function affect!(ratejump::RateJump, ev, xd)
 end
 
 # perform the jump on the continuous variable
-function affect!(ratejump::RateJump, ev, u, xd, t, parms)
-	ratejump.Delta(u, xd, t, parms, ev)
+function affect!(ratejump::RateJump, ev, u, xd, parms, t)
+	ratejump.Delta(u, xd, parms, t, ev)
 end

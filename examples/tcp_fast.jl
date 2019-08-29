@@ -1,6 +1,6 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
 
-function F_tcpf(xcdot, xc, xd, t, parms::Vector{Float64})
+function F_tcpf(xcdot, xc, xd, parms::Vector{Float64}, t)
   # vector field used for the continuous variable
   if mod(xd[1],2)==0
     xcdot[1] = xc[1]
@@ -10,7 +10,7 @@ function F_tcpf(xcdot, xc, xd, t, parms::Vector{Float64})
   nothing
 end
 
-function R_tcpf(xc, xd, t::Float64, parms, sum_rate::Bool)
+function R_tcpf(xc, xd, parms, t::Float64, issum::Bool)
   # fonction de tau
   if sum_rate==false
     return vec([5.0/(1.0 + exp(-xc[1]/1.0 + 5.0)) + 0.1, parms[1]])

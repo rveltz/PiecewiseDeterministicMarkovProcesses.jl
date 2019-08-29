@@ -22,7 +22,7 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 	return th,xch,xdh
 end
 
-function F_tcp!(ẋ, xc, xd, t, parms)
+function F_tcp!(ẋ, xc, xd, parms, t)
 	# vector field used for the continuous variable
 	if mod(xd[1],2)==0
 		 ẋ[1] = 1.
@@ -34,8 +34,8 @@ end
 
 rate_tcp(x) = 1/x
 
-function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
-	if sum_rate==false
+function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
+	if issum==false
 		rate[1] = rate_tcp(xc[1])
 		rate[2] = 0.0
 		return 0., 100.

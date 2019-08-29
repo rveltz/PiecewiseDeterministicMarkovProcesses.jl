@@ -2,7 +2,7 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
-function F_tcp!(ẋ, xc, xd, t, parms)
+function F_tcp!(ẋ, xc, xd, parms, t)
 	# vector field used for the continuous variable
 	if mod(xd[1],2) == 0
 		 ẋ[1] = 1.0
@@ -14,8 +14,8 @@ end
 
 rate_tcp(x) = 1/(1+exp(-x))
 
-function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
-	if sum_rate==false
+function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
+	if issum==false
 		rate[1] = rate_tcp(xc[1])
 		rate[2] = 0.0
 		return rate_tcp(xc[1]), 1.
@@ -74,7 +74,7 @@ nu_tcp = [1 0;0 -1]
 	errors = Float64[]
 
 Random.seed!(1234)
-	res_a = AnalyticalSample(xc0, xd0, 0.0, nj, verbose=true)
+	res_a = AnalyticalSample(xc0, xd0, 0.0, nj, verbose=false)
 
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]

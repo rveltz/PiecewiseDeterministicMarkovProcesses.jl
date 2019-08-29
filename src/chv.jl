@@ -6,10 +6,10 @@ function f_CHV!(F, R, t::Float64, x, xdot, xd, parms, rate)
 	# used for the exact method
 	# we put [1] to use it in the case of the rejection method as well
 	tau = x[end]
-	sr = R(rate, x, xd, tau, parms, true)[1]
+	sr = R(rate, x, xd, parms, tau, true)[1]
 	@assert sr > 0.0 "Total rate must be positive"
 	isr = min(1.0e9, 1.0 / sr)
-	F(xdot, x, xd, tau, parms)
+	F(xdot, x, xd, parms, tau)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] * isr
@@ -107,7 +107,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 		# this is the next jump time
 		t = res_ode[end, end]
 
-		problem.caract.R(rate, X_extended, Xd, t, problem.caract.parms, false)
+		problem.caract.R(rate, X_extended, Xd, problem.caract.parms, t, false)
 
 		# jump time:
 		if (t < tf) && nsteps < n_jumps
@@ -121,7 +121,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			end
 
 			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X_extended, Xd, t, problem.caract.parms, ev)
+			problem.caract.pdmpjump.Delta(X_extended, Xd, problem.caract.parms, t, ev)
 
 			verbose && println("--> Which reaction? => ", ev)
 			verbose && println("--> xd = ", Xd)
@@ -150,6 +150,5 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	end
 	verbose && println("-->Done")
 	verbose && println("--> xc = ", xd_hist[:,1:nsteps-1])
-	return PDMPResult(t_hist, xc_hist, xd_hist,Float64[])
-
+	return PDMPResult(t_hist, xc_hist, xd_hist, Float64[], save_positions)
 end

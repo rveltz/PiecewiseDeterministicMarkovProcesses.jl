@@ -24,11 +24,11 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 
 	# define the ODE flow
 	if ode == :cvode || ode == :bdf
-		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
+		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
 	elseif	ode == :adams
-		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
+		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
 	elseif ode == :lsoda
-		Flow = (X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), X0_, tp_, abstol = abstol, reltol = reltol)
+		Flow = (X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
 	end
 
 	ti, tf = problem.interval
@@ -52,7 +52,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 	#variables for rejection algorithm
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
-	ppf = problem.caract.R(rate, X0, Xd, t, problem.caract.parms, true)
+	ppf = problem.caract.R(rate, X0, Xd, problem.caract.parms, t, true)
 
 	# @assert ppf[2] == R(rate,X0+0.1265987*cumsum(ones(length(X0))),Xd,t+0.124686489,parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 	# rate *= 0;ppf = R(rate,X0,Xd,t,parms,true)
@@ -73,7 +73,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 			verbose && println("----> δt = ", δt, ", t∈", tp, ", dt = ", tp[2]-tp[1], ", xc = ", X0)
 
 			t = tp[end]
-			ppf = problem.caract.R(rate, X0, Xd, t, problem.caract.parms, true)
+			ppf = problem.caract.R(rate, X0, Xd, problem.caract.parms, t, true)
 			@assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
 			if t == tf
 				reject = false
@@ -84,7 +84,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 		end
 
 		# there is a jump!
-		ppf = problem.caract.R(rate,X0,Xd,t,problem.caract.parms,false)
+		ppf = problem.caract.R(rate, X0, Xd, problem.caract.parms, t, false)
 
 		if (t < tf)
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
@@ -96,7 +96,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X0, Xd, X0[end], problem.caract.parms, ev)
+			problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 		end
 
 		nsteps += 1
@@ -110,8 +110,7 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 	end
 	if verbose println("-->Done") end
 	if verbose println("--> xd = ",xd_hist[:,1:nsteps]) end
-	result = PDMPResult(t_hist[1:nsteps], xc_hist[:,1:nsteps], xd_hist[:,1:nsteps], Float64[])
-	return(result)
+	return PDMPResult(t_hist[1:nsteps], xc_hist[:,1:nsteps], xd_hist[:,1:nsteps], Float64[], save_positions)
 end
 
 """
@@ -157,9 +156,9 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 	nb_rejet = 0
 	lambda_star = 0.0 # this is the bound for the rejection method
 	tp = [0., 0.]
-	lambda_star = problem.caract.R(rate_vector, X0, Xd, t, problem.caract.parms, true)[2]
+	lambda_star = problem.caract.R(rate_vector, X0, Xd, problem.caract.parms, t, true)[2]
 
-	@assert lambda_star == problem.caract.R(rate_vector,X0,Xd,t+rand(),problem.caract.parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
+	@assert lambda_star == problem.caract.R(rate_vector, X0, Xd, problem.caract.parms, t+rand(), true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
 
 	δt = problem.simjptimes.tstop_extended
 
@@ -169,14 +168,14 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 		nsteps = 1
 		while (reject) && (nsteps < 10^6) && (t < tf)
 			tp = [t, min(tf, t + δt / lambda_star)] 		# mettre un lambda_star?
-			problem.caract.F(res_ode, X0, Xd, tp, problem.caract.parms) 	# we evolve the flow inplace
+			problem.caract.F(res_ode, X0, Xd, problem.caract.parms, tp) 	# we evolve the flow inplace
 
 			@inbounds for ii in eachindex(X0)
 				X0[ii] = res_ode[end, ii]
 			end
 
 			t = tp[end]
-			ppf = problem.caract.R(rate_vector, X0, Xd, t, problem.caract.parms, true)
+			ppf = problem.caract.R(rate_vector, X0, Xd, problem.caract.parms, t, true)
 			@assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
 			if t == tf
 				reject = false
@@ -191,7 +190,7 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 		njumps += 1
 
 		# there is a jump!
-		ppf = problem.caract.R(rate_vector, X0, Xd, t, problem.caract.parms, false)
+		ppf = problem.caract.R(rate_vector, X0, Xd, problem.caract.parms, t, false)
 
 		if (t < tf)
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
@@ -203,7 +202,7 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
 
 			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X0, Xd, t, problem.caract.parms, ev)
+			problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 		end
 
 		nsteps += 1
@@ -216,6 +215,5 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 	if verbose println("-->Done") end
 
 	if verbose println("--> xc = ",xd_hist[:,1:nsteps]) end
-	result = PDMPResult(t_hist[1:njumps], xc_hist[:,1:njumps], xd_hist[:,1:njumps], Float64[])
-	return(result)
+	return PDMPResult(t_hist[1:njumps], xc_hist[:,1:njumps], xd_hist[:,1:njumps], Float64[], (false, true))
 end

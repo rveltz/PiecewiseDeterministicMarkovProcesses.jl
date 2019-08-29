@@ -26,15 +26,15 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 end
 
 
-function F!(ẋ, xc, xd, t, parms)
+function F!(ẋ, xc, xd, parms, t)
 	ẋ[1] = -r * (2mod(xd[1],2)-1) * xc[1]
 end
 
 R(x) = x
 
-function R!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
-	if sum_rate==false
+	if issum==false
 		rate[1] = R(xc[1])
 		rate[2] = 0.0
 		return R(xc[1]),40.

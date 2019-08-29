@@ -8,8 +8,8 @@ end
 
 function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
 	tau = x[end]
-	sr = prob.R(prob.ratecache, x, prob.xd, tau, prob.parms, true)[1]
-	prob.F(xdot, x, prob.xd, tau, prob.parms)
+	sr = prob.R(prob.ratecache, x, prob.xd, prob.parms, tau, true)[1]
+	prob.F(xdot, x, prob.xd, prob.parms, tau)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] / sr
@@ -44,7 +44,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 	end
 
 	# execute the jump
-	caract.R(caract.ratecache, integrator.u, caract.xd, t, caract.parms, false)
+	caract.R(caract.ratecache, integrator.u, caract.xd, caract.parms, t, false)
 	if (t < tf)
 		#save rates for debugging
 		prob.save_rate && push!(prob.rate_hist, sum(caract.ratecache))
@@ -61,7 +61,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, verbose)
 		end
 
 		# Xc = Xc .+ deltaxc
-		caract.pdmpjump.Delta(integrator.u, caract.xd, t, caract.parms, ev)
+		caract.pdmpjump.Delta(integrator.u, caract.xd, caract.parms, t, ev)
 		u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
@@ -161,14 +161,14 @@ function chv_diffeq!(problem::PDMPProblem,
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
 		verbose && println("----> LAST BIT!!, xc = ",caract.xc[end], ", xd = ",caract.xd, ", t = ", problem.time[end])
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, tt, caract.parms), copy(caract.xc), (tprev,tf))
+		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
 		sol = DiffEqBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ",sol.u[end])
 		push!(problem.Xc, sol.u[end])
 		push!(problem.Xd, copy(caract.xd))
 		push!(problem.time, sol.t[end])
 	end
-	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist)
+	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist, save_positions)
 end
 
 

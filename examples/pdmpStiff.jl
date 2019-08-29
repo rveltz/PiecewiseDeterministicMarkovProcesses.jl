@@ -36,9 +36,9 @@ end
 
 R(x) = x
 
-function R!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
-	if sum_rate == false
+	if issum == false
 		rate[1] = R(xc[1])
 		rate[2] = parms[1]
 		return 0.

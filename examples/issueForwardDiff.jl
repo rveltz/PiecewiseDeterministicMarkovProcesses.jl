@@ -1,7 +1,7 @@
 using Revise, PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
-function F_fd!(ẋ, xc, xd, t, parms)
+function F_fd!(ẋ, xc, xd, parms, t)
 	# vector field used for the continuous variable
 	if mod(xd[1], 2) == 0
 		ẋ[1] = 1 + xd[1]
@@ -13,9 +13,9 @@ end
 
 rate_tcp(x) = 1/x
 
-function R_fd!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R_fd!(rate, xc, xd, parms, t, issum::Bool)
 	rate[1] = 1.0 + rate_tcp(xd[1]) * xc[1]
-	if sum_rate == false
+	if issum == false
 		return 0., 0.
 	else
 		return sum(rate), 0.

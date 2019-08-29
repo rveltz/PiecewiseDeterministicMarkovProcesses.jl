@@ -27,7 +27,7 @@ function AnalyticalSample(xc0, xd0, ti, nj::Int64)
 	return th, xch, xdh
 end
 
-function F!(ẋ, xc, xd, t, parms)
+function F!(ẋ, xc, xd, parms, t)
 	if mod(xd[1],2)==0
 		ẋ[1] = 10xc[1]
 	else
@@ -37,7 +37,7 @@ end
 
 R(x) = x
 
-function R!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
 	if sum_rate == false
 		rate[1] = R(xc[1])

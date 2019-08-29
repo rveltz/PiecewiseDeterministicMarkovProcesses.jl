@@ -1,5 +1,5 @@
 # Dummy functions to allow not specifying these characteristics
-function F_dummy(ẋ, xc, xd, t, parms)
+function F_dummy(ẋ, xc, xd, parms, t)
 	fill!(ẋ, 0)
 	nothing
 end
@@ -138,6 +138,7 @@ struct PDMPResult{Tc <: Real,vectype_xc,vectype_xd}
 	xc::vectype_xc
 	xd::vectype_xd
 	rates::Vector{Tc}
+	save_positions::Tuple{Bool, Bool}
 end
 
 PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc, vectype_xc, vectype_xd} = PDMPResult{Tc, vectype_xc, vectype_xd}(time, xc, xd, Tc[])
@@ -146,7 +147,7 @@ PDMPResult(time::Vector{Tc},xc::vectype_xc,xd::vectype_xd) where {Tc, vectype_xc
 """
 Dummy flow to be used in rejection algorithm
 """
-function Phi_dummy(out::Array{Float64,2}, xc::Vector{Float64},xd,t::Array{Float64},parms::Ty) where Ty
+function Phi_dummy(out, xc, xd, parms, t)
 	# vector field used for the continuous variable
 	# trivial dynamics
 	out[1,:] .= xc
