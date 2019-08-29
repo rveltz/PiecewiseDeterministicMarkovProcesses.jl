@@ -6,6 +6,9 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
 	verbose && printstyled(color=:red,"--> Start rejection method\n")
 
+	# initialise the problem. If I call twice this function, it should give the same result...
+	init!(problem)
+
 	# define the ODE flow
 	if ode == :cvode || ode == :bdf
 		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
@@ -104,6 +107,9 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 	nsteps = 1
 	npoints = 2 # number of points for ODE integration
 	njumps = 1
+
+	# initialise the problem. If I call twice this function, it should give the same result...
+	init!(problem)
 
 	xc0 = problem.caract.xc
 	xd0 = problem.caract.xd

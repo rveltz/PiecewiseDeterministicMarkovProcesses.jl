@@ -22,6 +22,9 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf, :euler]
 
+	# initialise the problem. If I call twice this function, it should give the same result...
+	init!(problem)
+
 	ti, tf = problem.tspan
 	n_jumps  += 1 # to hold initial vector
 	nsteps  = 1 # index for the current jump number

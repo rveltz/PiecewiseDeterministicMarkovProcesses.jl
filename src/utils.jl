@@ -74,34 +74,15 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	caract::Tcar
 end
 
-function PDMPProblem(xc0::vectype_xc,
-		xd0::vectype_xd,
-		rate::vectype_rate,
-		F::TF, R::TR, DX::TD,
-		nu::Tnu, parms::Tp,
-		tspan::Tuple{Tc, Tc}, alg::Talg) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
-	ti, tf = tspan
-	ratecache = DiffCache(rate)
-	caract = PDMPCaracteristics(F,R,nu,xc0,xd0,parms)
-	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
-			tspan,
-			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-			[ti],
-			VectorOfArray([copy(xc0)]),
-			VectorOfArray([copy(xd0)]),
-			Tc[],
-			caract)
-end
-
 function init!(pb::PDMPProblem)
 	init!(pb.caract)
-	# pb.simjptimes.tstop_extended = -log(rand())
-	# pb.simjptimes.lastjumptime = pb.tspan[1]
-	# pb.simjptimes.njumps = 0
-	# pb.simjptimes.fictitous_jumps = 0
-	# resize!(pb.time, 1)
-	# resize!(pb.Xc.u, 1)
-	# resize!(pb.Xd.u, 1)
+	pb.simjptimes.tstop_extended = -log(rand())
+	pb.simjptimes.lastjumptime = pb.tspan[1]
+	pb.simjptimes.njumps = 0
+	pb.simjptimes.fictitous_jumps = 0
+	resize!(pb.time, 1)
+	resize!(pb.Xc.u, 1)
+	resize!(pb.Xd.u, 1)
 end
 
 # callable struct used in the iterator interface
@@ -110,17 +91,36 @@ function (prob::PDMPProblem)(u,t,integrator)
 end
 
 # simplified constructors to PDMPProblem
+function PDMPProblem(xc0::vectype_xc,
+		xd0::vectype_xd,
+		rate::vectype_rate,
+		F::TF, R::TR, DX::TD,
+		nu::Tnu, parms::Tp,
+		tspan::Tuple{Tc, Tc}, alg::Talg) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
+	ti, tf = tspan
+	ratecache = DiffCache(rate)
+	caract = PDMPCaracteristics(F, R, nu, xc0, xd0, parms)
+	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
+			tspan,
+			PDMPJumpTime{Tc, Td}(Tc(0), Tc(0), 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			[ti],
+			VectorOfArray([copy(xc0)]),
+			VectorOfArray([copy(xd0)]),
+			Tc[],
+			caract)
+end
+
 function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				tspan) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	ti, tf = tspan
 	rate = zeros(Tc, size(nu, 1))
 	ratecache = copy(rate)#DiffCache(rate)
-	caract = PDMPCaracteristics(F,R,DX,nu,xc0,xd0,parms)
+	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms)
 	# custom type to collect all parameters in one structure
 	return PDMPProblem{Tc, Td, vecc, vecd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
 			tspan,
-			PDMPJumpTime{Tc, Td}(-log(rand()), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
+			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
 			Tc[],

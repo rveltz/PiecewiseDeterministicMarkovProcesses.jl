@@ -96,4 +96,4 @@ end
 
 Random.seed!(8)
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, verbose = false)
+	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)

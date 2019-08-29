@@ -84,7 +84,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	ti, tf = problem.tspan
 	algopdmp = CHV(ode)
 
-	# initialise the problem
+	# initialise the problem. If I call twice this function, it should give the same result...
 	init!(problem)
 
 	# we declare the characteristics for convenience
