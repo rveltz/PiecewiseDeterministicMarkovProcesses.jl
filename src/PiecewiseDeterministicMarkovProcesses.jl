@@ -32,34 +32,4 @@ module PiecewiseDeterministicMarkovProcesses
 		tauleap
 
 	export PDMPProblem, CHV, Rejection, RejectionExact, solve
-
-"""
-This function performs a pdmp simulation using the Change of Variable (CHV, see https://arxiv.org/abs/1504.06873) method or the rejection method.
-	It takes the following arguments:
-
-`pdmp!(xc0, xd0, F!, R!, DX, nu, parms, ti, tf; verbose::Bool = false, ode = :cvode, algo=:chv, n_jumps = 30_000, save_positions = (false, true), saverate = false, save_at = [])`
-
-It takes the arguments:
-- **xc0**: a `Vector` of `Float64`, representing the initial states of the continuous variable.
-- **xd0**: a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **F!**: an inplace `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system. `F!(xdot,xc,xd,t,parms)` returns `nothing`
-- **R!**: an inplace `Function` or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate `Vector` of `Float64` holding the different reaction rates, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. `R!(rate,xc,xd,t,parms,sum_rate)` returns `Float64,Float64`
-- **DX**: a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous/discrete variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump. `DX(xc,xd,t,parms,ind_rec)` returns `nothing`
-- `nu`: a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
-- `parms` : data for the parameters of the system. It is passed to `F!`, `R!` and `DX`.
-- `ti`: the initial simulation time (`Float64`)
-- `tf`: the final simulation time (`Float64`)
-- `verbose`: a `Bool` for printing verbose.
-- `ode`: ode time stepper `:cvode`, `:lsoda` or any solver from `DifferentialEquations.jl`, like `CVODE_BDF()`.
-- `n_jumps`: an `Int64` representing the maximum number of jumps to be computed. Can be put to `Inf64`.
-- `ind_save_d`: a range to hold the indices of the discrete variable to be saved
-- `ind_save_c`: a range to hold the indices of the continuous variable to be saved
-- `save_positions = (false,true)` indicates whether to save the pre-jump (resp. post-jump) state
-- `save_at`: an ordered list of times at which the user want to save the state. Work in progress: not available for every algorithm.
-- `saverate::Bool` indicates whether the total rates at each jump is saved. Useful to study how to tidy the bound on the rates in the rejection algorithm.
-- `return_pb::Bool` indicates if you want the solver to return the `struct` used to solve the problem
-- `abstol = 1e-9`
-- `restol = 1e-7`
-"""
-
 end # module

@@ -1,21 +1,5 @@
 struct RejectionExact <: AbstractRejectionExact end
 
-"""
-This function performs a simulation using the rejection method.
-It takes the following arguments:
-
-- **n_max**: an `Int64` representing the maximum number of jumps to be computed.
-- **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
-- **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **F** : a `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
-- **R!** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. The returned vector has components. If sum_rate is `False`, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is `True`, one must return total_rate,bound_ where total_rate is a `Float64` that is the sum of the rates. `R!(rate,xc,xd,t,parms,sum_rate)` returns `Float64,Float64`. In case `sum_rate = true`, you are not allowed to modify the first argument e.g. `rate`
-- **Delta** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
-- **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
-- **parms** : data for the parameters of the system.
-- **tf** : the final simulation time (`Float64`)
-- **verbose** : a `Bool` for printing verbose.
-- **ode**: ode time stepper :cvode or :lsoda
-"""
 function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = false, save_rejected=false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false,true),) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
@@ -113,24 +97,6 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 	return PDMPResult(t_hist[1:nsteps], xc_hist[:,1:nsteps], xd_hist[:,1:nsteps], Float64[], save_positions)
 end
 
-"""
-
-rejection_exact
-
-This function performs a simulation using the rejection method when the flow **is known analytically**.
-It takes the following arguments:
-
-- **n_max**: an `Int64` representing the maximum number of jumps to be computed.
-- **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
-- **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **Phi!** : a `Function` or a callable type, which itself takes 6 arguments to represent the vector field; rate a `Vector` of `Float64` representing the **flow** of the vector which needs to be filled with values of the rates, xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system, sum_of_rate a `Bool` stating if the function must return the total rate.
-- **R!** : a `Function` or a callable type, which itself takes five arguments to represent the rate functions associated to the jumps;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise. The returned vector has components. If sum_rate is `False`, one must return rate_vector, bound_ where bound_ is a bound on the total rate vector. In the case sum_rate is `True`, one must return total_rate,bound_ where total_rate is a `Float64` that is the sum of the rates. In any case, the function must return a couple (total_rates, bound) where bound is a bound for the total rate.
-- **Delta** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
-- **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
-- **parms** : data for the parameters of the system.
-- **tf** : the final simulation time (`Float64`)
-- **verbose** : a `Bool` for printing verbose.
-"""
 function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_rejected = false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, xd_jump::Bool=true) where {Talgo <: AbstractRejectionExact}
 	ti, tf = problem.tspan
 	# it is faster to pre-allocate arrays and fill it at run time

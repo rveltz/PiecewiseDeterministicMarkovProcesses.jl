@@ -17,25 +17,6 @@ function f_CHV!(F, R, t::Float64, x, xdot, xd, parms, rate)
 	nothing
 end
 
-"""
-chv!
-
-This function performs a pdmp simulation using the Change of Variable (CHV) method see https://arxiv.org/abs/1504.06873.
-It takes the following arguments:
-
-- **n_max**: an `Int64` representing the maximum number of jumps to be computed.
-- **xc0** : a `Vector` of `Float64`, representing the initial states of the continuous variable.
-- **xd0** : a `Vector` of `Int64`, representing the initial states of the discrete variable.
-- **F!** : an inplace `Function` or a callable type, which itself takes five arguments to represent the vector field; xdot a `Vector` of `Float64` representing the vector field associated to the continuous variable, xc `Vector` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time and parms, a `Vector` of `Float64` representing the parameters of the system.
-- **R** : an inplace `Function` or a callable type, which itself takes six arguments to represent the rate functions associated to the jumps;rate `Vector` of `Float64` holding the different reaction rates, xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and sum_rate a `Bool` being a flag asking to return a `Float64` if true and a `Vector` otherwise.
-- **DX** : a `Function` or a callable type, which itself takes five arguments to apply the jump to the continuous variable;xc `Vector` of `Float64` representing the current state of the continuous variable, xd `Vector` of `Int64` representing the current state of the discrete variable, t a `Float64` representing the current time, parms a `Vector` of `Float64` representing the parameters of the system and ind_rec an `Int64` representing the index of the discrete jump.
-- **nu** : a `Matrix` of `Int64`, representing the transitions of the system, organised by row.
-- **parms** : data for the parameters of the system.
-- **tf** : the final simulation time (`Float64`)
-- **verbose** : a `Bool` for printing verbose.
-- **ode**: ode time stepper, must be one of those: [:cvode,:lsoda,:Adams,:BDF]
-- **save_at**: array of ordered time at which the solution is required
-"""
 function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false,true),) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
