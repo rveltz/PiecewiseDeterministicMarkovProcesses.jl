@@ -1,182 +1,3 @@
-# Dummy functions to allow not specifying these characteristics
-function F_dummy(ẋ, xc, xd, parms, t)
-	fill!(ẋ, 0)
-	nothing
-end
-
-mutable struct PDMPJumpTime{Tc <: Real, Td}
-	tstop_extended::Tc
-	lastjumptime::Tc
-	njumps::Td
-
-	# fields required for the rejection method
-	lambda_star::Tc					# bound on the total rate
-	ppf::Vector{Tc}
-	reject::Bool					# boolean to know whether to reject or not the step
-	fictitous_jumps::Td
-end
-
-struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
-	F::TF						# vector field for ODE between jumps
-	R::TR			    		# rate function for jumps
-	pdmpjump::TJ
-
-	xc::vecc					# current continuous variable
-	xd::vecd					# current discrete variable
-
-	xc0::vecc					# initial continuous variable
-	xd0::vecd					# initial discrete variable
-	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as this can be an issue for StaticArrays.jl
-	parms::Tparms				# container to hold parameters to be passed to F, R, Delta
-
-	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
-						vecc <: AbstractVector{Tc},
-						vecd <: AbstractVector{Td}}
-		jump = RateJump(nu, Delta)
-		rate = zeros(Tc, size(nu, 1))
-		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
-	end
-end
-
-
-function PDMPCaracteristics(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td}, vecc <: AbstractVector{Tc}, vecd <: AbstractVector{Td}}
-	return PDMPCaracteristics(F, R, Delta_dummy, nu, xc0, xd0, parms)
-end
-
-# """
-# The function allows to reset the internal variables xc and xd. Call as follows:
-# 	`reset!(pb, xc, xd)`
-# """
-# function reset!(pb::PDMPCaracteristics, xc, xd)
-# 	pb.xc .= xc
-# 	pb.xd .= xd
-# end
-
-function init!(pb::PDMPCaracteristics)
-	pb.xc .= pb.xc0
-	pb.xd .= pb.xd0
-end
-
-struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
-						vectype_xd <: AbstractVector{Td},
-						vectype_rate,
-						Tnu <: AbstractArray{Td},
-						Tp, TF, TR, Tcar}
-	tspan::Tuple{Tc, Tc}			    			# final simulation time interval
-	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
-	time::Vector{Float64}
-	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}		# continuous variable history
-	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}		# discrete variable history
-	# variables for debugging
-	rate_hist::Vector{Tc}			# to save the rates for debugging purposes
-
-	# structs for characteristics of the PDMP
-	caract::Tcar
-end
-
-function init!(pb::PDMPProblem)
-	init!(pb.caract)
-	pb.simjptimes.tstop_extended = -log(rand())
-	pb.simjptimes.lastjumptime = pb.tspan[1]
-	pb.simjptimes.njumps = 0
-	pb.simjptimes.fictitous_jumps = 0
-	resize!(pb.time, 1)
-	resize!(pb.Xc.u, 1)
-	resize!(pb.Xd.u, 1)
-end
-
-# callable struct used in the iterator interface
-function (prob::PDMPProblem)(u,t,integrator)
-	t == prob.simjptimes.tstop_extended
-end
-
-# simplified constructors to PDMPProblem
-function PDMPProblem(xc0::vectype_xc,
-		xd0::vectype_xd,
-		rate::vectype_rate,
-		F::TF, R::TR, DX::TD,
-		nu::Tnu, parms::Tp,
-		tspan::Tuple{Tc, Tc}, alg::Talg) where {Tc, Td, vectype_xc <: AbstractVector{Tc}, vectype_xd <: AbstractVector{Td}, vectype_rate, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, Talg}
-	ti, tf = tspan
-	ratecache = DiffCache(rate)
-	caract = PDMPCaracteristics(F, R, nu, xc0, xd0, parms)
-	return PDMPProblem{Tc, Td, vectype_xc, vectype_xd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
-			tspan,
-			PDMPJumpTime{Tc, Td}(Tc(0), Tc(0), 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-			[ti],
-			VectorOfArray([copy(xc0)]),
-			VectorOfArray([copy(xd0)]),
-			Tc[],
-			caract)
-end
-
-function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
-				xc0::vecc, xd0::vecd, parms::Tp,
-				tspan) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
-	ti, tf = tspan
-	rate = zeros(Tc, size(nu, 1))
-	ratecache = copy(rate)#DiffCache(rate)
-	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms)
-	# custom type to collect all parameters in one structure
-	return PDMPProblem{Tc, Td, vecc, vecd, typeof(ratecache), Tnu, Tp, TF, TR, typeof(caract)}(
-			tspan,
-			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
-			[ti],
-			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
-			Tc[],
-			caract)
-end
-
-function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
-				tspan; kwargs...) where {Tc, Td, Tnu <: AbstractMatrix{Td}, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
-	return PDMPProblem(F, R, Delta_dummy, nu, xc0, xd0, parms, tspan; kwargs...)
-end
-
-function PDMPProblem(F, R, Delta, reaction_number::Int64, xc0::vecc, xd0::vecd, parms,
-				tspan; kwargs...) where {Tc, Td, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
-	return PDMPProblem(F, R, Delta, spzeros(Int64, reaction_number, length(xd0)), xc0, xd0, parms, tspan; kwargs...)
-end
-
-# """
-# The function allows to reset the internal variables xc and xd. Call as follows:
-# 	`reset!(pb, xc, xd)`
-# """
-# function reset!(pb::PDMPProblem, xc, xd)
-# 	pb.caract.xc .= xc
-# 	pb.caract.xd .= xd
-# end
-
-"""
-This type stores the output composed of:
-- **time** : a `Vector` of `Float64`, containing the times of simulated events.
-- **xc** : containing the simulated states for the continuous variable.
-- **xd** : containing the simulated states for the continuous variable.
-- **rates** : containing the rates used during the simulation
-"""
-struct PDMPResult{Tc <: Real, vectype_xc, vectype_xd}
-	time::Vector{Tc}
-	xc::vectype_xc
-	xd::vectype_xd
-	rates::Vector{Tc}
-	save_positions::Tuple{Bool, Bool}
-	njumps::Int64
-	nrejected::Int64
-end
-
-PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, Tc[], (false,false), 0, 0)
-PDMPResult(time, xchist, xdhist, rates, sp)  = PDMPResult(time, xchist, xdhist, rates, sp, 0, 0)
-
-"""
-Dummy flow to be used in rejection algorithm
-"""
-function Phi_dummy(out, xc, xd, parms, t)
-	# vector field used for the continuous variable
-	# trivial dynamics
-	out[1,:] .= xc
-	out[2,:] .= xc
-	nothing
-end
-
 """
 Function to pre-allocate arrays contening the result.
 """
@@ -213,17 +34,6 @@ function allocate_arrays(ti	,xc0, xd0, n_max; rejection = false, ind_save_c=-1:1
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 
-"""
-function to save data
-"""
-# function save_data(nsteps, X0, Xd, xc_hist, xd_hist, ind_save_d, ind_save_c)
-# 	@inbounds for ii in eachindex(ind_save_c)
-# 		xc_hist[ii,nsteps] = X0[ind_save_c[ii]]
-# 	end
-# 	@inbounds for ii in eachindex(ind_save_d)
-# 		xd_hist[ii,nsteps] = Xd[ind_save_d[ii]]
-# 	end
-# end
 
 """
 Function copied from Gillespie.jl and StatsBase
@@ -244,9 +54,22 @@ function pfsample(w::vec, s::Tc, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
 	return i
 end
 
-# function filter_saveat!(save_at, ti, tf)
-# 	filter!(x -> (x >= ti)*(x <= tf), save_at)
-# 	if isempty(save_at) || save_at[end] < tf
-# 		push!(save_at, tf)
-# 	end
-# end
+"""
+This type stores the output composed of:
+- **time** : a `Vector` of `Float64`, containing the times of simulated events.
+- **xc** : containing the simulated states for the continuous variable.
+- **xd** : containing the simulated states for the continuous variable.
+- **rates** : containing the rates used during the simulation
+"""
+struct PDMPResult{Tc <: Real, vectype_xc, vectype_xd}
+	time::Vector{Tc}
+	xc::vectype_xc
+	xd::vectype_xd
+	rates::Vector{Tc}
+	save_positions::Tuple{Bool, Bool}
+	njumps::Int64
+	nrejected::Int64
+end
+
+PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, Tc[], (false,false), length(time), 0)
+PDMPResult(time, xchist, xdhist, rates, sp)  = PDMPResult(time, xchist, xdhist, rates, sp, length(time), 0)

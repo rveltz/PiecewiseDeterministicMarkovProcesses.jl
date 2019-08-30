@@ -12,6 +12,7 @@ module PiecewiseDeterministicMarkovProcesses
 	abstract type AbstractRejectionIterator <: AbstractRejection end
 
 	include("utilsforwarddiff.jl")
+	include("problem.jl")
 	include("utils.jl")
 	include("chv.jl")
 	include("chvdiffeq.jl")

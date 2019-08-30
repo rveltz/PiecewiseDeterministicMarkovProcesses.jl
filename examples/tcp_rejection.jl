@@ -70,7 +70,7 @@ xd0 = [0, 0]
 nu_tcp = [1 0;0 -1]
 	parms = [0.0]
 	tf = 100000.
-	nj = 5
+	nj = 50
 	errors = Float64[]
 
 Random.seed!(1234)
@@ -87,7 +87,15 @@ println("\n\nComparison of solvers")
 	end
 
 
-# using Plots
-# plot(res_old.time,res_old.xc',label="Old-rejection")
-#	 plot!(res.time,[x[1] for x in res.xc],label="Iterator")
+
+# Random.seed!(1234)
+# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+# 	alloc1 =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
 #
+# Random.seed!(1234)
+# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+# 	alloc2 =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 4nj, save_positions = (false, false))
+#
+# Random.seed!(1234)
+# 	PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+# 	res = @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 4nj, save_positions = (false, false))

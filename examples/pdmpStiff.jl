@@ -97,3 +97,11 @@ end
 Random.seed!(8)
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)
+
+
+# test for allocations, should not depend on
+Random.seed!(8)
+	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	Random.seed!(8)
+	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
