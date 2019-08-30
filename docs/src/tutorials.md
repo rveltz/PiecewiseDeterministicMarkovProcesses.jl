@@ -54,12 +54,12 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate function
 	if issum == false
 	# in the case, one is required to mutate the vector `rate`
-		rate[1] = R(xc[1])
+		rate[1] = k(xc[1])
 		rate[2] = parms[1]
 		return 0.
 	else
 	# in this case, one is required to return the sum of the rates
-		return R(xc[1]) + parms[1]
+		return k(xc[1]) + parms[1]
 	end
 end
 
@@ -116,12 +116,12 @@ function R2!(rate, xc, xd, parms, t, issum::Bool)
 	bound_rejection = 1. + parms[1] + 15  # bound on the total rate
 	if issum == false
 	# in the case, one is required to mutate the vector `rate`
-		rate[1] = R(xc[1])
+		rate[1] = k(xc[1])
 		rate[2] = parms[1]
 		return 0., bound_rejection
 	else
 	# in this case, one is required to return the sum of the rates
-		return R(xc[1]) + parms[1], bound_rejection
+		return k(xc[1]) + parms[1], bound_rejection
 	end
 end
 ```

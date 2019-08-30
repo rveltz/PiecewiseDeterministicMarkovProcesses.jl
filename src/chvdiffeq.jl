@@ -52,16 +52,9 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 		# Update event
 		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
 
-		deltaxd = view(caract.pdmpjump.nu, ev, :)
+		# we perform the jump
+		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
 
-		# Xd = Xd .+ deltaxd
-		# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, prob.xd)
-		@inbounds for ii in eachindex(caract.xd)
-			caract.xd[ii] += deltaxd[ii]
-		end
-
-		# Xc = Xc .+ deltaxc
-		caract.pdmpjump.Delta(integrator.u, caract.xd, caract.parms, t, ev)
 		u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)

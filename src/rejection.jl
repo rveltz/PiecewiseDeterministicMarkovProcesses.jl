@@ -77,13 +77,17 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
 			# make a jump
 			ev = pfsample(rate, sum(rate), numpf)
-			deltaxd .= problem.caract.pdmpjump.nu[ev,:]
+			# deltaxd .= problem.caract.pdmpjump.nu[ev,:]
+			#
+			# # Xd = Xd .+ deltaxd
+			# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
+			#
+			# # Xc = Xc .+ deltaxc
+			# problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 
-			# Xd = Xd .+ deltaxd
-			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
+			# we perform the jump
+			affect!(problem.caract.pdmpjump, ev, X0, Xd, problem.caract.parms, t)
 
-			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 		end
 
 		nsteps += 1
@@ -168,13 +172,10 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
 			# make a jump
 			ev = pfsample(rate_vector, sum(rate_vector), numpf)
-			deltaxd .= problem.caract.pdmpjump.nu[ev,:]
 
-			# Xd = Xd .+ deltaxd
-			LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
+			# we perform the jump
+			affect!(problem.caract.pdmpjump, ev, X0, Xd, problem.caract.parms, t)
 
-			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 		end
 
 		nsteps += 1

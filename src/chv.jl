@@ -99,15 +99,9 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 		if (t < tf) && nsteps < n_jumps
 			# Update event
 			ev = pfsample(rate, sum(rate), numpf)
-			deltaxd .= problem.caract.pdmpjump.nu[ev,:]
-
-			# Xd = Xd .+ deltaxd
-			@inbounds for ii in eachindex(Xd)
-				Xd[ii] += deltaxd[ii]
-			end
-
-			# Xc = Xc .+ deltaxc
-			problem.caract.pdmpjump.Delta(X_extended, Xd, problem.caract.parms, t, ev)
+	
+			# we perform the jump
+			affect!(problem.caract.pdmpjump, ev, X_extended, Xd, problem.caract.parms, t)
 
 			verbose && println("--> Which reaction? => ", ev)
 			verbose && println("--> xd = ", Xd)
