@@ -1,6 +1,7 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
 const PDMP = PiecewiseDeterministicMarkovProcesses
-function F_tcp!(ẋ, xc, xd, t, parms)
+
+function F_tcp!(ẋ, xc, xd, parms, t)
     if mod(xd[1],2)==0
          ẋ[1] =  1.0
          ẋ[2] = -1.0
@@ -13,7 +14,7 @@ end
 
 R(x) = 5.0/(1.0 + exp(-x/1.0 + 5.0))
 
-function R_tcp!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
     if sum_rate==false
         rate[1] = R(xc[1])
         rate[2] = parms[1]

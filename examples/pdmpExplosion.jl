@@ -26,15 +26,15 @@ function AnalyticalSample(xc0,xd0,ti,nj::Int64)
 end
 
 
-function F!(ẋ, xc, xd, t, parms)
+function F!(ẋ, xc, xd, parms, t)
 	ẋ[1] = -r * (2mod(xd[1],2)-1) * xc[1]
 end
 
 R(x) = x
 
-function R!(rate, xc, xd, t, parms, sum_rate::Bool)
+function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
-	if sum_rate==false
+	if issum==false
 		rate[1] = R(xc[1])
 		rate[2] = 0.0
 		return R(xc[1]),40.
@@ -62,7 +62,9 @@ rnd_state = 0.
 println("\n\nComparison of solvers")
 	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
 		Random.seed!(8)
-		res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = nj, ode = ode[1], verbose = false)
+
+		problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+		res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 		# this is to check the state of the random generator at the end of the simulation
 		if ode[1] == :lsoda
 			global rnd_state = rand()
@@ -73,30 +75,3 @@ println("\n\nComparison of solvers")
 		println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
 		push!(errors,norm(res.time - res_a[1],Inf64))
 	end
-
-#
-# println("\n\nComparison of solvers for splitting the computation")
-# # we compute up to time 0.5 and then up to the end
-# println("\n\nComparison of solvers")
-# 	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
-# 		@show ode
-# 		Random.seed!(8)
-# 		res1 =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F!, R!, nu, parms, ti, tf, n_jumps = 4, ode = ode[1], verbose = false)
-#
-# 		println(length(res1.time), " ", res_a[end][9])
-# 		@show res1.time
-#
-# 		# Random.GLOBAL_RNG.idxF +=-0
-#
-# 		@show rand()
-#
-# 		res2 =  PiecewiseDeterministicMarkovProcesses.pdmp!(res1.xc[:,end], res1.xd[:,end], F!, R!, nu, parms, 0.8, tf, n_jumps = nj - 4 , ode = ode[1], verbose = false)
-#
-# 		tt = vcat(res1.time[1:end],res2.time[1:end])
-#
-# 		@show tt - res_a[1][1:length(tt)]
-#
-#
-# 		println("--> norm difference = ", norm(tt - res_a[1],Inf64), "  - solver = ", ode[2])
-# 		push!(errors,norm(tt - res_a[1],Inf64))
-# 	end
