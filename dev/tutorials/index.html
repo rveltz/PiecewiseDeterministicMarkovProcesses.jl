@@ -12,12 +12,12 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate function
 	if issum == false
 	# in the case, one is required to mutate the vector `rate`
-		rate[1] = R(xc[1])
+		rate[1] = k(xc[1])
 		rate[2] = parms[1]
 		return 0.
 	else
 	# in this case, one is required to return the sum of the rates
-		return R(xc[1]) + parms[1]
+		return k(xc[1]) + parms[1]
 	end
 end
 
@@ -37,12 +37,12 @@ Plots.plot(sol.time,sol.xc[1,:],label=&quot;xc&quot;)</code></pre><p>This produc
 	bound_rejection = 1. + parms[1] + 15  # bound on the total rate
 	if issum == false
 	# in the case, one is required to mutate the vector `rate`
-		rate[1] = R(xc[1])
+		rate[1] = k(xc[1])
 		rate[2] = parms[1]
 		return 0., bound_rejection
 	else
 	# in this case, one is required to return the sum of the rates
-		return R(xc[1]) + parms[1], bound_rejection
+		return k(xc[1]) + parms[1], bound_rejection
 	end
 end</code></pre><p>We can now simulate this process as follows</p><pre><code class="language-julia">Random.seed!(8) # to get the same result as this simulation!
 problem = PDMP.PDMPProblem(F!, R2!, nu, xc0, xd0, parms, (0.0, 1.0))
