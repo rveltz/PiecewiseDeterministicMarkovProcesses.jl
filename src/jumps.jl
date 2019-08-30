@@ -23,15 +23,12 @@ struct RateJump{Td, Tnu <: AbstractArray{Td}, TD} <: AbstractJump
 
 end
 
-# perform the jump on the discrete variable
-function affect!(ratejump::RateJump, ev, xd)
+function affect!(ratejump::RateJump, ev, xc, xd, parms, t)
+	# perform the jump on the discrete variable
 	deltaxd = view(ratejump.nu, ev, :)
 	@inbounds for ii in eachindex(xd)
 		xd[ii] += deltaxd[ii]
 	end
-end
-
-# perform the jump on the continuous variable
-function affect!(ratejump::RateJump, ev, u, xd, parms, t)
-	ratejump.Delta(u, xd, parms, t, ev)
+	# perform the jump on the continuous variable
+	ratejump.Delta(xc, xd, parms, t, ev)
 end
