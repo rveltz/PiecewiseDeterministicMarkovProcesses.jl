@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorials · PiecewiseDeterministicMarkovProcesses.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PiecewiseDeterministicMarkovProcesses.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li class="current"><a class="toctext" href>Tutorials</a><ul class="internal"><li><a class="toctext" href="#Basic-example-with-CHV-method-1">Basic example with CHV method</a></li><li><a class="toctext" href="#Basic-example-with-the-rejection-method-1">Basic example with the rejection method</a></li></ul></li><li><a class="toctext" href="../problem/">Problem Type</a></li><li><a class="toctext" href="../solver/">Solver Algorithms</a></li><li><a class="toctext" href="../addFeatures/">Additional Features</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Tutorials</a></li></ul><a class="edit-page" href="https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl/blob/master/docs/src/tutorials.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Tutorials</span><a class="fa fa-bars" href="#"></a></div></header><p>See also the <a href="https://github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl/tree/master/examples">examples directory</a> for more involved examples. </p><h2><a class="nav-anchor" id="Basic-example-with-CHV-method-1" href="#Basic-example-with-CHV-method-1">Basic example with CHV method</a></h2><p>A simple example of jump process is shown. We look at the following process of switching dynamics where </p><div>\[X(t) = (x_c(t), x_d(t)) \in\mathbb R\times\lbrace-1,1\rbrace.\]</div><p>In between jumps, <span>$x_c$</span> evolves according to </p><div>\[\dot x_c(t) = 10x_c(t),\quad\text{ if } x_d(t)\text{ is even}.\]</div><div>\[\dot x_c(t) = -3x_c(t)^2,\quad \text{ otherwise}.\]</div><p>We first need to load the library.  </p><pre><code class="language-julia">using PiecewiseDeterministicMarkovProcesses
+const PDMP = PiecewiseDeterministicMarkovProcesses</code></pre><p>We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE. Hence, we define a function that, given the continuous state <span>$x_c$</span> and the discrete state <span>$x_d$</span> at time <span>$t$</span>, returns the vector field. In addition some parameters can be passed with the variable <code>parms</code>.</p><pre><code class="language-julia">function F!(ẋ, xc, xd, parms, t)
+	if mod(xd[1],2)==0
+		ẋ[1] = 10xc[1]
+	else
+		ẋ[1] = -3xc[1]^2
+	end
+end</code></pre><p>Let&#39;s consider a stochastic process with following transitions:</p><table><tr><th>Transition</th><th>Rate</th><th>Reaction number</th><th>Jump</th></tr><tr><td><span>$x_d\to x_d+[1,0]$</span></td><td><span>$k(x_c)$</span></td><td>1</td><td>[1]</td></tr><tr><td><span>$x_d\to x_d+[0,1]$</span></td><td><span>$parms$</span></td><td>2</td><td>[1]</td></tr></table><p>We implement these jumps using a 2x1 matrix <code>nu</code> of Integers, such that the jumps on each discrete component <code>xd</code> are given by <code>nu * xd</code>. Hence, we have <code>nu = [1 0;0 -1]</code>.	</p><p>The rates of these reactions are encoded in the following function.</p><pre><code class="language-julia">k(x) = 1 + x
+
+function R!(rate, xc, xd, parms, t, issum::Bool)
+	# rate function
+	if issum == false
+	# in the case, one is required to mutate the vector `rate`
+		rate[1] = R(xc[1])
+		rate[2] = parms[1]
+		return 0.
+	else
+	# in this case, one is required to return the sum of the rates
+		return R(xc[1]) + parms[1]
+	end
+end
+
+# initial conditions for the continuous/discrete variables
+xc0 = [1.0]
+xd0 = [0, 0]
+
+# matrix of jumps for the discrete variables, analogous to chemical reactions
+nu = [1 0 ; 0 -1]
+
+# parameters
+parms = [50.]</code></pre><p>We define a problem type by giving the characteristics of the process <code>F, R, Delta, nu</code>, the initial conditions, and the timespan to solve over:</p><pre><code class="language-none">Random.seed!(8) # to get the same result as this simulation!
+problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (0.0, 10.0))</code></pre><p>After defining the problem, you solve it using <code>solve</code>.</p><pre><code class="language-julia">sol =  PDMP.solve(problem, CHV(CVODE_BDF()))</code></pre><p>In this case, we chose to sample <code>pb</code> with the <a href="https://arxiv.org/abs/1504.06873">CHV algorithm</a> where the flow in between jumps is integrated with the solver <code>CVODE_BDF()</code> from <a href="https://github.com/JuliaDiffEq/DifferentialEquations.jl">DifferentialEquations.jl</a>.</p><p>We can then plot the solution as follows:</p><pre><code class="language-none"># plotting
+using Plots
+Plots.plot(sol.time,sol.xc[1,:],label=&quot;xc&quot;)</code></pre><p>This produces the graph:</p><p><img src="../example1.png" alt="TCP"/></p><h2><a class="nav-anchor" id="Basic-example-with-the-rejection-method-1" href="#Basic-example-with-the-rejection-method-1">Basic example with the rejection method</a></h2><p>The previous method is useful when the total rate function varies a lot. In the case where the total rate is mostly constant in between jumps, the <strong>rejection method</strong> is more appropriate. </p><p>The <strong>rejection method</strong> assumes some a priori knowledge of the process one wants to simulate. In particular, the user must be able to provide a bound on the total rate. More precisely, the user must provide a constant bound in between the jumps. To use this method, <code>R_tcp!</code> must return <code>sum(rate), bound_rejection</code>. Note that this means that in between jumps, one has:</p><p><code>sum(rate)(t) &lt;= bound_rejection</code></p><pre><code class="language-julia">function R2!(rate, xc, xd, parms, t, issum::Bool)
+	# rate function
+	bound_rejection = 1. + parms[1] + 15  # bound on the total rate
+	if issum == false
+	# in the case, one is required to mutate the vector `rate`
+		rate[1] = R(xc[1])
+		rate[2] = parms[1]
+		return 0., bound_rejection
+	else
+	# in this case, one is required to return the sum of the rates
+		return R(xc[1]) + parms[1], bound_rejection
+	end
+end</code></pre><p>We can now simulate this process as follows</p><pre><code class="language-julia">Random.seed!(8) # to get the same result as this simulation!
+problem = PDMP.PDMPProblem(F!, R2!, nu, xc0, xd0, parms, (0.0, 1.0))
+sol =  PDMP.solve(problem, Rejection(CVODE_BDF()))</code></pre><p>In this case, we chose to sample <code>pb</code> with the Rejection algorithm where the flow in between jumps is integrated with the solver <code>CVODE_BDF()</code> from <a href="https://github.com/JuliaDiffEq/DifferentialEquations.jl">DifferentialEquations.jl</a>.</p><p>We can then plot the solution as follows:</p><pre><code class="language-none"># plotting
+using Plots
+Plots.plot(sol.time,sol.xc[1,:],label=&quot;xc&quot;)</code></pre><p>This produces the graph:</p><p><img src="../example2.png" alt="TCP"/></p><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../problem/"><span class="direction">Next</span><span class="title">Problem Type</span></a></footer></article></body></html>
