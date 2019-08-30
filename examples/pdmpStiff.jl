@@ -1,5 +1,5 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
-const PDMP = PiecewiseDeterministicMarkovProcesses
+	const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSample(xc0, xd0, ti, nj::Int64)
 	xch = [xc0[1]]
@@ -72,9 +72,6 @@ end
 
 
 # here, we write the jump problem with a function
-using SparseArrays
-nusp = spzeros(Int64, 2, 2)
-
 function Delta!(xc, xd, t, parms, ind_reaction::Int64)
 	if ind_reaction == 1
 		xd[1] += 1
@@ -87,7 +84,7 @@ end
 println("\n\nComparison of solvers, with function Delta")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
 	Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!,  Delta!, nusp, xc0, xd0, parms, (ti, tf))
+	problem = PDMP.PDMPProblem(F!, R!,  Delta!, 2, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ", ode[2])
 	push!(errors, norm(res.time - res_a[1], Inf64))
@@ -102,6 +99,22 @@ Random.seed!(8)
 # test for allocations, should not depend on
 Random.seed!(8)
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+	alloc1 =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	Random.seed!(8)
 	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
+
+# using Plots
+# Random.seed!(8)
+# 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, 60.))
+# 	sol =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
+# 	plot(sol.time, sol.xc[1,:],label="solution")
+#
+# 	Random.seed!(8)
+# 	problem1 = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, 30.))
+# 	sol1 =  PDMP.solve(problem1, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
+# 	plot!(sol1.time, sol1.xc[1,:],label="part 1")
+#
+# 	problem2 = PDMP.PDMPProblem(F!, R!, nu, sol1.xc[:,end], sol1.xd[:,end], parms, (30., 60.))
+# 	sol2 =  PDMP.solve(problem2, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
+# 	plot!(sol2.time, sol2.xc[1,:],label="part 2", marker=:d)

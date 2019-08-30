@@ -71,5 +71,5 @@ struct PDMPResult{Tc <: Real, vectype_xc, vectype_xd}
 	nrejected::Int64
 end
 
-PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, Tc[], (false,false), length(time), 0)
+PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, eltype(xchist)[], (false,false), length(time), 0)
 PDMPResult(time, xchist, xdhist, rates, sp)  = PDMPResult(time, xchist, xdhist, rates, sp, length(time), 0)

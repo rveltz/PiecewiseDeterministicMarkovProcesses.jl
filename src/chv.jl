@@ -123,9 +123,9 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 
 		else
 			if ode in [:cvode, :bdf, :adams]
-				res_ode_last = Sundials.cvode((tt, x, xdot)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = Sundials.cvode((tt, x, xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
 			else#if ode==:lsoda
-				res_ode_last = LSODA.lsoda((tt, x, xdot, data)->problem.caract.F(xdot,x,Xd,tt,problem.caract.parms), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt, x, xdot, data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), xc_hist[end], [t_hist[end], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 

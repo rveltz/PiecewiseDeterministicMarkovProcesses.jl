@@ -1,6 +1,16 @@
+using SparseArrays
 # Dummy functions to allow not specifying these characteristics
 function F_dummy(ẋ, xc, xd, parms, t)
 	fill!(ẋ, 0)
+	nothing
+end
+
+# Dummy flow to be used in rejection algorithm
+function Phi_dummy(out, xc, xd, parms, t)
+	# vector field used for the continuous variable
+	# trivial dynamics
+	out[1,:] .= xc
+	out[2,:] .= xc
 	nothing
 end
 
@@ -104,15 +114,4 @@ end
 function PDMPProblem(F, R, Delta, reaction_number::Int64, xc0::vecc, xd0::vecd, parms,
 				tspan; kwargs...) where {Tc, Td, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
 	return PDMPProblem(F, R, Delta, spzeros(Int64, reaction_number, length(xd0)), xc0, xd0, parms, tspan; kwargs...)
-end
-
-"""
-Dummy flow to be used in rejection algorithm
-"""
-function Phi_dummy(out, xc, xd, parms, t)
-	# vector field used for the continuous variable
-	# trivial dynamics
-	out[1,:] .= xc
-	out[2,:] .= xc
-	nothing
 end
