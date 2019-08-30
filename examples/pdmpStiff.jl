@@ -54,7 +54,7 @@ xc0 = [1.0]
 	parms = [.0]
 	ti = 0.322156
 	tf = 100000.
-	nj = 50
+	nj = 50 
 
 errors = Float64[]
 
