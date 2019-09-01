@@ -19,7 +19,7 @@ R(x_c(t),x_d(t),p,t).
 ```
 
 Note, that in between jumps, $x_d(t)$ is constant but $x_c(t)$ is allowed to evolve.
-$R$ should be specified in-place as `R(rate,xc,xd,t,p,issum::Bool)` where it mutates `rate`. Note that a boolean `issum` is provided and the behavior of `R` should be as follows
+$R$ should be specified in-place as `R(rate,xc,xd,p,t,issum::Bool)` where it mutates `rate`. Note that a boolean `issum` is provided and the behavior of `R` should be as follows
 
 - if `issum == true`, we only required `R` to return the total rate, *e.g.* `sum(rate)`. We use this formalism because sometimes you can compute the `sum` without mutating `rate`.
 - if `issum == true`, `R` must populate `rate` with the updated rate 

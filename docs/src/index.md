@@ -7,7 +7,7 @@ PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulati
 
 ## Definition of the Jump process
 
-We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c, x_d)$ where $x_c$ is solution of the differential equation $$\frac{dx_c(t)}{dt} = F(x_c(t),x_d(t),p,t).$$ The second component $x_d$ is a piecewise constant array with type `Int` and `p` are some parameters. The jumps occur at rates $R(x_c(t),x_d(t),t)$. At each jump, $x_d$ or $x_c$ can be affected.
+We briefly recall facts about a simple class of PDMPs. They are described by a couple $(x_c, x_d)$ where $x_c$ is solution of the differential equation $$\frac{dx_c(t)}{dt} = F(x_c(t),x_d(t),p,t).$$ The second component $x_d$ is a piecewise constant array with type `Int` and `p` are some parameters. The jumps occur at rates $R(x_c(t),x_d(t),p,t)$. At each jump, $x_d$ or $x_c$ can be affected.
 
 
 ## Related projects
