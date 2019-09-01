@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Definition of the Jump process",
     "category": "section",
-    "text": "We briefly recall facts about a simple class of PDMPs. They are described by a couple (x_c x_d) where x_c is solution of the differential equation fracdx_c(t)dt = F(x_c(t)x_d(t)pt) The second component x_d is a piecewise constant array with type Int and p are some parameters. The jumps occur at rates R(x_c(t)x_d(t)t). At each jump, x_d or x_c can be affected."
+    "text": "We briefly recall facts about a simple class of PDMPs. They are described by a couple (x_c x_d) where x_c is solution of the differential equation fracdx_c(t)dt = F(x_c(t)x_d(t)pt) The second component x_d is a piecewise constant array with type Int and p are some parameters. The jumps occur at rates R(x_c(t)x_d(t)pt). At each jump, x_d or x_c can be affected."
 },
 
 {
@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Problem Type",
     "title": "Jumps",
     "category": "section",
-    "text": "Jumps are defined as a Jump process which change states at some rate R which is a scalar function of the type R(x_c(t)x_d(t)pt)Note, that in between jumps, x_d(t) is constant but x_c(t) is allowed to evolve. R should be specified in-place as R(rate,xc,xd,t,p,issum::Bool) where it mutates rate. Note that a boolean issum is provided and the behavior of R should be as followsif issum == true, we only required R to return the total rate, e.g. sum(rate). We use this formalism because sometimes you can compute the sum without mutating rate.\nif issum == true, R must populate rate with the updated rate We then need to provide the way the jumps affect the state variable. There are two possible ways here:either give a transition matrix nu: it will only affects the discrete component xd and leave xc unaffected.\ngive a function to implement jumps Delta(xc, xd, parms, t, ind_reaction::Int64) where you can mutate xc,xd or parms. The argument ind_reaction is the index of the reaction at which the jump occurs. See examples/pdmp_example_eva.jl for an example."
+    "text": "Jumps are defined as a Jump process which change states at some rate R which is a scalar function of the type R(x_c(t)x_d(t)pt)Note, that in between jumps, x_d(t) is constant but x_c(t) is allowed to evolve. R should be specified in-place as R(rate,xc,xd,p,t,issum::Bool) where it mutates rate. Note that a boolean issum is provided and the behavior of R should be as followsif issum == true, we only required R to return the total rate, e.g. sum(rate). We use this formalism because sometimes you can compute the sum without mutating rate.\nif issum == true, R must populate rate with the updated rate We then need to provide the way the jumps affect the state variable. There are two possible ways here:either give a transition matrix nu: it will only affects the discrete component xd and leave xc unaffected.\ngive a function to implement jumps Delta(xc, xd, parms, t, ind_reaction::Int64) where you can mutate xc,xd or parms. The argument ind_reaction is the index of the reaction at which the jump occurs. See examples/pdmp_example_eva.jl for an example."
 },
 
 {
