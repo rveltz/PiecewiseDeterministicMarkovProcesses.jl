@@ -7,10 +7,11 @@ struct CHV{Tode} <: AbstractCHVIterator
 end
 
 function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
-	tau = x[end]
+	nxc = length(prob.xc)
+	tau = x[nxc + 1]
 	sr = prob.R(prob.ratecache, x, prob.xd, prob.parms, tau, true)[1]
 	prob.F(xdot, x, prob.xd, prob.parms, tau)
-	xdot[end] = 1.0
+	xdot[nxc + 1] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] / sr
 	end
@@ -77,7 +78,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	ti, tf = problem.tspan
 	algopdmp = CHV(ode)
 
-	# initialise the problem. If I call twice this function, it should give the same result...
+	# initialise the problem. If I call twice this solve function, it should give the same result...
 	init!(problem)
 
 	# we declare the characteristics for convenience
@@ -103,7 +104,7 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# define the ODE flow, this leads to big memory saving
 	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
-	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9))
+	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, problem.caract, tt), X_extended, (0.0, 1e9))
 	integrator = init(prob_CHV, ode, tstops = problem.simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	# current jump number
@@ -141,7 +142,7 @@ end
 
 
 function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, X_extended = zeros(Tc, 1 + 1), save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
-	
+
 	# hack to resize the extended vector to the proper dimension
 	resize!(X_extended, length(problem.caract.xc) + 1)
 
