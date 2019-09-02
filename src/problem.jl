@@ -1,4 +1,5 @@
 using SparseArrays
+
 # Dummy functions to allow not specifying these characteristics
 function F_dummy(ẋ, xc, xd, parms, t)
 	fill!(ẋ, 0)

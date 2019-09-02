@@ -141,6 +141,7 @@ end
 
 
 function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, X_extended = zeros(Tc, 1 + 1), save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+	
 	# hack to resize the extended vector to the proper dimension
 	resize!(X_extended, length(problem.caract.xc) + 1)
 
