@@ -11,11 +11,11 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 
 	# define the ODE flow
 	if ode == :cvode || ode == :bdf
-		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
+		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
 	elseif	ode == :adams
-		Flow = (X0_,Xd_,tp_)->Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
+		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
 	elseif ode == :lsoda
-		Flow = (X0_,Xd_,tp_)->LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
+		Flow = (X0_,Xd_,tp_) -> LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
 	end
 
 	ti, tf = problem.tspan

@@ -7,9 +7,9 @@ end
 
 # encode the vector field
 function (wrap::DiffeqJumpWrapper)(ẋ, xc, xd, p, t)
-	@assert 1==0 "WIP"
-	@show typeof(xc)
-	@show typeof(ẋ)
+	# @assert 1==0 "WIP"
+	# @show typeof(xc)
+	# @show typeof(ẋ)
 	# il faut des ExtendedJumpArray pour l'appel qui suit
 	wrap.diffeqjumppb.prob.f(ẋ, xc, p, t)
 	nothing
@@ -18,7 +18,7 @@ end
 # encode the rate function
 function (wrap::DiffeqJumpWrapper)(rate, xc, xd, p, t, issum::Bool)
 	for ii in eachindex(rate)
-		rate[ii] = wrap.diffeqjumppb.variable_jumps[ii].rate(xc, p, t)
+		rate[ii] = wrap.diffeqjumppb.variable_jumps[ii].rate(xc.u, p, t)
 	end
 	return sum(rate)
 end
@@ -26,9 +26,10 @@ end
 # encode the jump function
 function (wrap::DiffeqJumpWrapper)(xc, xd, p, t, ind_reaction::Int64)
 	# this is a hack to be able to call affect! from DiffEqJump which require an integrator as an argument
-	wrap.u .= xc
+	@show xc xd wrap.u typeof(xc)
+	wrap.u .= xc.u[1:end-1]
 	wrap.diffeqjumppb.variable_jumps[ind_reaction].affect!(wrap)
-	xc .= wrap.u
+	xc.u[1:end-1] .= wrap.u
 	nothing
 end
 
@@ -38,7 +39,7 @@ function PDMPProblem(jpprob::JumpProblem)
 	@assert jpprob.massaction_jump == nothing
 	@show jpprob.variable_jumps
 
-	pb_wrapper = DiffeqJumpWrapper(jpprob, copy(jpprob.prob.u0))
+	pb_wrapper = DiffeqJumpWrapper(jpprob, copy(jpprob.prob.u0.u))
 
 	# get PDMP characteristics
 	F = (xdot,xc,xd,p,t) -> pb_wrapper(xdot,xc,xd,p,t)
@@ -54,4 +55,12 @@ function PDMPProblem(jpprob::JumpProblem)
 	nb_reactions = length(jpprob.variable_jumps)
 
 	return PDMPProblem(F,R,Delta,nb_reactions,xc0,xd0,p,tspan)
+end
+
+function solve(jpprob::JumpProblem, algo::CHV{Tode};kwargs...) where {Tode <: DiffEqBase.DEAlgorithm}
+	#issue with copy for eachindex(xc)...
+	problem = PDMPProblem(jpprob)
+	X_extended = copy(jpprob.prob.u0)
+	resize!(X_extended.u, length(jpprob.prob.u0.u) + 1)
+	return solve(problem, algo, X_extended; kwargs...)
 end

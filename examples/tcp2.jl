@@ -39,7 +39,7 @@ R(x) = x
 
 function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
-	if sum_rate == false
+	if issum == false
 		rate[1] = R(xc[1])
 		rate[2] = parms[1]
 		return 0.
@@ -62,7 +62,7 @@ xc0 = [1.0]
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
-Random.seed!(8) #0.000666 seconds (329 allocations: 26.234 KiB)
+Random.seed!(8) #0.000637 seconds (327 allocations: 26.219 KiB)
 	pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res = @time PDMP.solve(pb, CHV(Tsit5()), n_jumps = nj, save_positions = (false, false))
 
