@@ -1,4 +1,5 @@
 using SparseArrays
+
 # Dummy functions to allow not specifying these characteristics
 function F_dummy(ẋ, xc, xd, parms, t)
 	fill!(ẋ, 0)
@@ -43,7 +44,7 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = RateJump(nu, Delta)
-		rate = zeros(Tc, size(nu, 1))
+		rate = dualcache(zeros(Tc, size(nu, 1)))
 		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
 	end
 end

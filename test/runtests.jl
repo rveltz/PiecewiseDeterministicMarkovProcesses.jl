@@ -1,4 +1,4 @@
-using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, DifferentialEquations
 
 @testset "Example TCP" begin
 	include("../examples/tcp.jl")

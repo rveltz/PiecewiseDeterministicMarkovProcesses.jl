@@ -68,16 +68,11 @@ end
 
 # plot(res_a[1],res_a[2])
 # plot!(res.time,res.xc[:,1])
-# #
-# # case with no allocations  0.000719 seconds (672 allocations: 57.250 KiB)
+# case with no allocations  0.000721 seconds (330 allocations: 26.266 KiB)
 # Random.seed!(1234)
-#	 res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
-#
-# # case with no allocations  0.000719 seconds (675 allocations: 57.297 KiB)
-# Random.seed!(1234)
-#	 res =  @time PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode =Tsit5())
-#	 res.time[1:10] |> println
-#
+# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+# 	res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+
 # # Random.seed!(1234)
 # #	 using PiecewiseDeterministicMarkovProcesses
 # #	 println("\n"*"+"^40)

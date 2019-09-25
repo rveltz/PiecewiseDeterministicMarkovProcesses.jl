@@ -7,11 +7,11 @@ struct DiffCache{T<:AbstractArray, S<:AbstractArray}
 	dual_rate::S
 end
 
-function DiffCache(T, size, ::Type{Val{chunk_size}}) where chunk_size
-	DiffCache(zeros(T, size...), zeros(ForwardDiff.Dual{nothing,T,chunk_size}, size...))
+function DiffCache(u::AbstractArray{T}, siz, ::Type{Val{chunk_size}}) where {T, chunk_size}
+	DiffCache(u, zeros(ForwardDiff.Dual{nothing,T,chunk_size}, siz...))
 end
 
-DiffCache(u::AbstractArray) = DiffCache(eltype(u),size(u),Val{ForwardDiff.pickchunksize(length(u))})
+dualcache(u::AbstractArray, N=Val{ForwardDiff.pickchunksize(length(u))}) = DiffCache(u, size(u), N)
 
-get_rate(dc::DiffCache, ::Type{T}) where {T<:ForwardDiff.Dual} = dc.dual_rate
-get_rate(dc::DiffCache, T) = dc.rate
+get_rate(dc::DiffCache, u::AbstractArray{T}) where T<:ForwardDiff.Dual = reinterpret(T, dc.dual_rate)
+get_rate(dc::DiffCache, u::AbstractArray) = dc.rate
