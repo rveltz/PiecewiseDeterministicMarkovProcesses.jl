@@ -62,7 +62,7 @@ xc0 = [1.0]
 Random.seed!(8)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
-Random.seed!(8) #0.000637 seconds (327 allocations: 26.219 KiB)
+Random.seed!(8) #0.000637 seconds (330 allocations: 26.266 KiB)
 	pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res = @time PDMP.solve(pb, CHV(Tsit5()), n_jumps = nj, save_positions = (false, false))
 
@@ -76,4 +76,4 @@ Random.seed!(8)
 Random.seed!(8)
 	pb = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res = PDMP.solve(pb, CHV(:lsoda), n_jumps = nj)
-	norm(res.time - res_a[1],Inf64)
+	norm(res.time - res_a[1], Inf64)

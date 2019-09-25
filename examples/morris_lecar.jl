@@ -30,31 +30,19 @@ end
 
 xc0 = vec([p1["v(0)"]])
 xd0 = vec([Int(p0["N"]),	#Na closed
-	0,			   #Na opened
-	Int(p0["M"]),	#K closed
-	0])			  #K opened
+	0,			   			#Na opened
+	Int(p0["M"]),			#K closed
+	0])						#K opened
 
 nu_ml = [[-1 1 0 0];[1 -1 0 1];[0 0 -1 1];[0 0 1 -1]]
 parms = vec([0.])
 
 tf = p1["t_end"]
-tf=350.
-
-Random.seed!(123)
-println("--> chv")
-dummy_t =	   PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:cvode,n_jumps = 6)
-dummy_t = @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:cvode,n_jumps = 450)
-dummy_t = @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,ode=:lsoda,n_jumps = 450)
+tf = 350.
 
 Random.seed!(123)
 println("--> chv_optim - call")
-result =		PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 6)
-result =  @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 4500) #cpp = 100ms/2200 jumps
-println("#jumps = (dummy / result) ", length(dummy_t.time),", ", length(result.time))
-
-try
-	println(norm(dummy_t.time-result.time))
-	println("--> xc_f-xc_t = ",norm(dummy_t.xc-result.xc))
-	println("--> xd_f-xd_t = ",norm(dummy_t.xd-result.xd))
-catch
-end
+pb = PDMP.PDMPProblem(F_ml!, R_ml!, nu_ml, xc0, xd0, parms, (0.0, tf))
+# result =		PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 6)
+# result =  @time PDMP.pdmp!(xc0,xd0, F_ml!, R_ml!, nu_ml, parms,0.0,tf,algo=:chv_optim,n_jumps = 4500) #cpp = 100ms/2200 jumps
+res = @time PDMP.solve(pb, CHV(Tsit5()), n_jumps = 2200, save_positions = (false, true))

@@ -32,7 +32,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",simjptimes.fictitous_jumps," !!\n")
 
-	simjptimes.ppf .= caract.R(caract.ratecache, integrator.u, caract.xd, caract.parms, t, true)
+	simjptimes.ppf .= caract.R(caract.ratecache.rate, integrator.u, caract.xd, caract.parms, t, true)
 	@assert simjptimes.ppf[1] < simjptimes.ppf[2] "Error, your bound on the rates is not high enough!, $(simjptimes.ppf)"
 
 	simjptimes.reject = rand() < 1 - simjptimes.ppf[1] / simjptimes.ppf[2]
@@ -43,7 +43,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 	# execute the jump
 	if t < tf && simjptimes.reject == false
 		verbose && println("----> Jump!, ratio = ", simjptimes.ppf[1] / simjptimes.ppf[2], ", xd = ", caract.xd)
-		simjptimes.ppf .= caract.R(caract.ratecache, integrator.u, caract.xd, caract.parms, t, false)
+		simjptimes.ppf .= caract.R(caract.ratecache.rate, integrator.u, caract.xd, caract.parms, t, false)
 
 		if (save_pre_jump) && (t <= tf)
 			verbose && printstyled(color=:green,"----> save pre-jump\n")
@@ -53,11 +53,11 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 		end
 
 		#save rates for debugging
-		save_rate && push!(prob.rate_hist, sum(caract.ratecache))
+		save_rate && push!(prob.rate_hist, sum(caract.ratecache.rate))
 
 		# Update event
-		ev = pfsample(caract.ratecache, sum(caract.ratecache), length(caract.ratecache))
-		
+		ev = pfsample(caract.ratecache.rate, sum(caract.ratecache.rate), length(caract.ratecache.rate))
+
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
 		u_modified!(integrator, true)
@@ -104,7 +104,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 	# current jump number
 	njumps = 0
 	problem.simjptimes.lambda_star = 0.0	# this is the bound for the rejection method
-	problem.simjptimes.ppf .= caract.R(caract.ratecache, X0, caract.xd, caract.parms, t, true)
+	problem.simjptimes.ppf .= caract.R(caract.ratecache.rate, X0, caract.xd, caract.parms, t, true)
 
 	problem.simjptimes.tstop_extended = problem.simjptimes.tstop_extended / problem.simjptimes.ppf[2] + ti
 
