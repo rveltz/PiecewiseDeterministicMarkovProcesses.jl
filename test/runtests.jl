@@ -19,6 +19,11 @@ end
 	# @test alloc1 == alloc2
 end
 
+@testset "Example with 2d example, for autodiff" begin
+	include("../examples/tcp2d.jl")
+	# @test prod(isless.(errors,1e-3))
+end
+
 @testset "Rejection method" begin
 	include("../examples/tcp_rejection.jl")
 	@test prod(isless.(errors,1e-5))

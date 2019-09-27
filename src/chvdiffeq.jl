@@ -8,7 +8,7 @@ end
 
 function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
 	tau = x[end]
-	rate = tmp = get_rate(prob.ratecache, x)
+	rate = get_rate(prob.ratecache, x)
 	sr = prob.R(rate, x, prob.xd, prob.parms, tau, true)[1]
 	prob.F(xdot, x, prob.xd, prob.parms, tau)
 	xdot[end] = 1.0
