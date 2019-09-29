@@ -15,8 +15,12 @@ end
 	@test prod(isless.(errors,1e-3))
 end
 
-@testset "Controlling allocations" begin
-	# @test alloc1 == alloc2
+@testset "Test allocations" begin
+	@test alloc1 == alloc2
+end
+
+@testset "Test repetitive call" begin
+	@test restime1 == res12.time
 end
 
 @testset "Example with 2d example, for autodiff" begin

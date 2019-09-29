@@ -10,7 +10,6 @@ function AnalyticalSample(xc0, xd0, ti, nj::Int64)
 		xc = xch[end]
 		xd = xdh[end]
 		S = -log(rand())
-		# @show xd,S
 		if mod(xd,2) == 0
 			t += 1/10*log(1+10*S/xc)
 			push!(xch,xc + 10 * S )
@@ -90,13 +89,11 @@ println("\n\nComparison of solvers, with function Delta")
 	push!(errors, norm(res.time - res_a[1], Inf64))
 end
 
-
 Random.seed!(8)
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)
 
-
-# test for allocations, should not depend on
+# test for allocations, should not depend on the requested number of jumps
 Random.seed!(8)
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	alloc1 =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
@@ -104,17 +101,10 @@ Random.seed!(8)
 	Random.seed!(8)
 	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
 
-# using Plots
-# Random.seed!(8)
-# 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, 60.))
-# 	sol =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
-# 	plot(sol.time, sol.xc[1,:],label="solution")
-#
-# 	Random.seed!(8)
-# 	problem1 = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, 30.))
-# 	sol1 =  PDMP.solve(problem1, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
-# 	plot!(sol1.time, sol1.xc[1,:],label="part 1")
-#
-# 	problem2 = PDMP.PDMPProblem(F!, R!, nu, sol1.xc[:,end], sol1.xd[:,end], parms, (30., 60.))
-# 	sol2 =  PDMP.solve(problem2, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
-# 	plot!(sol2.time, sol2.xc[1,:],label="part 2", marker=:d)
+# test for many calls to solve, the trajectories should be the same
+problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+	Random.seed!(8)
+	res = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
+	restime1 = copy(res.time)
+	Random.seed!(8)
+	res12 = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
