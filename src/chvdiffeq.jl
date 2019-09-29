@@ -97,6 +97,7 @@ end
 function chv_diffeq!(problem::PDMPProblem,
 			ti::Tc, tf::Tc, X_extended::vece,
 			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false) where {Tc, Td, vece}
+	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
 	ti, tf = problem.tspan

@@ -43,9 +43,10 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
-		jump = RateJump(nu, Delta)
+		jump = Jump(nu, Delta)
 		rate = dualcache(get_rate_prototype(jump, Tc))
-		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
+		ratefunction = ConstantRate(R)
+		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
 	end
 end
 
@@ -57,6 +58,7 @@ end
 function init!(pb::PDMPCaracteristics)
 	pb.xc .= pb.xc0
 	pb.xd .= pb.xd0
+	init!(pb.R)
 end
 
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},

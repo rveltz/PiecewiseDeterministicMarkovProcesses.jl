@@ -1,5 +1,5 @@
 module PiecewiseDeterministicMarkovProcesses
-	using Random, LinearAlgebra
+	using Random, LinearAlgebra, SparseArrays, Parameters
 	using LSODA, Sundials, DiffEqJump, RecursiveArrayTools, DiffEqBase, SparseArrays
 	using ForwardDiff
 	import DiffEqBase: solve
@@ -12,6 +12,7 @@ module PiecewiseDeterministicMarkovProcesses
 	abstract type AbstractRejectionIterator <: AbstractRejection end
 
 	include("utilsforwarddiff.jl")
+	include("rate.jl")
 	include("problem.jl")
 	include("utils.jl")
 	include("chv.jl")

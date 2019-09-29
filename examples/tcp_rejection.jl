@@ -79,14 +79,20 @@ Random.seed!(1234)
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
 	Random.seed!(1234)
-	# res =  PiecewiseDeterministicMarkovProcesses.pdmp!(xc0, xd0, F_tcp!, R_tcp!, nu_tcp, parms, 0.0, tf, n_jumps = nj,   ode = ode[1], verbose = false, save_positions=(false, true), algo=:rejection)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ",ode[2])
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
 	end
 
-
+# test for allocations, should not depend on
+Random.seed!(1234)
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	Random.seed!(1234)
+	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	Random.seed!(1234)
+	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
 
 # Random.seed!(1234)
 # 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
