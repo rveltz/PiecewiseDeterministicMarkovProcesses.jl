@@ -10,6 +10,7 @@ struct VariableRate{TR} <: AbstractRate
 end
 
 function (vr::VariableRate)(rate, xc, xd, p, t, issum)
+	out = vr.R(rate, xc, xd, p, t, issum)
 	return vr.R(rate, xc, xd, p, t, issum)
 end
 
@@ -28,14 +29,13 @@ function (cr::ConstantRate)(rate, xc, xd, p, t, issum)
 	if issum == true
 		if cr.totalrate < 0
 			# update the catched value
-			cr.totalrate = cr.R(rate, xc, xd, p, t, true)[1]
+			cr.totalrate = cr.R(rate, xc, xd, p, t, issum)[1]
 		end
-		@show cr.totalrate
 		return cr.totalrate, cr.totalrate
 	else
-		cr.R(rate, xc, xd, p, t, false)
 		# the following call will be amortized if we call the method twice
-		cr.totalrate = cr.R(rate, xc, xd, p, t, true)[1]
+		cr.totalrate = -1
+		cr.R(rate, xc, xd, p, t, issum)
 	end
 end
 
@@ -50,11 +50,11 @@ end
 
 function (vr::CompositeRate)(rate, xc, xd, p, t, issum)
 	if issum == false
-		vr.Rcst(rate, xc, xd, p, t, false)
-		vr.Rvar(rate, xc, xd, p, t, false)
+		vr.Rcst(rate, xc, xd, p, t, issum)
+		vr.Rvar(rate, xc, xd, p, t, issum)
 	else
-		out_cst = vr.Rcst(rate, xc, xd, p, t, true)
-		out_var = vr.Rvar(rate, xc, xd, p, t, true)
+		out_cst = vr.Rcst(rate, xc, xd, p, t, issum)
+		out_var = vr.Rvar(rate, xc, xd, p, t, issum)
 		return out_cst .+ out_var
 	end
 end

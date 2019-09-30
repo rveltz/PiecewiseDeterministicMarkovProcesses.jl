@@ -19,6 +19,10 @@ end
 	@test alloc1 == alloc2
 end
 
+@testset "Test Rate structures" begin
+	include("testRates.jl")
+end
+
 @testset "Example with 2d example, for autodiff" begin
 	include("../examples/tcp2d.jl")
 end
