@@ -3,7 +3,7 @@ abstract type AbstractRate end
 # These are different structs introduced to deal with the case where the rate function is constant in between jumps: this are defined through the following type `ConstantRate`. This leads us to treat the case where the user can provide two rate functions, the first one being a `ConstantRate` and a second one `VariableRate` where no a-priori knowledge in infused by the user. These two functions are encapsulated in a `CompositeRate` structure. A composite rate `r::CompositeRate` is called like `r(rate, xc, xd, p, t, issum)`. In this case, the two components of `r` act on the same rate vector `rate` so the indexing of `rate` inside `r.Rcst` and `r.Rvar` should be considered global by the user and not local.
 
 # this is used to initialise the rate component of the structure `PDMPCaracteristics`. This is useful so that a call to `solve` with identical seed always return the same trajectory
-init!(R) = nothing
+init!(R::AbstractRate) = nothing
 
 struct VariableRate{TR} <: AbstractRate
 	R::TR
@@ -42,6 +42,7 @@ end
 struct CompositeRate{TRc, TRv} <: AbstractRate
 	Rcst::TRc
 	Rvar::TRv
+
 	function CompositeRate(Rc, Rv)
 		rc = ConstantRate(Rc)
 		rv = VariableRate(Rv)
@@ -51,13 +52,14 @@ end
 
 init!(r::CompositeRate) = (init!(r.Rcst); init!(r.Rvar))
 
-function (vr::CompositeRate)(rate, xc, xd, p, t, issum)
+# TODO For some reason, this is still allocating
+function (cpr::CompositeRate)(rate, xc, xd, p, t, issum)
 	if issum == false
-		vr.Rcst(rate, xc, xd, p, t, issum)
-		vr.Rvar(rate, xc, xd, p, t, issum)
+		cpr.Rcst(rate, xc, xd, p, t, issum)
+		cpr.Rvar(rate, xc, xd, p, t, issum)
 	else
-		out_cst = vr.Rcst(rate, xc, xd, p, t, issum)
-		out_var = vr.Rvar(rate, xc, xd, p, t, issum)
+		out_cst = cpr.Rcst(rate, xc, xd, p, t, issum)
+		out_var = cpr.Rvar(rate, xc, xd, p, t, issum)
 		return out_cst .+ out_var
 	end
 end
