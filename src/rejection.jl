@@ -1,22 +1,16 @@
 struct RejectionExact <: AbstractRejectionExact end
 
-function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = false, save_rejected=false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true)) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = false, save_rejected = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
-	verbose && printstyled(color=:red,"--> Start rejection method\n")
+	verbose && printstyled(color=:red,"--> Start Rejection method\n")
 
 	# initialise the problem. If I call twice this function, it should give the same result...
 	init!(problem)
 
-	# define the ODE flow
-	if ode == :cvode || ode == :bdf
-		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
-	elseif	ode == :adams
-		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
-	elseif ode == :lsoda
-		Flow = (X0_,Xd_,tp_) -> LSODA.lsoda((tt,x,xdot,data)->problem.caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
-	end
+	# we declare the characteristics for convenience
+	caract = problem.caract
 
 	ti, tf = problem.tspan
 	# it is faster to pre-allocate arrays and fill it at run time
@@ -24,26 +18,31 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 	nsteps  = 1
 	npoints = 2 # number of points for ODE integration
 
-	xc0 = problem.caract.xc
-	xd0 = problem.caract.xd
+	xc0 = caract.xc
+	xd0 = caract.xd
 
 	# Set up initial variables
 	t = ti
-	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps; rejection = true)
+	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c = allocate_arrays(ti, xc0, xd0, n_jumps; rejection = true)
+	rate_hist = eltype(xc0)[]
 
-	deltaxd = copy(problem.caract.pdmpjump.nu[1, :]) # declare this variable
+	# define the ODE flow
+	if ode == :cvode || ode == :bdf
+		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot) -> caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :BDF)
+	elseif	ode == :adams
+		Flow = (X0_,Xd_,tp_) -> Sundials.cvode(  (tt,x,xdot) -> caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol, integrator = :Adams)
+	elseif ode == :lsoda
+		Flow = (X0_,Xd_,tp_) -> LSODA.lsoda((tt,x,xdot,data) -> caract.F(xdot,x,Xd,problem.caract.parms,tt), X0_, tp_, abstol = abstol, reltol = reltol)
+	end
+
 	numpf   = size(problem.caract.pdmpjump.nu,1)	 # number of reactions
-	rate	= zeros(numpf)  # vector of rates
+	rate	= zeros(numpf) # vector of rates
 	tp = [ti, tf]		   # vector to hold the time interval over which to integrate the flow
 
 	#variables for rejection algorithm
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
-	ppf = problem.caract.R(rate, X0, Xd, problem.caract.parms, t, true)
-
-	# @assert ppf[2] == R(rate,X0+0.1265987*cumsum(ones(length(X0))),Xd,t+0.124686489,parms,true)[2] "Your rejection bound must be constant in between jumps, it cannot depend on time!!"
-	# rate *= 0;ppf = R(rate,X0,Xd,t,parms,true)
-	# @assert sum(rate) == 0 "You cannot modify the first argument of your rate function when sum_rate = true"
+	ppf = caract.R(rate, X0, Xd, problem.caract.parms, t, true)
 
 	δt = problem.simjptimes.tstop_extended
 
@@ -77,13 +76,6 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
 			# make a jump
 			ev = pfsample(rate, sum(rate), numpf)
-			# deltaxd .= problem.caract.pdmpjump.nu[ev,:]
-			#
-			# # Xd = Xd .+ deltaxd
-			# LinearAlgebra.BLAS.axpy!(1.0, deltaxd, Xd)
-			#
-			# # Xc = Xc .+ deltaxc
-			# problem.caract.pdmpjump.Delta(X0, Xd, problem.caract.parms, t, ev)
 
 			# we perform the jump
 			affect!(problem.caract.pdmpjump, ev, X0, Xd, problem.caract.parms, t)
@@ -91,17 +83,14 @@ function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = fals
 		end
 
 		nsteps += 1
-		t_hist[nsteps] = t
-		@inbounds for ii in eachindex(X0)
-			xc_hist[ii,nsteps] = X0[ii]
-		end
-		@inbounds for ii in eachindex(Xd)
-			xd_hist[ii,nsteps] = Xd[ii]
-		end
+		push!(t_hist, t)
+		push!(xc_hist, X0[ind_save_c])
+		push!(xd_hist, Xd[ind_save_d])
+		save_rate && push!(rate_hist, sum(rate))
 	end
-	if verbose println("-->Done") end
+	if verbose println("--> Done") end
 	if verbose println("--> xd = ",xd_hist[:,1:nsteps]) end
-	return PDMPResult(t_hist[1:nsteps], xc_hist[:,1:nsteps], xd_hist[:,1:nsteps], Float64[], save_positions)
+	return PDMPResult(t_hist[1:nsteps], xc_hist[:,1:nsteps], xd_hist[:,1:nsteps], rate_hist, save_positions)
 end
 
 function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_rejected = false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, xd_jump::Bool=true) where {Talgo <: AbstractRejectionExact}
@@ -121,7 +110,7 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 
 	# Set up initial variables
 	t = ti
-	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode = allocate_arrays(ti, xc0, xd0, n_jumps, rejection = true, ind_save_d = ind_save_d, ind_save_c = ind_save_c )
+	X0, _, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c = allocate_arrays(ti, xc0, xd0, n_jumps, rejection = true, ind_save_d = ind_save_d, ind_save_c = ind_save_c )
 
 	deltaxd = copy(problem.caract.pdmpjump.nu[1, :]) # declare this variable
 	numpf   = size(problem.caract.pdmpjump.nu,1)	 # number of reactions
@@ -179,10 +168,9 @@ function solve(problem::PDMPProblem, algo::Talgo; verbose::Bool = false, save_re
 		end
 
 		nsteps += 1
-		t_hist[njumps] = t
-		xc_hist[:,njumps] = X0[ind_save_c]
-		xd_hist[:,njumps] = Xd[ind_save_d]
-
+		push!(t_hist, t)
+		push!(xc_hist, X0[ind_save_c])
+		push!(xd_hist, Xd[ind_save_d])
 	end
 	println("njumps = ", njumps, " / rejections = ", nb_rejet)
 	if verbose println("-->Done") end

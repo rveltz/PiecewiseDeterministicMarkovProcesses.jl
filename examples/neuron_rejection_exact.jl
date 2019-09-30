@@ -6,16 +6,16 @@ const PDMP = PiecewiseDeterministicMarkovProcesses
 const N = 100
 
 function f(x)
-	return	x.^8
+	return	x^8
 end
 
 function Phi(out::Array{Float64,2}, xc, xd, parms, t::Array{Float64})
 	# vector field used for the continuous variable
 	# for this particular model, the empirical mean is constant between jumps
-	lambda_= 0.24
+	λ = 0.24
 	xbar::Float64 = sum(xc) / N
-	out[1,:] = copy(xc)
-	out[2,:] = xbar .+ exp(-lambda_*(t[2]-t[1])) .* (xc .- xbar)
+	out[1,:] .= xc
+	out[2,:] .= xbar .+ exp(-λ*(t[2]-t[1])) .* (xc .- xbar)
 	nothing
 end
 
@@ -39,7 +39,6 @@ end
 function Delta_xc_mf(xc, xd, parms, t::Float64, ind_reaction::Int64)
 	# this function return the jump in the continuous component
 	J = 0.98
-	lambda_= 0.24
 	for i=1:N
 		xc[i] += J/N
 	end
@@ -50,9 +49,9 @@ end
 
 Random.seed!(1234)
 xc0 = rand(N)*0.2 .+ 0.5
-xd0 = Vector{Int64}(zeros(N))
+xd0 = zeros(Int64, N)
 
-const nu_neur = SparseArrays.sparse(Array{Int64}(undef,N,N)*0)
+nu_neur = spzeros(Int64,N,N)
 parms = [0.1]
 tf = 10_050.
 

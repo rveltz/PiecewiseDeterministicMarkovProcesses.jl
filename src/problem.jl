@@ -90,6 +90,7 @@ function init!(pb::PDMPProblem)
 	pb.simjptimes.njumps = 0
 	pb.simjptimes.fictitous_jumps = 0
 	resize!(pb.time, 1)
+	resize!(pb.rate_hist, 1)
 	resize!(pb.Xc.u, 1)
 	resize!(pb.Xd.u, 1)
 end

@@ -21,16 +21,11 @@ function allocate_arrays(ti	,xc0, xd0, n_max; rejection = false, ind_save_c=-1:1
 	Xd	 = copy(xd0)
 
 	# arrays for storing history, pre-allocate storage
-	t_hist  = zeros(n_max)
-	xc_hist = zeros(eltype(xc0), length(ind_save_c), n_max)
-	xd_hist = zeros(eltype(xd0), length(ind_save_d), n_max)
+	t_hist  = [ti]
+	xc_hist = VectorOfArray([copy(xc0)[ind_save_c]])
+	xd_hist = VectorOfArray([copy(xd0)[ind_save_d]])
 	res_ode = zeros(2, length(X0))
 
-
-	# initialise arrays
-	t_hist[1] = ti
-	xc_hist[:,1] .= xc0[ind_save_c]
-	xd_hist[:,1] .= Xd[ind_save_d]
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c
 end
 

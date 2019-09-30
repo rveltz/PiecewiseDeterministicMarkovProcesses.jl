@@ -2,10 +2,11 @@
 
 include("chvdiffeq.jl")
 
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d=-1:1, ind_save_c=-1:1, dt=0.001, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
+	verbose && printstyled(color=:red,"--> Start CHV method\n")
 
 	# initialise the problem. If I call twice this solve function, it should give the same result...
 	init!(problem)
@@ -17,8 +18,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	n_jumps  += 1 # to hold initial vector
 	nsteps  = 1 # index for the current jump number
 
-	xc0 = problem.caract.xc0
-	xd0 = problem.caract.xd0
+	xc0 = caract.xc0
+	xd0 = caract.xd0
 
 	# Set up initial simulation time
 	t = ti
@@ -32,7 +33,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	t_hist  = [ti]
 
 	#useful to use the same array, as it can be used in CHV(ode)
-	Xd = problem.caract.xd
+	Xd = caract.xd
 	if ind_save_c[1] == -1
 		ind_save_c = 1:length(xc0)
 	end
@@ -48,8 +49,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 
 	nsteps += 1
 
-	deltaxd = copy(problem.caract.pdmpjump.nu[1,:]) # declare this variable, variable to hold discrete jump
-	numpf   = size(problem.caract.pdmpjump.nu,1)    # number of reactions
+	numpf   = size(caract.pdmpjump.nu, 1)    # number of reactions
 	rate    = zeros(numpf)  # vector of rates
 
 	# define the ODE flow, this leads to big memory saving
@@ -118,7 +118,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 		end
 		nsteps += 1
 	end
-	verbose && println("-->Done")
+	verbose && println("--> Done")
 	verbose && println("--> xc = ", xd_hist[:,1:nsteps-1])
 	return PDMPResult(t_hist, xc_hist, xd_hist, rate_hist, save_positions)
 end

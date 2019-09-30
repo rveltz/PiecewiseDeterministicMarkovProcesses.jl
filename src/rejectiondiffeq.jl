@@ -145,7 +145,13 @@ function rejection_diffeq!(problem::PDMPProblem,
 		push!(problem.Xd, copy(caract.xd))
 		push!(problem.time, sol.t[end])
 	end
-	return PDMPResult(problem.time, problem.Xc, problem.Xd, problem.rate_hist, save_positions)
+	return PDMPResult(problem.time,
+						problem.Xc,
+						problem.Xd,
+						problem.rate_hist,
+						save_positions,
+						problem.simjptimes.njumps,
+						problem.simjptimes.fictitous_jumps)
 end
 
 
