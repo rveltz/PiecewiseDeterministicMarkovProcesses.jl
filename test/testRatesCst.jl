@@ -123,3 +123,12 @@ pbvar = PDMP.PDMPProblem(F!, Rvar, nu, xc0, xd0, parms, (ti, tf))
 	resvar = PDMP.solve(pbvar, algo; n_jumps = nj)
 	@test resvar.time == res0.time
 	# plot!(resvar.time, resvar.xc[1,:])
+
+Random.seed!(8)
+	res0 =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)
+	Random.seed!(8)
+	rescst = PDMP.solve(pbcst, CHV(:lsoda); n_jumps = nj)
+	@test rescst.time == res0.time
+	Random.seed!(8)
+	resvar = PDMP.solve(pbvar, CHV(:lsoda); n_jumps = nj)
+	@test resvar.time == res0.time
