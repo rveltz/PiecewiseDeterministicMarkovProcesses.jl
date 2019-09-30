@@ -1,6 +1,6 @@
 # PDMP Solvers
 
-`solve(prob::PDMPProblem,alg;kwargs)`
+`solve(prob::PDMPProblem, alg; kwargs)`
 
 Solves the PDMP defined by `prob` using the algorithm `alg`.
 
@@ -43,7 +43,7 @@ In all other cases, one should try the CHV method where no a priori knowledge of
 
 ## Common Solver Options
 
-To simulate a PDMP, one uses `solve(prob::PDMPProblem,alg;kwargs)`. The field are as follows
+To simulate a PDMP, one uses `solve(prob::PDMPProblem, alg; kwargs)`. The field are as follows
 
 - `alg` can be `CHV(ode)` (for the [CHV algorithm](https://arxiv.org/abs/1504.06873)), `Rejection(ode)` for the Rejection algorithm and `RejectionExact()` for the rejection algorithm in case the flow in between jumps is known analytically. In this latter case, `prob.F` is used for the specification of the Flow. The ODE solver `ode` can be any solver of [DifferentialEquations.jl](https://github.com/JuliaDiffEq/DifferentialEquations.jl) like `Tsit5()` for example or anyone of the list `[:cvode, :lsoda, :adams, :bdf, :euler]`. Indeed, the package implement an iterator interface which does not work yet with `ode = LSODA()`. In order to have access to the ODE solver `LSODA()`, one should use `ode = :lsoda`.
 - `n_jumps = 10`: requires the solver to only compute the first 10 jumps.
@@ -53,5 +53,5 @@ To simulate a PDMP, one uses `solve(prob::PDMPProblem,alg;kwargs)`. The field ar
 - `abstol`: absolute tolerance used in the ODE solver
 - `ind_save_c`: which indices of `xc` should be saved
 - `ind_save_d`: which indices of `xd` should be saved
-- `save_rate = true`: requires the solver to save the total rate. Can be useful when estimating the rate bounds in oreder to use the Rejection algorithm as a second try.
+- `save_rate = true`: requires the solver to save the total rate. Can be useful when estimating the rate bounds in order to use the Rejection algorithm as a second try.
 -  `X_extended = zeros(Tc, 1 + 1)`: (advanced use) options used to provide the shape of the extended array in the [CHV algorithm](https://arxiv.org/abs/1504.06873). Can be useful in order to use `StaticArrays.jl` for example.

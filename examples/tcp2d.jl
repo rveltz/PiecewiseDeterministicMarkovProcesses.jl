@@ -1,12 +1,12 @@
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, Random, DifferentialEquations
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, parms, t)
 	if mod(xd[1],2)==0
 		 ẋ[1] =  1.0
-		 ẋ[2] = -1.0*xc[2]
+		 ẋ[2] = -1.0 * xc[2]
 	else
-		 ẋ[1] = -1.0*xc[1]
+		 ẋ[1] = -1.0 * xc[1]
 		 ẋ[2] =  1.0
 	end
 	nothing
@@ -15,7 +15,7 @@ end
 R(x) = x
 
 function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
-	if issum==false
+	if issum == false
 		rate[1] = R(xc[1]) +  R(xc[2])
 		rate[2] = parms[1]
 		return 0.
@@ -44,4 +44,20 @@ Random.seed!(1234)
 result3 = PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, save_positions=(false, false))
 
 #test auto-differentiation
-# result4 = PDMP.solve(problem, CHV(Rodas5()); n_jumps = nj, save_positions=(false, false))
+# result4 = PDMP.solve(problem, CHV(Rodas5()))
+
+####################################################################################################
+# DEBUG DEBUG
+# 
+# algo = CHV(Tsit5())
+# xd1 = zeros(Float64, length(xc0)+1)
+# xdd1 = similar(xd1)
+#
+# J = zeros(3,3)
+# algo(xdd1,xd1,problem.caract,0.)
+#
+# vf = (dx,x) -> algo(dx,x,problem.caract,0.)
+# #it works!
+# vf(xdd1,xd1)
+#
+# ForwardDiff.jacobian!(J, vf, xdd1, xd1)

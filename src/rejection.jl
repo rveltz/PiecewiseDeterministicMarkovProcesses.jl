@@ -1,6 +1,6 @@
 struct RejectionExact <: AbstractRejectionExact end
 
-function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = false, save_rejected=false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false,true),) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::Rejection{Tode}; verbose::Bool = false, save_rejected=false, ind_save_d=-1:1, ind_save_c=-1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true)) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
