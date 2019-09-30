@@ -63,7 +63,7 @@ pbcst = PDMP.PDMPProblem(F!, Rcst, nu, xc0, xd0, parms, (ti, tf))
 	Random.seed!(8)
 	rescst = PDMP.solve(pbcst, algo; n_jumps = nj)
 	@test rescst.time == res0.time
-	# plot!(rescst.time, res0.xc[1,:])
+	# plot!(rescst.time, rescst.xc[1,:])
 
 # here the rate function is constant in between jumps
 pbvar = PDMP.PDMPProblem(F!, Rvar, nu, xc0, xd0, parms, (ti, tf))

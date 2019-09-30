@@ -17,6 +17,7 @@ end
 mutable struct ConstantRate{TR} <: AbstractRate
 	R::TR
 	totalrate::Float64
+
 	function ConstantRate(R)
 		return new{typeof(R)}(R, -1.0)
 	end
@@ -47,6 +48,8 @@ struct CompositeRate{TRc, TRv} <: AbstractRate
 		return new{typeof(rc), typeof(rv)}(rc, rv)
 	end
 end
+
+init!(r::CompositeRate) = (init!(r.Rcst); init!(r.Rvar))
 
 function (vr::CompositeRate)(rate, xc, xd, p, t, issum)
 	if issum == false
