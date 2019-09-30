@@ -27,7 +27,7 @@ function AnalyticalSample(xc0, xd0, ti, nj::Int64)
 end
 
 function F!(ẋ, xc, xd, parms, t)
-	if mod(xd[1],2)==0
+	if mod(xd[1], 2)==0
 		ẋ[1] = 10xc[1]
 	else
 		ẋ[1] = -3xc[1]^2

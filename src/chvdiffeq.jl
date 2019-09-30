@@ -18,30 +18,6 @@ function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracte
 	return nothing
 end
 
-# function (chv::CHV{Tode})(xdot::ArrayPartition, x::ArrayPartition, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
-# 	tau = x.x[2]
-# 	sr = prob.R(prob.ratecache, x.x[1], prob.xd, prob.parms, tau, true)[1]
-# 	prob.F(xdot.x[1], x.x[1], prob.xd, prob.parms, tau)
-# 	xdot.x[2][1] = 1.0 / sr
-# 	# @inbounds for i in eachindex(xdot.x[1])
-# 	# 	xdot.x[1][i] = xdot.x[1][i] / sr
-# 	# end
-# 	mul!(xdot.x[1], 1.0 / sr, xdot.x[1])
-# 	return nothing
-# end
-#
-# function (chv::CHV{Tode})(xdot::ExtendedJumpArray, x::ExtendedJumpArray, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
-# 	tau = x[end]
-# 	sr = prob.R(prob.ratecache, x.u, prob.xd, prob.parms, tau, true)[1]
-# 	prob.F(xdot.u, x.u, prob.xd, prob.parms, tau)
-# 	xdot[end] = 1.0 / sr
-# 	# @inbounds for i in eachindex(xdot.x[1])
-# 	# 	xdot.x[1][i] = xdot.x[1][i] / sr
-# 	# end
-# 	mul!(xdot.u, 1.0 / sr, xdot.u)
-# 	return nothing
-# end
-
 ###################################################################################################
 ### implementation of the CHV algo using DiffEq
 
@@ -175,8 +151,5 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo:
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)
 
-	# X_extended = ExtendedJumpArray(copy(problem.caract.xc), [Tc(1)])
-	# X_extended = DiffEqArray(copy(problem.caract.xc), 	  [Tc(1)])
-	# X_extended = ArrayPartition(copy(problem.caract.xc),    [Tc(1)])
 	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate)
 end
