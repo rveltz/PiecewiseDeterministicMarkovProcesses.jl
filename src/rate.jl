@@ -48,6 +48,10 @@ struct CompositeRate{TRc, TRv} <: AbstractRate
 		rv = VariableRate(Rv)
 		return new{typeof(rc), typeof(rv)}(rc, rv)
 	end
+
+	function CompositeRate(rc::AbstractRate, rv::AbstractRate)
+		return new{typeof(rc), typeof(rv)}(rc, rv)
+	end
 end
 
 init!(r::CompositeRate) = (init!(r.Rcst); init!(r.Rvar))
