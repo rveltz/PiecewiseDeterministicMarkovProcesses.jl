@@ -103,6 +103,7 @@ Random.seed!(8)
 	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	Random.seed!(8)
 	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
+	println("--> allocs = ", (alloc1, alloc2))
 
 # using Plots
 # Random.seed!(8)

@@ -30,17 +30,6 @@ end
 # 	return nothing
 # end
 #
-# function (chv::CHV{Tode})(xdot::ExtendedJumpArray, x::ExtendedJumpArray, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
-# 	tau = x[end]
-# 	sr = prob.R(prob.ratecache, x.u, prob.xd, prob.parms, tau, true)[1]
-# 	prob.F(xdot.u, x.u, prob.xd, prob.parms, tau)
-# 	xdot[end] = 1.0 / sr
-# 	# @inbounds for i in eachindex(xdot.x[1])
-# 	# 	xdot.x[1][i] = xdot.x[1][i] / sr
-# 	# end
-# 	mul!(xdot.u, 1.0 / sr, xdot.u)
-# 	return nothing
-# end
 
 ###################################################################################################
 ### implementation of the CHV algo using DiffEq
