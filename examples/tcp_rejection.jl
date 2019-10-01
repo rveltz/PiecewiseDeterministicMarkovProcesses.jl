@@ -85,14 +85,16 @@ println("\n\nComparison of solvers")
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
 	end
 
-# test for allocations, should not depend on
-Random.seed!(1234)
+println("test for allocations, should not depend on")
+	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	Random.seed!(1234)
 	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	Random.seed!(1234)
 	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
+	Random.seed!(1234)
+	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 3nj, save_positions = (false, false))
 
 # Random.seed!(1234)
 # 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
