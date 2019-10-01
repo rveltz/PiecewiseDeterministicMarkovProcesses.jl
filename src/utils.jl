@@ -67,4 +67,6 @@ struct PDMPResult{Tc <: Real, vectype_xc, vectype_xd}
 end
 
 PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, eltype(xchist)[], (false,false), length(time), 0)
-PDMPResult(time, xchist, xdhist, rates, sp)  = PDMPResult(time, xchist, xdhist, rates, sp, length(time), 0)
+PDMPResult(time, xchist, xdhist, rates, savepos)  = PDMPResult(time, xchist, xdhist, rates, savepos, length(time), 0)
+
+PDMPResult(pb::PDMPProblem, savepos = (false, false)) = PDMPResult(pb.time, pb.Xc, pb.Xd, pb.rate_hist, savepos, pb.simjptimes.njumps, pb.simjptimes.fictitous_jumps)

@@ -83,6 +83,10 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	caract::Tcar									# struct for characteristics of the PDMP
 end
 
+pushTime!(pb::PDMPProblem, t) = push!(pb.time, t)
+pushXc!(pb::PDMPProblem, xc) = push!(pb.Xc, xc)
+pushXd!(pb::PDMPProblem, xd) = push!(pb.Xd, xd)
+
 function init!(pb::PDMPProblem)
 	init!(pb.caract)
 	pb.simjptimes.tstop_extended = -log(rand())
