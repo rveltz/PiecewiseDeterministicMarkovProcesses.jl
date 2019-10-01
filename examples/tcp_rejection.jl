@@ -18,9 +18,9 @@ function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
 	if issum==false
 		rate[1] = rate_tcp(xc[1])
 		rate[2] = 0.0
-		return rate_tcp(xc[1]), 1.
+		return rate_tcp(xc[1]), 1.0
 	else
-		return rate_tcp(xc[1]), 1.
+		return rate_tcp(xc[1]), 1.0
 	end
 end
 
@@ -107,3 +107,7 @@ println("test for allocations, should not depend on")
 # Random.seed!(1234)
 # 	PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 # 	res = @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 4nj, save_positions = (false, false))
+# 
+# Random.seed!(1234)
+# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+# 	res =  PDMP.solve(problem, Rejection(:lsoda); n_jumps = nj, save_positions = (false, false), save_rate = true)

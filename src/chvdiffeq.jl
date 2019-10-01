@@ -24,15 +24,17 @@ end
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose)
+	# we declare the characteristics for convenience
+	caract = prob.caract
+	ratecache = caract.ratecache
+	simjptimes = prob.simjptimes
+	
 	# final simulation time
 	tf = prob.tspan[2]
 
 	# find the next jump time
 	t = integrator.u[end]
 	prob.simjptimes.lastjumptime = t
-
-	# we declare the characteristics for convenience
-	caract = prob.caract
 
 	verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
 	verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", caract.xd,"\n")

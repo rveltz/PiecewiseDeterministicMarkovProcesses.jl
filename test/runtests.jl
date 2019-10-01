@@ -59,6 +59,6 @@ end
 
 @testset "Neural network" begin
 	include("../examples/neuron_rejection_exact.jl")
-	@test result.xd[1,end] == 98
-	@test size(result.xd)[1] == 2
+	@test result.xd[1,end] == 99
+	@test size(result.xd)[1] == 100
 end
