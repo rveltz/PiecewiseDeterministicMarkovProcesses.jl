@@ -55,3 +55,6 @@ To simulate a PDMP, one uses `solve(prob::PDMPProblem, alg; kwargs)`. The field 
 - `ind_save_d`: which indices of `xd` should be saved
 - `save_rate = true`: requires the solver to save the total rate. Can be useful when estimating the rate bounds in order to use the Rejection algorithm as a second try.
 -  `X_extended = zeros(Tc, 1 + 1)`: (advanced use) options used to provide the shape of the extended array in the [CHV algorithm](https://arxiv.org/abs/1504.06873). Can be useful in order to use `StaticArrays.jl` for example.
+
+!!! note "Solvers for the `DiffEqJump` wrapper"
+    We provide a basic wrapper that should work for `VariableJumps` (the other types of jumps have not been thoroughly tested). You can use `CHV` for this type of problems. The `Rejection` solver is not functional yet.
