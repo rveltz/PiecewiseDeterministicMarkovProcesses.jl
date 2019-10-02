@@ -2,6 +2,7 @@ module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra, SparseArrays, Parameters
 	using LSODA, Sundials, DiffEqJump, RecursiveArrayTools, DiffEqBase, SparseArrays
 	using ForwardDiff
+	using DiffEqBase, DiffEqJump
 	import DiffEqBase: solve
 
 	abstract type AbstractPDMPAlgorithm end
@@ -20,7 +21,7 @@ module PiecewiseDeterministicMarkovProcesses
 	include("rejectiondiffeq.jl")
 	include("rejection.jl")
 	include("tau-leap.jl")
-	include("diffeq.jl")
+	include("diffeqwrap.jl")
 
 	export ssa,
 		chv!,chv,

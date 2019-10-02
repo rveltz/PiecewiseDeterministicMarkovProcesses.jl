@@ -62,3 +62,7 @@ end
 	@test result.xd[1,end] == 99
 	@test size(result.xd)[1] == 100
 end
+
+@testset "DiffEqJump Wrap" begin
+	include("../examples/examplediffeqjumpwrapper.jl")
+end
