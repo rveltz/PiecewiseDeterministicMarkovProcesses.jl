@@ -19,18 +19,19 @@ f = function (du,u,p,t)
 	nothing
 end
 
-prob = ODEProblem(f,[0.2, 0.0, 0.0],(0.0,10.0))
-jump_prob = JumpProblem(prob,Direct(),jump,jumpprint)
+prob = ODEProblem(f, [0.2, 0.0, 0.0], (0.0,10.0))
+jump_prob = JumpProblem(prob, Direct(), jump,jumpprint)
+
 integrator = init(jump_prob,Tsit5())
 
 # let us solve the PDMD with DiffEqJump
 Random.seed!(123)
-soldj = @time solve(jump_prob,Tsit5())
+	soldj = @time solve(jump_prob,Tsit5())
 # plot(soldj,ylims=(0, 2))
 
 # wrapper to PDMP
-pb = PDMP.PDMPProblem(jump_prob)
+pb = PDMP.PDMPProblem(prob,jump,jumpprint)
 Random.seed!(123)
-solwp = @time solve(jump_prob, CHV(Tsit5()); save_positions = (false, true))
+	solwp = @time solve(pb, CHV(Tsit5()); save_positions = (false, true))
 # plot(solwp.time, solwp.xc[1,:])
-# 	plot!(solwp.time, solwp.xc[2,:],line=:step, marker=:d)
+	# plot!(solwp.time, solwp.xc[2,:],line=:step, marker=:d)

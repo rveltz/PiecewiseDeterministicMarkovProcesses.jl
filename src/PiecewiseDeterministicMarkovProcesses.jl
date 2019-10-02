@@ -1,7 +1,8 @@
 module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra
-	using LSODA, Sundials, DiffEqJump, RecursiveArrayTools, DiffEqBase, SparseArrays
+	using LSODA, Sundials, RecursiveArrayTools, SparseArrays
 	using ForwardDiff
+	using DiffEqBase, DiffEqJump
 	import DiffEqBase: solve
 
 	abstract type AbstractPDMPAlgorithm end
@@ -19,7 +20,7 @@ module PiecewiseDeterministicMarkovProcesses
 	include("rejectiondiffeq.jl")
 	include("rejection.jl")
 	include("tau-leap.jl")
-	include("diffeq.jl")
+	include("diffeqwrap.jl")
 
 	export pdmp!,
 		ssa,
