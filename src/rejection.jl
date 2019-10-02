@@ -68,7 +68,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 		if (t < tf)
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
 			# make a jump
-			ev = pfsample(ratecache.rate, sum(ratecache.rate), length(ratecache.rate))
+			ev = pfsample(ratecache.rate)
 
 			# we perform the jump
 			affect!(caract.pdmpjump, ev, X0, Xd, caract.parms, t)

@@ -49,6 +49,8 @@ function pfsample(w::vec, s::Tc, n::Int64) where {Tc, vec <: AbstractVector{Tc}}
 	return i
 end
 
+pfsample(rate) = pfsample(rate, sum(rate), length(rate))
+
 """
 This type stores the output composed of:
 - **time** : a `Vector` of `Float64`, containing the times of simulated events.

@@ -56,7 +56,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 		end
 
 		# Update event
-		ev = pfsample(ratecache.rate, sum(ratecache.rate), length(ratecache.rate))
+		ev = pfsample(ratecache.rate)
 
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
