@@ -103,7 +103,8 @@ function rejection_diffeq!(problem::PDMPProblem,
 	X0 = copy(caract.xc)
 
 	# current jump number
-	njumps = 0
+	# njumps = 0
+	simjptimes.njumps = 1
 	simjptimes.lambda_star = 0.0	# this is the bound for the rejection method
 	simjptimes.ppf .= caract.R(ratecache.rate, X0, caract.xd, caract.parms, t, true)
 
@@ -118,7 +119,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 	prob_REJ = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
 	integrator = init(prob_REJ, ode, tstops = simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
-	while (t < tf) && simjptimes.njumps < n_jumps-1 #&& simjptimes.fictitous_jumps < 10
+	while (t < tf) && simjptimes.njumps < n_jumps #&& simjptimes.fictitous_jumps < 10
 		verbose && println("--> n = $(simjptimes.njumps), t = $t -> ", simjptimes.tstop_extended)
 		step!(integrator)
 		if t >= simjptimes.lastjumptime
@@ -128,7 +129,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 		t, tprev = simjptimes.lastjumptime, t
 
 		# the previous step was a jump!
-		if njumps < simjptimes.njumps && save_positions[2] && (t <= tf) && simjptimes.reject == false
+		if save_positions[2] && (t <= tf) && simjptimes.reject == false
 			verbose && println("----> save post-jump, xd = ", problem.Xd)
 			pushTime!(problem ,t)
 			pushXc!(problem, copy(caract.xc))

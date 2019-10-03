@@ -37,6 +37,11 @@ end
 	@test norm(errors, Inf64) < 1e-5
 end
 
+@testset "Test number of fictitious jumps" begin
+	@test res1.njumps == res2.njumps
+	@test res1.nrejected == res2.nrejected
+end
+
 @testset "Neuron model" begin
 	include("../examples/pdmp_example_eva.jl")
 	@test result1.time[end] == 100.
@@ -59,7 +64,7 @@ end
 
 @testset "Neural network" begin
 	include("../examples/neuron_rejection_exact.jl")
-	@test result.xd[1,end] == 99
+	@test result.xd[1,end] == 97
 	@test size(result.xd)[1] == 100
 end
 

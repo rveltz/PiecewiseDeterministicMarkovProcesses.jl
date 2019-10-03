@@ -14,7 +14,8 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 
 	ti, tf = problem.tspan
 	# it is faster to pre-allocate arrays and fill it at run time
-	n_jumps  += 1 #to hold initial vector
+	n_jumps  += 0 # to hold initial vector
+	n_reject  = 0  # to hold the number of rejects
 	nsteps  = 1
 	npoints = 2 # number of points for ODE integration
 
@@ -60,6 +61,9 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 				reject = rand() < 1 - ppf[1] / ppf[2]
 			end
 			δt = -log(rand())
+			if reject
+				n_reject += 1
+			end
 		end
 
 		# there is a jump!
@@ -82,7 +86,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 	end
 	if verbose println("--> Done") end
 	if verbose println("--> xd = ",xd_hist[:,1:nsteps]) end
-	return PDMPResult(problem.time, xc_hist, xd_hist, problem.rate_hist, save_positions, nsteps, 0)
+	return PDMPResult(problem.time, xc_hist, xd_hist, problem.rate_hist, save_positions, nsteps, n_reject)
 end
 
 function solve(problem::PDMPProblem, algo::Rejection{Tode}; reltol = 1e-7, abstol = 1e-9, kwargs...) where {Tode <: Symbol}

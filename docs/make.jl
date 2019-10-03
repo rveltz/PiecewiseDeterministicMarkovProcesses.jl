@@ -7,7 +7,7 @@ makedocs(doctest = false,
 				"Tutorials" => "tutorials.md",
 				"Problem Type" => "problem.md",
 				"Solver Algorithms" => "solver.md",
-				"Additional Features" => "addFeatures.md"
+				"FAQ" => "addFeatures.md"
 			]
 )
 

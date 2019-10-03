@@ -116,8 +116,9 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# current jump number
 	njumps = 0
+	simjptimes.njumps = 1
 
-	while (t < tf) && simjptimes.njumps < n_jumps-1
+	while (t < tf) && simjptimes.njumps < n_jumps
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
 		step!(integrator)
 

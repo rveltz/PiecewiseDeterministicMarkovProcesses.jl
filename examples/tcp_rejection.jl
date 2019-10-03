@@ -81,6 +81,7 @@ println("\n\nComparison of solvers")
 	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
+	@show res.njumps, res.nrejected, length(res.xc)
 	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ",ode[2])
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
 	end
@@ -107,7 +108,16 @@ println("test for allocations, should not depend on")
 # Random.seed!(1234)
 # 	PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 # 	res = @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 4nj, save_positions = (false, false))
-# 
+#
 # Random.seed!(1234)
 # 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 # 	res =  PDMP.solve(problem, Rejection(:lsoda); n_jumps = nj, save_positions = (false, false), save_rate = true)
+
+
+# test the number of rejected jumps
+Random.seed!(1234)
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res1 =  PDMP.solve(problem, Rejection(:cvode); n_jumps = nj)
+Random.seed!(1234)
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res2 =  PDMP.solve(problem, Rejection(CVODE_BDF()); n_jumps = nj)
