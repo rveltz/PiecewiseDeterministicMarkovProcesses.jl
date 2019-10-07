@@ -1,5 +1,9 @@
 using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, DifferentialEquations
 
+macro testS(label, args...)
+	:(@testset $label begin @test $(args...); end)
+end
+
 @testset "Example TCP" begin
 	include("../examples/tcp.jl")
 	@test norm(errors[6:end], Inf64) < 1e-4
@@ -13,7 +17,7 @@ end
 @testset "Example with stiff ODE part" begin
 	include("pdmpStiff.jl")
 	@test norm(errors, Inf64) < 1e-3
-	@test restime1 == res12.time
+	@testS "Call many times the same problem" restime1 == res12.time
 end
 
 @testset "Controlling allocations" begin

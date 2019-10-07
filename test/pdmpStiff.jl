@@ -119,6 +119,7 @@ println("\n\nComparison of solvers - rejection")
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = 4, verbose = false)
 	println("--> norm difference = ", norm(res.time - res_a_rej[1][1:4], Inf64), "  - solver = ",ode[2])
+	@test norm(res.time - res_a_rej[1][1:4], Inf64) < 0.0043
 end
 
 Random.seed!(8)

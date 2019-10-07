@@ -79,7 +79,7 @@ end
 
 function rejection_diffeq!(problem::PDMPProblem,
 				ti::Tc, tf::Tc, verbose = false; ode = Tsit5(),
-				save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false) where {Tc, Td}
+				save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false, finalizer = finalize_dummy) where {Tc, Td}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
 	ti, tf = problem.tspan
@@ -140,6 +140,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 			#put the flag for rejection
 			simjptimes.reject = true
 		end
+		finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
 	end
 	# we check whether the last bit [t_last_jump, tf] is missing
 	if t>tf
@@ -155,7 +156,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 end
 
 
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::Rejection{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = true) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::Rejection{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = true, finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
 
-	return rejection_diffeq!(problem, problem.tspan[1], problem.tspan[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate )
+	return rejection_diffeq!(problem, problem.tspan[1], problem.tspan[2], verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer )
 end

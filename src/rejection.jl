@@ -1,6 +1,6 @@
 struct RejectionExact <: AbstractRejectionExact end
 
-function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save_rejected = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, save_positions = (false, true), save_rate = false)
+function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save_rejected = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy)
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"--> Start Rejection method\n")
 
@@ -83,6 +83,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 		push!(xc_hist, X0[ind_save_c])
 		push!(xd_hist, Xd[ind_save_d])
 		save_rate && push!(problem.rate_hist, sum(ratecache.rate))
+		finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
 	end
 	if verbose println("--> Done") end
 	if verbose println("--> xd = ",xd_hist[:,1:nsteps]) end

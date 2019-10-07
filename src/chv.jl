@@ -2,7 +2,7 @@
 
 include("chvdiffeq.jl")
 
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
@@ -95,6 +95,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			push!(xd_hist, Xd[ind_save_d])
 
 			save_rate && push!(problem.rate_hist, caract.R(ratecache.rate, X_extended, Xd, caract.parms, t, true)[1])
+
+			finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
 
 			δt = - log(rand())
 

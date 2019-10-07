@@ -48,7 +48,7 @@ result3 = PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, save_positions=(false, 
 
 ####################################################################################################
 # DEBUG DEBUG
-# 
+#
 # algo = CHV(Tsit5())
 # xd1 = zeros(Float64, length(xc0)+1)
 # xdd1 = similar(xd1)
