@@ -11,7 +11,7 @@ end
 end
 
 @testset "Example with stiff ODE part" begin
-	include("../examples/pdmpStiff.jl")
+	include("pdmpStiff.jl")
 	@test norm(errors, Inf64) < 1e-3
 	@test restime1 == res12.time
 end

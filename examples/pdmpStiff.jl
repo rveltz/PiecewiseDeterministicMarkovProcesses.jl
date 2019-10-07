@@ -1,7 +1,7 @@
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 	const PDMP = PiecewiseDeterministicMarkovProcesses
 
-function AnalyticalSample(xc0, xd0, ti, nj::Int64)
+function AnalyticalSampleCHV(xc0, xd0, ti, nj::Int64)
 	xch = [xc0[1]]
 	xdh = [xd0[1]]
 	th  = [ti]
@@ -40,9 +40,9 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 	if issum == false
 		rate[1] = R(xc[1])
 		rate[2] = parms[1]
-		return 0.
+		return 0., parms[1] + 50.
 	else
-		return R(xc[1]) + parms[1]
+		return R(xc[1]) + parms[1], parms[1] + 50.
 	end
 end
 
@@ -58,54 +58,13 @@ xc0 = [1.0]
 errors = Float64[]
 
 Random.seed!(8)
-	res_a = AnalyticalSample(xc0,xd0,ti,nj)
+	res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
 
+problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
 	Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
-	println("--> norm difference = ", norm(res.time - res_a[1], Inf64), "  - solver = ",ode[2])
-	push!(errors,norm(res.time - res_a[1],Inf64))
+	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
+	push!(errors,norm(res.time - res_a_chv[1],Inf64))
 end
-
-
-# here, we write the jump problem with a function
-function Delta!(xc, xd, t, parms, ind_reaction::Int64)
-	if ind_reaction == 1
-		xd[1] += 1
-	else
-		xd[2] -= 1
-	end
-	nothing
-end
-
-println("\n\nComparison of solvers, with function Delta")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
-	Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!,  Delta!, 2, xc0, xd0, parms, (ti, tf))
-	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
-	println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ", ode[2])
-	push!(errors, norm(res.time - res_a[1], Inf64))
-end
-
-Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	res =  PDMP.solve(problem, CHV(:lsoda); n_jumps = nj)
-
-# test for allocations, should not depend on the requested number of jumps
-Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	alloc1 =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
-	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
-	Random.seed!(8)
-	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
-	println("--> allocations = ", (alloc1, alloc2))
-
-# test for many calls to solve, the trajectories should be the same
-problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	Random.seed!(8)
-	res = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
-	restime1 = copy(res.time)
-	Random.seed!(8)
-	res12 = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))

@@ -81,7 +81,6 @@ println("\n\nComparison of solvers")
 	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
-	@show res.njumps, res.nrejected, length(res.xc)
 	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ",ode[2])
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
 	end
@@ -96,6 +95,18 @@ println("test for allocations, should not depend on")
 	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
 	Random.seed!(1234)
 	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 3nj, save_positions = (false, false))
+
+println("test for multiple calls, the result should not depend on")
+	Random.seed!(1234)
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+	res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+	@assert res1.time != res2.time
+	Random.seed!(1234)
+	res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+	Random.seed!(1234)
+	res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+	@assert res1.time == res2.time
 
 # Random.seed!(1234)
 # 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))

@@ -1,4 +1,11 @@
 """
+Finalising function. It is called at the end of each computed jump for the user to alter the saving, plotting... procedure.
+"""
+function finalize_dummy(rate, xc, xd, p, t)
+	nothing
+end
+
+"""
 Function to pre-allocate arrays contening the result.
 """
 function allocate_arrays(ti	,xc0, xd0, n_max; rejection = false, ind_save_c=-1:1, ind_save_d=-1:1)
@@ -71,4 +78,4 @@ end
 PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, eltype(xchist)[], (false,false), length(time), 0)
 PDMPResult(time, xchist, xdhist, rates, savepos)  = PDMPResult(time, xchist, xdhist, rates, savepos, length(time), 0)
 
-PDMPResult(pb::PDMPProblem, savepos = (false, false)) = PDMPResult(pb.time, pb.Xc, pb.Xd, pb.rate_hist, savepos, pb.simjptimes.njumps, pb.simjptimes.fictitous_jumps)
+PDMPResult(pb::PDMPProblem, savepos = (false, false)) = PDMPResult(copy(pb.time), copy(pb.Xc), copy(pb.Xd), copy(pb.rate_hist), savepos, pb.simjptimes.njumps, pb.simjptimes.fictitous_jumps)
