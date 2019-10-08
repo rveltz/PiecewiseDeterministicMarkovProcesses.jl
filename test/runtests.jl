@@ -4,6 +4,8 @@ macro testS(label, args...)
 	:(@testset $label begin @test $(args...); end)
 end
 
+include("simpleTests.jl")
+
 @testset "Example TCP" begin
 	include("../examples/tcp.jl")
 	@test norm(errors[6:end], Inf64) < 1e-4
