@@ -13,5 +13,7 @@ end
 
 dualcache(u::AbstractArray, N=Val{ForwardDiff.pickchunksize(length(u))}) = DiffCache(u, size(u), N)
 
+# this is from the trick above. It fails here because x and dc.rate do not have the same dimension
 get_rate(dc::DiffCache, u::AbstractArray{T}) where T<:ForwardDiff.Dual = reinterpret(T, dc.dual_rate)
+# get_rate(dc::DiffCache, u::AbstractArray{T}) where T <: ForwardDiff.Dual = (dc.dual_rate)
 get_rate(dc::DiffCache, u::AbstractArray) = dc.rate

@@ -1,5 +1,3 @@
-include("problem.jl")
-
 using DiffEqJump: AbstractAggregatorAlgorithm, NullAggregator
 
 PDMPProblem(prob,jumps::ConstantRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)

@@ -1,5 +1,5 @@
 using PiecewiseDeterministicMarkovProcesses, Random, DifferentialEquations
-const PDMP = PiecewiseDeterministicMarkovProcesses
+	const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, parms, t)
 	if mod(xd[1],2)==0
@@ -15,36 +15,36 @@ end
 R(x) = x
 
 function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
-	if issum == false
 		rate[1] = R(xc[1]) +  R(xc[2])
-		rate[2] = parms[1]
+		rate[2] = parms[1] * xd[1] * xc[1]
+	if issum == false
 		return 0.
 	else
-		return R(xc[1]) +  R(xc[2]) + parms[1]
+		return sum(rate)
 	end
 end
 
-xc0 = vec([0.05,0.075])
-xd0 = vec([0, 1])
+xc0 = [0.05, 0.075]
+xd0 = [0, 1]
 
-nu_tcp = [[1 0];[0 -1]]
-parms = vec([0.1])
+nu_tcp = [1 0;0 -1]
+parms = [0.1]
 tf = 10000.0
 nj = 1000
 
 
 Random.seed!(1234)
-problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-result1 = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions=(false, false))
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+	result1 = @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions=(false, false))
 
 Random.seed!(1234)
-result2 = PDMP.solve(problem, CHV(:cvode); n_jumps = nj, save_positions=(false, false))
+	result2 = PDMP.solve(problem, CHV(:cvode); n_jumps = nj, save_positions=(false, false))
 
 Random.seed!(1234)
-result3 = PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, save_positions=(false, false))
+	result3 = PDMP.solve(problem, CHV(:lsoda); n_jumps = 2, save_positions=(false, false))
 
 #test auto-differentiation
-# result4 = PDMP.solve(problem, CHV(Rodas5()))
+# result4 = @time PDMP.solve(problem, CHV(Rodas5()))
 
 ####################################################################################################
 # DEBUG DEBUG

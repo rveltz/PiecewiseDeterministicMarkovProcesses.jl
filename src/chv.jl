@@ -1,7 +1,5 @@
 ### WARNING This is an old ODE solver which is not based on an iterator implementation. We keep it until LSODA has an iterator implementation
 
-include("chvdiffeq.jl")
-
 function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode

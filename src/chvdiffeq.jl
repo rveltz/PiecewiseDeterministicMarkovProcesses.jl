@@ -1,7 +1,4 @@
 ###################################################################################################
-include("jumps.jl")
-include("utils.jl")
-
 struct CHV{Tode} <: AbstractCHVIterator
 	ode::Tode	# ODE solver to use for the flow in between jumps
 end

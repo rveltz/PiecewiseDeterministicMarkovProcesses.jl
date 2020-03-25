@@ -69,8 +69,8 @@ end
 # plot!(res.time,res.xc[:,1])
 # case with no allocations  0.000721 seconds (330 allocations: 26.266 KiB)
 # Random.seed!(1234)
-# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-# 	res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, 1e19))
+# 	res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = 4nj, save_positions = (false, false))
 
 # res =  @timed PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 # res[end].poolalloc
