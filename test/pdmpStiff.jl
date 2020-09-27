@@ -122,16 +122,34 @@ println("\n\nComparison of solvers - CHV (without saving solution)")
 	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
 	@test norm(res1.time - res2.time) ≈ 0
 	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
-	@show res1.xd[end] , res2.xd[end]
 	if ode[1] isa Symbol
 		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
 	end
 end
 
+println("\n\nComparison of solvers - CHV (without saving solution)")
+	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+	Random.seed!(8)
+	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+	Random.seed!(8)
+	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
+	@test norm(res1.time - res2.time) ≈ 0
+	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
+	if ode[1] isa Symbol
+		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
+	end
+end
 
+# idem as above but with tf limited simulation
 Random.seed!(8)
-res1 =  PDMP.solve(problem, CHV(CVODE_BDF()); n_jumps = nj)
-plot(res1.time, res1.xc[:,:]')
+res1 =  PDMP.solve(problem, CHV(:lsoda); n_jumps = 200)
+Random.seed!(8)
+res2 =  PDMP.solve(problem, CHV(:lsoda); n_jumps = 200, save_positions = (true, false) )
+@test res1.time[end] ≈ res2.time[end]
+@test res1.xc[end] ≈ res2.xc[end]
+
+# using Plots
+# plot(res1.time, res1.xc[:,:]')
 
 println("\n\nComparison of solvers - rejection")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]

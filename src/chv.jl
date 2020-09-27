@@ -4,7 +4,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :bdf]
-	verbose && printstyled(color=:red,"--> Start CHV method\n")
+	verbose && printstyled(color=:red,"--> Start CHV method (algo::Symbol)\n")
 
 	# initialise the problem. If I call twice this solve function, it should give the same result...
 	init!(problem)
@@ -88,7 +88,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			verbose && println("--> xd = ", Xd)
 
 			# save state, post-jump
-			if save_positions[2]
+			if save_positions[2] || (nsteps == n_jumps-1)
 				pushTime!(problem, t)
 				push!(xc_hist, X_extended[ind_save_c])
 				push!(xd_hist, Xd[ind_save_d])
@@ -102,9 +102,9 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 
 		else
 			if ode in [:cvode, :bdf, :adams]
-				res_ode_last = Sundials.cvode((tt, x, xdot)->caract.F(xdot,x,Xd,caract.parms,tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = Sundials.cvode((tt, x, xdot) -> caract.F(xdot, x, Xd, caract.parms, tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
 			else#if ode==:lsoda
-				res_ode_last = LSODA.lsoda((tt, x, xdot, data)->caract.F(xdot,x,Xd,caract.parms,tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt, x, xdot, data) -> caract.F(xdot, x, Xd, caract.parms, tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 
@@ -116,6 +116,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 		nsteps += 1
 	end
 	verbose && println("--> Done")
-	verbose && println("--> xc = ", xd_hist[:,1:nsteps-1])
+	if verbose && save_positions[2]
+		println("--> xc = ", xd_hist[:, 1:nsteps-1])
+	end
 	return PDMPResult(problem.time, xc_hist, xd_hist, problem.rate_hist, save_positions, length(problem.time), 0)
 end

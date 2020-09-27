@@ -18,3 +18,8 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+DiffEqBase = "6.38, 6.47"
+Parameters = "0.12.1"
+RecursiveArrayTools = "2.4"
