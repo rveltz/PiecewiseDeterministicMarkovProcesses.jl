@@ -1,3 +1,4 @@
+# using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials, Test
 	const PDMP = PiecewiseDeterministicMarkovProcesses
 
@@ -105,13 +106,32 @@ Random.seed!(8)
 	res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-println("\n\nComparison of solvers")
+println("\n\nComparison of solvers - CHV")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
 	Random.seed!(8)
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
 	@test norm(res.time - res_a_chv[1],Inf64) < 1e3
 end
+
+println("\n\nComparison of solvers - CHV (without saving solution)")
+	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+	Random.seed!(8)
+	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+	Random.seed!(8)
+	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
+	@test norm(res1.time - res2.time) ≈ 0
+	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
+	@show res1.xd[end] , res2.xd[end]
+	if ode[1] isa Symbol
+		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
+	end
+end
+
+
+Random.seed!(8)
+res1 =  PDMP.solve(problem, CHV(CVODE_BDF()); n_jumps = nj)
+plot(res1.time, res1.xc[:,:]')
 
 println("\n\nComparison of solvers - rejection")
 	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
@@ -127,7 +147,6 @@ Random.seed!(8)
 	res1 = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj)
 	Random.seed!(8)
 	res2 = PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj)
-
 
 println("Alternate between calls CHV - Rej")
 	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))

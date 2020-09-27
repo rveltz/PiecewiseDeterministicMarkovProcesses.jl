@@ -88,9 +88,11 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			verbose && println("--> xd = ", Xd)
 
 			# save state, post-jump
-			pushTime!(problem, t)
-			push!(xc_hist, X_extended[ind_save_c])
-			push!(xd_hist, Xd[ind_save_d])
+			if save_positions[2]
+				pushTime!(problem, t)
+				push!(xc_hist, X_extended[ind_save_c])
+				push!(xd_hist, Xd[ind_save_d])
+			end
 
 			save_rate && push!(problem.rate_hist, caract.R(ratecache.rate, X_extended, Xd, caract.parms, t, true)[1])
 
