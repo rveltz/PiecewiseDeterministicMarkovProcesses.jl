@@ -70,6 +70,20 @@ function init!(pb::PDMPCaracteristics)
 	init!(pb.R)
 end
 
+"""
+	PDMPProblem(F, R, DX, nu, xc0, xd0, parms, tspan)
+
+Create a PDMP problem to be simulated.
+
+## Arguments
+- `F` inplace function `F(du,u,p,t)` representing the vector field
+- `R` rate function used to compute the transition rates. It has the signature ??.
+- `nu::AbstractMatrix` matrix of transitions
+- `xc0` initial state of the continuous variable
+- `xd0` initial state of the discrete variable
+- `parms` parameters to be passed to the vector field and rate functions
+- `tspan` simulation window
+"""
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
 						Tcar}

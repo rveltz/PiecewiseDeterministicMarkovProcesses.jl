@@ -3,11 +3,11 @@ struct CHV{Tode} <: AbstractCHVIterator
 	ode::Tode	# ODE solver to use for the flow in between jumps
 end
 
-function (chv::CHV{Tode})(xdot, x, prob::Tpb, t) where {Tode, Tpb <: PDMPCaracteristics}
+function (chv::CHV{Tode})(xdot, x, caract::PDMPCaracteristics, t) where {Tode}
 	tau = x[end]
-	rate = get_rate(prob.ratecache, x)
-	sr = prob.R(rate, x, prob.xd, prob.parms, tau, true)[1]
-	prob.F(xdot, x, prob.xd, prob.parms, tau)
+	rate = get_rate(caract.ratecache, x)
+	sr = caract.R(rate, x, caract.xd, caract.parms, tau, true)[1]
+	caract.F(xdot, x, caract.xd, caract.parms, tau)
 	xdot[end] = 1.0
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] / sr

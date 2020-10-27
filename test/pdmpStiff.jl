@@ -105,35 +105,44 @@ Random.seed!(8)
 Random.seed!(8)
 	res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
 
+algos = [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - CHV")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+	for ode in algos
 	Random.seed!(8)
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
-	@test norm(res.time - res_a_chv[1],Inf64) < 1e3
+		# compare jump times
+		@test norm(res.time - res_a_chv[1], Inf64) < 1e-3
+		# compare xc end values
+		@test norm(res.xc[end][1] - res_a_chv[2][end], Inf64) < 4e-6
 end
 
 println("\n\nComparison of solvers - CHV (without saving solution)")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+	for ode in algos
 	Random.seed!(8)
 	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	Random.seed!(8)
 	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
-	@test norm(res1.time - res2.time) ≈ 0
+		@test norm(res1.time[end] - res2.time[end]) ≈ 0
 	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
 	if ode[1] isa Symbol
 		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
 	end
 end
 
-println("\n\nComparison of solvers - CHV (without saving solution)")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+println("\n\nComparison of solvers - CHV (limited by simulation time)")
+	problem.tspan[2] = 4.0
+	jumpsana = res_a_chv[1][res_a_chv[1] .< problem.tspan[2]]
+	for ode in algos
 	Random.seed!(8)
 	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+		# same without recording the intermediate jumps
 	Random.seed!(8)
 	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
-	@test norm(res1.time - res2.time) ≈ 0
+		@test norm(res1.time[1:end-1] .- jumpsana, Inf) < 2e-5
+		@test norm(res1.time[end] - res2.time[end]) ≈ 0
 	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
 	if ode[1] isa Symbol
 		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
@@ -141,20 +150,22 @@ println("\n\nComparison of solvers - CHV (without saving solution)")
 end
 
 # idem as above but with tf limited simulation
+prob2 = deepcopy(problem)
+prob2.tspan[2] = 4.0
 Random.seed!(8)
-res1 =  PDMP.solve(problem, CHV(:lsoda); n_jumps = 200)
+res3 =  @time PDMP.solve(prob2, CHV(:lsoda); n_jumps = 200)
 Random.seed!(8)
-res2 =  PDMP.solve(problem, CHV(:lsoda); n_jumps = 200, save_positions = (true, false) )
-@test res1.time[end] ≈ res2.time[end]
-@test res1.xc[end] ≈ res2.xc[end]
+res4 =  @time PDMP.solve(prob2, CHV(:lsoda); n_jumps = 20, save_positions = (true, false) )
+@test res3.time[end] ≈ res4.time[end]
+@test res3.xc[end] ≈ res3.xc[end]
 
 # using Plots
 # plot(res1.time, res1.xc[:,:]')
 
+problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - rejection")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+	for ode in algos
 	Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = 4, verbose = false)
 	println("--> norm difference = ", norm(res.time - res_a_rej[1][1:4], Inf64), "  - solver = ",ode[2])
 	@test norm(res.time - res_a_rej[1][1:4], Inf64) < 0.0043
@@ -187,10 +198,10 @@ function Delta!(xc, xd, t, parms, ind_reaction::Int64)
 	nothing
 end
 
+problem = PDMP.PDMPProblem(F!, R!,  Delta!, 2, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers, with function Delta")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+	for ode in algos
 	Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!,  Delta!, 2, xc0, xd0, parms, (ti, tf))
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time - res_a_chv[1],Inf64), "  - solver = ", ode[2])
 	push!(errors, norm(res.time - res_a_chv[1], Inf64))

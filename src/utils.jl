@@ -75,7 +75,7 @@ struct PDMPResult{Tc <: Real, vectype_xc, vectype_xd}
 	nrejected::Int64
 end
 
-PDMPResult(time, xchist, xdhist)  = PDMPResult(time, xchist, xdhist, eltype(xchist)[], (false,false), length(time), 0)
-PDMPResult(time, xchist, xdhist, rates, savepos)  = PDMPResult(time, xchist, xdhist, rates, savepos, length(time), 0)
+PDMPResult(time, xchist, xdhist) = PDMPResult(time, xchist, xdhist, eltype(xchist)[], (false, false), length(time), 0)
+PDMPResult(time, xchist, xdhist, rates, savepos) = PDMPResult(time, xchist, xdhist, rates, savepos, length(time), 0)
 
 PDMPResult(pb::PDMPProblem, savepos = (false, false)) = PDMPResult(copy(pb.time), copy(pb.Xc), copy(pb.Xd), copy(pb.rate_hist), savepos, pb.simjptimes.njumps, pb.simjptimes.fictitous_jumps)

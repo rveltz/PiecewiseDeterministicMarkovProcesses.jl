@@ -60,24 +60,24 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	# Main loop
 	while (t < tf) && (nsteps < n_jumps)
 
-		verbose && println("--> t = ", t," - δt = ", δt, ",nstep =  ", nsteps)
+		verbose && println("--> t = $t, δt = $δt, nstep =  $nsteps")
 
 		res_ode .= Flow(X_extended, Xd, δt, ratecache.rate)
 
 		verbose && println("--> ode solve is done!")
+
+		# jump time:
+		if (res_ode[end] < tf) && nsteps < n_jumps
+			# this is the next jump time
+			t = res_ode[end, end]
 
 		# this holds the new state of the continuous component
 		@inbounds for ii in eachindex(X_extended)
 			X_extended[ii] = res_ode[end, ii]
 		end
 
-		# this is the next jump time
-		t = res_ode[end, end]
-
 		caract.R(ratecache.rate, X_extended, Xd, caract.parms, t, false)
 
-		# jump time:
-		if (t < tf) && nsteps < n_jumps
 			# Update event
 			ev = pfsample(ratecache.rate)
 
@@ -102,16 +102,16 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 
 		else
 			if ode in [:cvode, :bdf, :adams]
-				res_ode_last = Sundials.cvode((tt, x, xdot) -> caract.F(xdot, x, Xd, caract.parms, tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = Sundials.cvode((tt, x, xdot) -> caract.F(xdot, x, Xd, caract.parms, tt), X_extended[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
 			else#if ode==:lsoda
-				res_ode_last = LSODA.lsoda((tt, x, xdot, data) -> caract.F(xdot, x, Xd, caract.parms, tt), xc_hist[end], [problem.time[end], tf], abstol = 1e-9, reltol = 1e-7)
+				res_ode_last = LSODA.lsoda((tt, x, xdot, data) -> caract.F(xdot, x, Xd, caract.parms, tt), X_extended[1:end-1], [t, tf], abstol = 1e-9, reltol = 1e-7)
 			end
 			t = tf
 
 			# save state
 			pushTime!(problem, tf)
-			push!(xc_hist, res_ode_last[end,ind_save_c])
-			push!(xd_hist, Xd[ind_save_d])
+			push!(xc_hist, copy(res_ode_last[end,ind_save_c]))
+			push!(xd_hist, copy(Xd[ind_save_d]))
 		end
 		nsteps += 1
 	end
@@ -119,5 +119,5 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	if verbose && save_positions[2]
 		println("--> xc = ", xd_hist[:, 1:nsteps-1])
 	end
-	return PDMPResult(problem.time, xc_hist, xd_hist, problem.rate_hist, save_positions, length(problem.time), 0)
+	return PDMPResult(copy(problem.time), xc_hist, xd_hist, problem.rate_hist, save_positions, length(problem.time), 0)
 end
