@@ -15,7 +15,7 @@ end
 rate_tcp(x) = 1/(1+exp(-x))
 
 function R_tcp!(rate, xc, xd, parms, t, issum::Bool)
-	if issum==false
+	if issum == false
 		rate[1] = rate_tcp(xc[1])
 		rate[2] = 0.0
 		return rate_tcp(xc[1]), 1.0
@@ -81,7 +81,7 @@ println("\n\nComparison of solvers")
 	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
-	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ",ode[2])
+	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ", ode[2])
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
 	end
 

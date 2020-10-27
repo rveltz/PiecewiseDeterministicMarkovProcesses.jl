@@ -64,6 +64,3 @@ sxc0_e = similar(sxc0, Size(2))
 problem = PDMP.PDMPProblem(F_fd!, R_fd!, nu_fd, sxc0, sxd0, parms, (0.0, 10000.))
 res =  @time PDMP.solve(problem, CHV(Tsit5()); save_positions = (false, false), n_jumps = 3000)
 # ress =  @time  PDMP.chv_diffeq!(sxc0, sxd0, F_fd!, R_fd!,Dummy!, nu_fd, parms, 0.0, 10000.0,false; n_jumps = 3000, ode = Tsit5(),save_positions = (false, false), rate = ratevec, xc0_extended = sxc0_e)
-
-
-length(sxc0)

@@ -34,17 +34,17 @@ R(x) = x
 
 function R!(rate, xc, xd, parms, t, issum::Bool)
 	# rate fonction
-	if issum==false
+	if issum == false
 		rate[1] = R(xc[1])
 		rate[2] = 0.0
-		return R(xc[1]),40.
+		return R(xc[1]), 40.
 	else
-		return R(xc[1]),40.
+		return R(xc[1]), 40.
 	end
 end
 
 xc0 = [1.0]
-xd0 = [0,0]
+xd0 = [0, 0]
 
 nu = [[1 0];[0 -1]]
 parms = [0.0]
@@ -73,5 +73,5 @@ println("\n\nComparison of solvers")
 		end
 
 		println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
-		push!(errors,norm(res.time - res_a[1],Inf64))
+		push!(errors, norm(res.time - res_a[1], Inf64))
 	end

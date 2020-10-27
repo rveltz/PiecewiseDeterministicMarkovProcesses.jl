@@ -64,8 +64,8 @@ Random.seed!(8)
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers")
 	for ode in [(CVODE_BDF(),"CVODEBDF"), (:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
-	Random.seed!(8)
-	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
-	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
-	push!(errors,norm(res.time - res_a_chv[1],Inf64))
+		Random.seed!(8)
+		res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+		println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
+		push!(errors,norm(res.time - res_a_chv[1], Inf64))
 end

@@ -12,7 +12,7 @@ where $F$ should be specified in-place as `F(dxc,xc,xd,p,t)`, and `xc0` should b
 
 ### Jumps
 
-Jumps are defined as a Jump process which change states at some rate $R$ which is a scalar function of the type 
+Jumps are defined as a Jump process which changes states at some rate $R$ which is a scalar function of the type 
 
 ```math
 R(x_c(t),x_d(t),p,t).
@@ -21,17 +21,17 @@ R(x_c(t),x_d(t),p,t).
 Note, that in between jumps, $x_d(t)$ is constant but $x_c(t)$ is allowed to evolve.
 $R$ should be specified in-place as `R(rate,xc,xd,p,t,issum::Bool)` where it mutates `rate`. Note that a boolean `issum` is provided and the behavior of `R` should be as follows
 
-- if `issum == true`, we only required `R` to return the total rate, *e.g.* `sum(rate)`. We use this formalism because sometimes you can compute the `sum` without mutating `rate`.
-- if `issum == true`, `R` must populate `rate` with the updated rate 
+- if `issum == true`, we only require `R` to return the total rate, *e.g.* `sum(rate)`. We use this formalism because sometimes you can compute the `sum` without mutating `rate`.
+- if `issum == false`, `R` must populate `rate` with the updated rates
 
 We then need to provide the way the jumps affect the state variable. There are two possible ways here:
 
-- either give a transition matrix `nu`: it will only affects the discrete component `xd` and leave `xc` unaffected.
+- either give a transition matrix `nu`: it will only affect the discrete component `xd` and leave `xc` unaffected.
 - give a function to implement jumps `Delta(xc, xd, parms, t, ind_reaction::Int64)` where you can mutate `xc,xd` or `parms`. The argument `ind_reaction` is the index of the reaction at which the jump occurs. See `examples/pdmp_example_eva.jl` for an example.
 
 ## Problem Type
 
-### Constructor
+### Constructors
 
 - `PDMPProblem(F,R,Delta,nu,xc0,xd0,p,tspan)`
 - `PDMPProblem(F,R,nu,xc0,xd0,p,tspan)` when ones does not want to provide the function `Delta`
