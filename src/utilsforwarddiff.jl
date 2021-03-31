@@ -1,5 +1,6 @@
 # Code to get PiecewiseDeterministicMarkovProcesses working with ForwardDiff
 # Makes use of the trick in http://docs.juliadiffeq.org/latest/basics/faq.html#Are-the-native-Julia-solvers-compatible-with-autodifferentiation?-1
+# https://diffeq.sciml.ai/stable/basics/faq/
 using ForwardDiff
 
 struct DiffCache{T<:AbstractArray, S<:AbstractArray}
