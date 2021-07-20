@@ -1,7 +1,7 @@
 name = "PiecewiseDeterministicMarkovProcesses"
 uuid = "86206cdf-4603-54e0-bd58-22a2dcbf57aa"
 authors = ["Romain Veltz <rveltz@salk.edu>", " Simon Frost <sdf22@cam.ac.uk>"]
-version = "0.0.1"
+version = "0.0.3"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
