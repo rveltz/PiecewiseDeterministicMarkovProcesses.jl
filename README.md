@@ -9,7 +9,7 @@ PiecewiseDeterministicMarkovProcesses.jl is a Julia package that allows simulati
 To install this package, run the command 
 
 ```julia
-add PiecewiseDeterministicMarkovProcesses
+] add PiecewiseDeterministicMarkovProcesses
 ```
 
 
