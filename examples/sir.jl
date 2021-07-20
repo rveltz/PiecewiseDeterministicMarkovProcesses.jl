@@ -28,8 +28,6 @@ nu = [[-1 1 0 0];[0 -1 1 0];[0 0 0 1]]
 parms = [0.1/100.0,0.01]
 tf = 150.0
 
-
-
 Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_sir!,R_sir!,nu, xc0, xd0, parms, (0.0, tf))
 	result = PDMP.solve(problem, CHV(Tsit5()); n_jumps = 1000)

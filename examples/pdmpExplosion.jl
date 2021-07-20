@@ -60,7 +60,7 @@ errors = Float64[]
 rnd_state = 0.
 
 println("\n\nComparison of solvers")
-	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
+	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=true),"rodas4P-AutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
 		Random.seed!(8)
 
 		problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))

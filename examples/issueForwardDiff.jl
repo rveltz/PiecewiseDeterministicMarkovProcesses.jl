@@ -49,7 +49,7 @@ Random.seed!(12)
 	res =  @time PDMP.solve(problem, CHV(AutoTsit5(Rosenbrock23(autodiff=true))); save_positions = (false, false), n_jumps = 3000)
 	# res =  @time PDMP.pdmp!(xc0, xd0, F_fd!, R_fd!,Dummy!, nu_fd, parms, 0.0, 10000.0; algo = :chv, n_jumps = 3000,   ode = AutoTsit5(Rosenbrock23(autodiff=true)), save_positions=(false,false)) #9ms
 
-# fail because of autodiff
+# used to fail because of autodiff
 Random.seed!(12)
 	problem = PDMP.PDMPProblem(F_fd!, R_fd!, nu_fd, xc0, xd0, parms, (0.0, 10000.))
 	res =  @time PDMP.solve(problem, CHV(TRBDF2(autodiff=true)); save_positions = (false, false), n_jumps = 3000)

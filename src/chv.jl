@@ -6,11 +6,11 @@ Same as the `solve` for `CHV(::DiffEqBase.DEAlgorithm)` but for `CHV(::Symbol)`.
 function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
-	@assert ode in [:cvode, :lsoda, :adams, :bdf]
+	@assert ode in [:cvode, :lsoda, :adams, :BDF]
 	verbose && printstyled(color=:red,"--> Start CHV method (algo::Symbol)\n")
 
 	# table to use DiffEqBase
-	odeTable = Dict(:lsoda => lsoda(), :BDF => CVODE_BDF(), :Adams => CVODE_Adams(), :cvode => CVODE_BDF())
+	odeTable = Dict(:lsoda => lsoda(), :BDF => CVODE_BDF(), :adams => CVODE_Adams(), :cvode => CVODE_BDF())
 
 	# initialise the problem. If I call twice this solve function, it should give the same result...
 	init!(problem)
