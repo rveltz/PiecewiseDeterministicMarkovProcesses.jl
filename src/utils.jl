@@ -1,9 +1,7 @@
 """
 Finalising function. It is called at the end of each computed jump for the user to alter the saving, plotting... procedure.
 """
-function finalize_dummy(rate, xc, xd, p, t)
-	nothing
-end
+finalize_dummy(rate, xc, xd, p, t) = nothing
 
 """
 Function to pre-allocate arrays contening the result.

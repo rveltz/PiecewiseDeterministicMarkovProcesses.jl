@@ -20,9 +20,10 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-DiffEqBase = "6.38, 6.47"
-DiffEqJump = "6.9, 6.10, 6.11"
-Distributions = "0.23, 0.24"
+DiffEqBase = "6"
+DiffEqJump = "6.9, 6.10, 6.11, 7, 8"
+DifferentialEquations = "6, 7"
+Distributions = "0.23, 0.24, 0.25"
 ForwardDiff = "0.10"
 LSODA = "0.6.2"
 Parameters = "0.12.1"
