@@ -3,7 +3,7 @@
 """
 Same as the `solve` for `CHV(::DiffEqBase.DEAlgorithm)` but for `CHV(::Symbol)`. This is an old implementation of the CHV algorithm which can be used with `:lsoda`. For all other solvers, use the the new solver.
 """
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy) where {Tode <: Symbol}
+function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind_save_d = -1:1, ind_save_c = -1:1, n_jumps = Inf64, reltol = 1e-7, abstol = 1e-9, save_positions = (false, true), save_rate = false, finalizer = finalize_dummy, kwargs...) where {Tode <: Symbol}
 	verbose && println("#"^30)
 	ode = algo.ode
 	@assert ode in [:cvode, :lsoda, :adams, :BDF]
