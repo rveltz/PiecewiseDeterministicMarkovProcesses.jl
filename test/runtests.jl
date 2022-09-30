@@ -18,7 +18,7 @@ end
 
 @testset "Example with stiff ODE part" begin
 	include("pdmpStiff.jl")
-	@test norm(errors, Inf64) < 1e-3
+	@test minimum(errors) < 1e-3
 	@testS "Call many times the same problem" restime1 == res12.time
 end
 
