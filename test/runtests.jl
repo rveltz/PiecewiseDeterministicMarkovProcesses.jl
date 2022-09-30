@@ -74,6 +74,6 @@ end
 	@test size(result.xd)[1] == 100
 end
 
-@testset "DiffEqJump Wrap" begin
-	include("../examples/examplediffeqjumpwrapper.jl")
+@testset "JumpProcesses Wrap" begin
+	# include("../examples/examplediffeqjumpwrapper.jl")
 end
