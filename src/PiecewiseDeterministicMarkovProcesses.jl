@@ -1,9 +1,10 @@
 module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra, SparseArrays, Parameters
-	using LSODA, Sundials, DiffEqJump, RecursiveArrayTools, DiffEqBase, SparseArrays
+	using LSODA, Sundials, JumpProcesses, RecursiveArrayTools, SciMLBase, SparseArrays
 	using ForwardDiff
-	using DiffEqBase, DiffEqJump
-	import DiffEqBase: solve
+	using JumpProcesses
+	import SciMLBase: solve
+	import PreallocationTools: dualcache, get_tmp
 
 	abstract type AbstractPDMPAlgorithm end
 	abstract type AbstractCHV <: AbstractPDMPAlgorithm end

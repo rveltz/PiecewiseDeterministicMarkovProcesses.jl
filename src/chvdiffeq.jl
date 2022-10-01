@@ -3,12 +3,12 @@ struct CHV{Tode} <: AbstractCHVIterator
 	ode::Tode	# ODE solver to use for the flow in between jumps
 end
 
-function (chv::CHV{Tode})(xdot, x, caract::PDMPCaracteristics, t) where {Tode}
+function (chv::CHV)(xdot, x, caract::PDMPCaracteristics, t)
 	tau = x[end]
 	rate = get_rate(caract.ratecache, x)
 	sr = caract.R(rate, x, caract.xd, caract.parms, tau, true)[1]
 	caract.F(xdot, x, caract.xd, caract.parms, tau)
-	xdot[end] = 1.0
+	xdot[end] = 1
 	@inbounds for i in eachindex(xdot)
 		xdot[i] = xdot[i] / sr
 	end
@@ -73,7 +73,16 @@ end
 
 function chv_diffeq!(problem::PDMPProblem,
 			ti::Tc, tf::Tc, X_extended::vece,
-			verbose = false; ode = Tsit5(), save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false, finalizer = finalizer) where {Tc, Td, vece}
+			verbose = false;
+			ode = Tsit5(),
+			save_positions = (false, true),
+			n_jumps::Td = Inf64,
+			save_rate = false,
+			finalizer = finalizer,
+			# options for DifferentialEquations
+			reltol=1e-7,
+			abstol=1e-9,
+			kwargs...) where {Tc, Td, vece}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in chv_diffeq\n")
 
@@ -107,9 +116,14 @@ function chv_diffeq!(problem::PDMPProblem,
 	cb = DiscreteCallback(problem, integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	# prob_CHV = ODEProblem((xdot,x,data,tt) -> problem(xdot, x, data, tt), X_extended, (0.0, 1e9))
-	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9))
-	integrator = init(prob_CHV, ode, tstops = simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
+	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9), kwargs...)
+	integrator = init(prob_CHV, ode,
+						tstops = simjptimes.tstop_extended,
+						callback = cb,
+						save_everystep = false,
+						reltol = reltol,
+						abstol = abstol,
+						advance_to_tstop = true)
 
 	# current jump number
 	njumps = 0
@@ -137,7 +151,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	if t>tf
 		verbose && println("----> LAST BIT!!, xc = ", caract.xc[end], ", xd = ", caract.xd, ", t = ", problem.time[end])
 		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
-		sol = DiffEqBase.solve(prob_last_bit, ode)
+		sol = SciMLBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ",sol.u[end])
 		pushXc!(problem, sol.u[end])
 		pushXd!(problem, copy(caract.xd))
@@ -146,7 +160,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	return PDMPResult(problem, save_positions)
 end
 
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}, X_extended; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+function solve(problem::PDMPProblem, algo::CHV{Tode}, X_extended; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy) where {Tode <: SciMLBase.DEAlgorithm}
 
 	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer)
 end
@@ -170,14 +184,14 @@ Simulate the PDMP `problem` using the CHV algorithm.
 -  `X_extended = zeros(Tc, 1 + 1)`: (advanced use) options used to provide the shape of the extended array in the [CHV algorithm](https://arxiv.org/abs/1504.06873). Can be useful in order to use `StaticArrays.jl` for example.
 -  `finalizer = finalize_dummy`: allows the user to pass a function `finalizer(rate, xc, xd, p, t)` which is called after each jump. Can be used to overload / add saving / plotting mechanisms.
 
-!!! note "Solvers for the `DiffEqJump` wrapper"
+!!! note "Solvers for the `JumpProcesses` wrapper"
     We provide a basic wrapper that should work for `VariableJumps` (the other types of jumps have not been thoroughly tested). You can use `CHV` for this type of problems. The `Rejection` solver is not functional yet.
 
 """
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
 
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)
 
-	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer )
+	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer, kwargs...)
 end
