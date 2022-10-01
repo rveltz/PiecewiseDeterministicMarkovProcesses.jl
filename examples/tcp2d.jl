@@ -38,15 +38,16 @@ Random.seed!(1234)
 	result1 = @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, true))
 
 Random.seed!(1234)
-	result2 = PDMP.solve(problem, CHV(:cvode); n_jumps = nj, save_positions = (false, true))
+	result2 = @time PDMP.solve(problem, CHV(:cvode); n_jumps = nj, save_positions = (false, true))
 
 Random.seed!(1234)
-	result3 = PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, save_positions = (false, true))
+	result3 = @time PDMP.solve(problem, CHV(:lsoda); n_jumps = nj, save_positions = (false, true))
 
 #test auto-differentiation
 Random.seed!(1234)
-	result4 = @time PDMP.solve(problem, CHV(Rodas4P()); n_jumps = nj, save_positions = (false, true))
+	result4 = @time PDMP.solve(problem, CHV(Rodas5P()); n_jumps = nj, save_positions = (false, true))
 
+# plot(result4.time, result4.xc[:,1])
 ####################################################################################################
 # # DEBUG DEBUG
 # #
