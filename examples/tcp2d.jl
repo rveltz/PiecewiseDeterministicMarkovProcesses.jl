@@ -47,7 +47,9 @@ Random.seed!(1234)
 Random.seed!(1234)
 	result4 = @time PDMP.solve(problem, CHV(Rodas5P()); n_jumps = nj, save_positions = (false, true))
 
-# plot(result4.time, result4.xc[:,1])
+
+# plot(result3.time, result3.xc[1,:])
+# plot!(result4.time, result4.xc[1,:])
 ####################################################################################################
 # # DEBUG DEBUG
 # #
