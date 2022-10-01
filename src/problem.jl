@@ -1,4 +1,4 @@
-using SparseArrays
+using SparseArrays, PreallocationTools
 
 # Dummy functions to allow not specifying these characteristics
 function F_dummy(ẋ, xc, xd, parms, t)
@@ -44,9 +44,9 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = Jump(nu, Delta)
-		rate = dualcache(get_rate_prototype(jump, Tc))
+		rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
 		ratefunction = VariableRate(R)
-		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
+		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
 	end
 
 	function PDMPCaracteristics(F, R::TR, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
@@ -54,8 +54,8 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 						vecd <: AbstractVector{Td},
 						TR <: AbstractRate}
 		jump = Jump(nu, Delta)
-		rate = dualcache(get_rate_prototype(jump, Tc))
-		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
+		rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
 	end
 end
 
@@ -103,7 +103,7 @@ We also provide a wrapper to [JumpProcesses.jl](https://github.com/SciML/JumpPro
 """
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
-						Tcar}
+						Tcar, R}
 	tspan::Vector{Tc}				    			# final simulation time interval, we use an array to be able to mutate it
 	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
 	time::Vector{Tc}
@@ -112,6 +112,7 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	# variables for debugging
 	rate_hist::Vector{Tc}							# to save the rates for debugging purposes
 	caract::Tcar									# struct for characteristics of the PDMP
+	rng::R
 end
 
 pushTime!(pb::PDMPProblem, t) = push!(pb.time, t)
@@ -120,6 +121,7 @@ pushXd!(pb::PDMPProblem, xd) = push!(pb.Xd, xd)
 
 function init!(pb::PDMPProblem)
 	init!(pb.caract)
+	#update avec pb.rng
 	pb.simjptimes.tstop_extended = -log(rand())
 	pb.simjptimes.lastjumptime = pb.tspan[1]
 	pb.simjptimes.njumps = 0
@@ -137,16 +139,18 @@ end
 
 function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
-				tspan) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}}
+				tspan;
+				rng::Trng = JumpProcesses.DEFAULT_RNG) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}, Trng}
 	ti, tf = tspan
 	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms)
-	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract)}(
+	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract), Trng}(
 			[ti, tf],
 			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
 			Tc[],
-			caract)
+			caract,
+			rng)
 end
 
 function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,

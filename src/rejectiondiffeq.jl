@@ -29,7 +29,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",simjptimes.fictitous_jumps," !!\n")
 
-	simjptimes.ppf .= caract.R(ratecache.rate, integrator.u, caract.xd, caract.parms, t, true)
+	simjptimes.ppf .= caract.R(get_tmp(ratecache, integrator.u), integrator.u, caract.xd, caract.parms, t, true)
 	@assert simjptimes.ppf[1] < simjptimes.ppf[2] "Error, your bound on the rates is not high enough!, $(simjptimes.ppf)"
 
 	simjptimes.reject = rand() < 1 - simjptimes.ppf[1] / simjptimes.ppf[2]
@@ -40,7 +40,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 	# execute the jump
 	if t < tf && simjptimes.reject == false
 		verbose && println("----> Jump!, ratio = ", simjptimes.ppf[1] / simjptimes.ppf[2], ", xd = ", caract.xd)
-		simjptimes.ppf .= caract.R(ratecache.rate, integrator.u, caract.xd, caract.parms, t, false)
+		simjptimes.ppf .= caract.R(get_tmp(ratecache, integrator.u), integrator.u, caract.xd, caract.parms, t, false)
 
 		if (save_pre_jump) && (t <= tf)
 			verbose && printstyled(color=:green,"----> save pre-jump\n")
@@ -52,7 +52,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 		end
 
 		# Update event
-		ev = pfsample(ratecache.rate)
+		ev = pfsample(get_tmp(ratecache, integrator.u))
 
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
@@ -102,7 +102,7 @@ function rejection_diffeq!(problem::PDMPProblem,
 	# njumps = 0
 	simjptimes.njumps = 1
 	simjptimes.lambda_star = 0.0	# this is the bound for the rejection method
-	simjptimes.ppf .= caract.R(ratecache.rate, X0, caract.xd, caract.parms, t, true)
+	simjptimes.ppf .= caract.R(get_tmp(ratecache, X0), X0, caract.xd, caract.parms, t, true)
 
 	simjptimes.tstop_extended = simjptimes.tstop_extended / simjptimes.ppf[2] + ti
 
@@ -131,12 +131,12 @@ function rejection_diffeq!(problem::PDMPProblem,
 			pushXc!(problem, copy(caract.xc))
 			pushXd!(problem, copy(caract.xd))
 			#save rates for debugging
-			save_rate && push!(problem.rate_hist, sum(ratecache.rate))
+			save_rate && push!(problem.rate_hist, sum(get_tmp(ratecache, X0)))
 			verbose && println("----> end save post-jump, ")
 			#put the flag for rejection
 			simjptimes.reject = true
 		end
-		finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
+		finalizer(get_tmp(ratecache, X0), caract.xc, caract.xd, caract.parms, t)
 	end
 	# we check whether the last bit [t_last_jump, tf] is missing
 	if t>tf

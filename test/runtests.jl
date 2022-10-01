@@ -23,7 +23,7 @@ end
 end
 
 @testset "Controlling allocations" begin
-	# @test alloc1 == alloc2
+	@test alloc1 == alloc2
 end
 
 @testset "Test Rate structures 1/2" begin
@@ -51,29 +51,29 @@ end
 @testset "Neuron model" begin
 	include("../examples/pdmp_example_eva.jl")
 	@test result1.time[end] == 100.
-	@test result1.xd[2,end] == 113
+	@test result1.xd[2,end] == 107
 end
 
 @testset "Example SIR" begin
 	include("../examples/sir.jl")
 	@test result.xd[1,end] == 0
-	@test result.xd[2,end] == 36
-	@test result.xd[3,end] == 73
+	@test result.xd[2,end] == 29
+	@test result.xd[3,end] == 80
 end
 
 @testset "Example SIR(rejection)" begin
 	include("../examples/sir-rejection.jl")
 	@test result.xd[1,end] == 0
-	@test result.xd[2,end] == 33
-	@test result.xd[3,end] == 76
+	@test result.xd[2,end] == 26
+	@test result.xd[3,end] == 83
 end
 
 @testset "Neural network" begin
 	include("../examples/neuron_rejection_exact.jl")
-	@test result.xd[1,end] == 97
+	@test result.xd[1,end] == 100
 	@test size(result.xd)[1] == 100
 end
 
 @testset "JumpProcesses Wrap" begin
-	# include("../examples/examplediffeqjumpwrapper.jl")
+	include("../examples/examplediffeqjumpwrapper.jl")
 end

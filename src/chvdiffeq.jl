@@ -5,7 +5,7 @@ end
 
 function (chv::CHV)(xdot, x, caract::PDMPCaracteristics, t)
 	tau = x[end]
-	rate = get_rate(caract.ratecache, x)
+	rate = get_tmp(caract.ratecache, x)
 	sr = caract.R(rate, x, caract.xd, caract.parms, tau, true)[1]
 	caract.F(xdot, x, caract.xd, caract.parms, tau)
 	xdot[end] = 1
@@ -17,13 +17,14 @@ end
 
 ###################################################################################################
 ### implementation of the CHV algo using DiffEq
+# the following does not allocate
 
 # The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose)
 	# we declare the characteristics for convenience
 	caract = prob.caract
-	ratecache = caract.ratecache
+	rate = get_tmp(caract.ratecache, integrator.u)
 	simjptimes = prob.simjptimes
 
 	# final simulation time
@@ -31,28 +32,29 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 
 	# find the next jump time
 	t = integrator.u[end]
+
 	simjptimes.lastjumptime = t
 
 	verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
-	verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", caract.xd,"\n")
+	# verbose && printstyled(color=:green, "--> jump not yet performed, xd = ", caract.xd,"\n")
 
-	if (save_pre_jump) && (t <= tf)
+	if save_pre_jump && (t <= tf)
 		verbose && printstyled(color=:green, "----> saving pre-jump\n")
 		pushXc!(prob, (integrator.u[1:end-1]))
 		pushXd!(prob, copy(caract.xd))
 		pushTime!(prob, t)
 		#save rates for debugging
-		save_rate && push!(prob.rate_hist, sum(ratecache.rate))
+		save_rate && push!(prob.rate_hist, sum(rate))
 	end
 
 	# execute the jump
-	caract.R(get_rate(ratecache, integrator.u), integrator.u, caract.xd, caract.parms, t, false)
-	if (t < tf)
+	caract.R(rate, integrator.u, caract.xd, caract.parms, t, false)
+	if t < tf
 		#save rates for debugging
-		save_rate && push!(prob.rate_hist, sum(ratecache.rate))
+		save_rate && push!(prob.rate_hist, sum(rate) )
 
 		# Update event
-		ev = pfsample(ratecache.rate)
+		ev = pfsample(rate)
 
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
@@ -63,7 +65,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 			caract.xc[ii] = integrator.u[ii]
 		end
 	end
-	verbose && printstyled(color=:green,"--> jump computed, xd = ",caract.xd,"\n")
+	# verbose && printstyled(color=:green,"--> jump computed, xd = ",caract.xd,"\n")
 	# we register the next time interval to solve the extended ode
 	simjptimes.njumps += 1
 	simjptimes.tstop_extended += -log(rand())
@@ -94,7 +96,6 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	# we declare the characteristics for convenience
 	caract = problem.caract
-	ratecache = caract.ratecache
 	simjptimes = problem.simjptimes
 
 #ISSUE HERE, IF USING A PROBLEM p MAKE SURE THE TIMES in p.sim ARE WELL SET
@@ -129,7 +130,10 @@ function chv_diffeq!(problem::PDMPProblem,
 	njumps = 0
 	simjptimes.njumps = 1
 
-	while (t < tf) && simjptimes.njumps < n_jumps
+	# reference to the rate vector
+	rate = get_tmp(caract.ratecache, integrator.u)
+
+	while (t < tf) && (simjptimes.njumps < n_jumps)
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
 		step!(integrator)
 
@@ -138,14 +142,14 @@ function chv_diffeq!(problem::PDMPProblem,
 
 		# the previous step was a jump! should we save it?
 		if njumps < simjptimes.njumps && save_positions[2] && (t <= tf)
-			verbose && println("----> save post-jump, xd = ",problem.Xd)
+			# verbose && println("----> save post-jump, xd = ",problem.Xd)
 			pushXc!(problem, copy(caract.xc))
 			pushXd!(problem, copy(caract.xd))
 			pushTime!(problem, t)
 			njumps +=1
 			verbose && println("----> end save post-jump, ")
 		end
-		finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
+		finalizer(rate, caract.xc, caract.xd, caract.parms, t)
 	end
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
