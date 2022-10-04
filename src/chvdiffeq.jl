@@ -203,7 +203,7 @@ Simulate the PDMP `problem` using the CHV algorithm.
     We provide a basic wrapper that should work for `VariableJumps` (the other types of jumps have not been thoroughly tested). You can use `CHV` for this type of problems. The `Rejection` solver is not functional yet.
 
 """
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar},
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar, TR},
 				algo::CHV{Tode};
 				verbose = false,
 				n_jumps = Inf64,
@@ -211,7 +211,7 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar},
 				reltol = 1e-7,
 				abstol = 1e-9,
 				save_rate = false,
-				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
+				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
 
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)
