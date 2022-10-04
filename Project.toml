@@ -21,7 +21,7 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-DifferentialEquations = "6, 7"
+DifferentialEquations = "6, ^7"
 Distributions = "0.23, 0.24, 0.25"
 ForwardDiff = "0.10"
 LSODA = "0.6.2, 0.7"

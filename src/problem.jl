@@ -40,21 +40,35 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as this can be an issue for StaticArrays.jl
 	parms::Tparms				# container to hold parameters to be passed to F, R, Delta
 
-	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
+	function PDMPCaracteristics(F, R, Delta,
+									nu::Tnu,
+									xc0::vecc, xd0::vecd,
+									parms::Tparms; Ncache = 0) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = Jump(nu, Delta)
-		rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+		if Ncache == 0
+			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+		else
+			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc), Ncache)
+		end
 		ratefunction = VariableRate(R)
 		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
 	end
 
-	function PDMPCaracteristics(F, R::TR, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
+	function PDMPCaracteristics(F, R::TR, Delta,
+									nu::Tnu,
+									xc0::vecc, xd0::vecd,
+									parms::Tparms; Ncache = 0) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td},
 						TR <: AbstractRate}
 		jump = Jump(nu, Delta)
-		rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+		if Ncache == 0
+			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+		else
+			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc), Ncache)
+		end
 		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
 	end
 end
@@ -140,9 +154,10 @@ end
 function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				tspan;
+				Ncache = 0,
 				rng::Trng = JumpProcesses.DEFAULT_RNG) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}, Trng}
 	ti, tf = tspan
-	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms)
+	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms; Ncache = Ncache)
 	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract), Trng}(
 			[ti, tf],
 			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),

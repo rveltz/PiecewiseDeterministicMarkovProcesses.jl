@@ -164,13 +164,23 @@ function chv_diffeq!(problem::PDMPProblem,
 	return PDMPResult(problem, save_positions)
 end
 
-function solve(problem::PDMPProblem, algo::CHV{Tode}, X_extended; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy) where {Tode <: SciMLBase.DEAlgorithm}
+function solve(problem::PDMPProblem,
+				algo::CHV{Tode},
+				X_extended;
+				verbose = false,
+				n_jumps = Inf64,
+				save_positions = (false,
+				true),
+				reltol = 1e-7,
+				abstol = 1e-9,
+				save_rate = false,
+				finalizer = finalize_dummy) where {Tode <: SciMLBase.DEAlgorithm}
 
 	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer)
 end
 
 """
-	solve(problem::PDMPProblem, algo; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy)
+	solve(problem::PDMPProblem, algo; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy, kwargs...)
 
 Simulate the PDMP `problem` using the CHV algorithm.
 
@@ -187,15 +197,36 @@ Simulate the PDMP `problem` using the CHV algorithm.
 - `save_rate = true`: requires the solver to save the total rate. Can be useful when estimating the rate bounds in order to use the Rejection algorithm as a second try.
 -  `X_extended = zeros(Tc, 1 + 1)`: (advanced use) options used to provide the shape of the extended array in the [CHV algorithm](https://arxiv.org/abs/1504.06873). Can be useful in order to use `StaticArrays.jl` for example.
 -  `finalizer = finalize_dummy`: allows the user to pass a function `finalizer(rate, xc, xd, p, t)` which is called after each jump. Can be used to overload / add saving / plotting mechanisms.
+- `kwargs` keyword arguments passed to the ODE solver (from DifferentialEquations.jl)
 
 !!! note "Solvers for the `JumpProcesses` wrapper"
     We provide a basic wrapper that should work for `VariableJumps` (the other types of jumps have not been thoroughly tested). You can use `CHV` for this type of problems. The `Rejection` solver is not functional yet.
 
 """
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar}, algo::CHV{Tode}; verbose = false, n_jumps = Inf64, save_positions = (false, true), reltol = 1e-7, abstol = 1e-9, save_rate = false, finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar},
+				algo::CHV{Tode};
+				verbose = false,
+				n_jumps = Inf64,
+				save_positions = (false, true),
+				reltol = 1e-7,
+				abstol = 1e-9,
+				save_rate = false,
+				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, vectype_rate, Tnu, Tp, TF, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
 
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)
 
-	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer, kwargs...)
+	return chv_diffeq!(problem,
+						problem.tspan[1],
+						problem.tspan[2],
+						X_extended,
+						verbose;
+						ode = algo.ode,
+						save_positions = save_positions,
+						n_jumps = n_jumps,
+						reltol = reltol,
+						abstol = abstol,
+						save_rate = save_rate,
+						finalizer = finalizer,
+						kwargs...)
 end
