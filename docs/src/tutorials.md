@@ -76,7 +76,7 @@ parms = [50.]
 
 We define a problem type by giving the characteristics of the process `F, R, Delta, nu`, the initial conditions, and the timespan to solve over:
 
-```
+```julia
 Random.seed!(8) # to get the same result as this simulation!
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (0.0, 10.0))
 ```

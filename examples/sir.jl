@@ -1,4 +1,4 @@
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, Sundials
 
 function R_sir!(rate,xc,xd,parms,t::Float64,issum::Bool)
 	(S,I,R,~) = xd
@@ -29,5 +29,7 @@ parms = [0.1/100.0,0.01]
 tf = 150.0
 
 Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_sir!,R_sir!,nu, xc0, xd0, parms, (0.0, tf))
-	result = PDMP.solve(problem, CHV(Tsit5()); n_jumps = 1000)
+problem = PDMP.PDMPProblem(F_sir!,R_sir!,nu, xc0, xd0, parms, (0.0, tf))
+result = PDMP.solve(problem, CHV(Tsit5()); n_jumps = 1000)
+result = PDMP.solve(problem, CHV(:cvode); n_jumps = 1000)
+result = PDMP.solve(problem, CHV(CVODE_BDF()); n_jumps = 1000)

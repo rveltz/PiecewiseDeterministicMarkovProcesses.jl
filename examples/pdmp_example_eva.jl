@@ -52,19 +52,19 @@ parms = [1.]
 tf = 100.
 
 println("--> Case simple chv:")
-	Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
-	dummy_t =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = 200)
+Random.seed!(1234)
+problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
+dummy_t =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = 200)
 
 
 println("--> For simulations rejection (Tsit5):")
-	Random.seed!(123)
-	problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
-	result1 =  @time PDMP.solve(problem, Rejection(:lsoda); n_jumps = 200)
+Random.seed!(123)
+problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
+result1 =  @time PDMP.solve(problem, Rejection(:lsoda); n_jumps = 200)
 
 println("--> Simulation using save_at to see sampling behaviour")
-	nj = 51
-	parms = [10.0]
-	Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
-	result3 =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = 200, save_positions = (false,true))
+nj = 51
+parms = [10.0]
+Random.seed!(1234)
+problem = PDMP.PDMPProblem(F_eva!,R_eva,Delta_xc_eva,nu_eva, xc0, xd0, parms, (0.0, tf))
+result3 =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = 200, save_positions = (false,true))

@@ -74,7 +74,9 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 end
 
 function chv_diffeq!(problem::PDMPProblem,
-			ti::Tc, tf::Tc, X_extended::vece,
+			ti::Tc,
+			tf::Tc,
+			X_extended::vece,
 			verbose = false;
 			ode = Tsit5(),
 			save_positions = (false, true),

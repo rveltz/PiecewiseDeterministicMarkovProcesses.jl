@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
@@ -68,45 +68,53 @@ xc0 = [ 0.0 ]
 xd0 = [0, 0]
 
 nu_tcp = [1 0;0 -1]
-	parms = [0.0]
-	tf = 100000.
-	nj = 50
-	errors = Float64[]
+parms = [0.0]
+tf = 100000.
+nj = 50
+errors = Float64[]
 
 Random.seed!(1234)
-	res_a = AnalyticalSample(xc0, xd0, 0.0, nj, verbose=false)
+res_a = AnalyticalSample(xc0, xd0, 0.0, nj, verbose=false)
 
 println("\n\nComparison of solvers")
-	for ode in [(:cvode,"cvode"),(:lsoda,"lsoda"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=true),"rodas4P-AutoDiff"),(Rodas4P(),"rodas4P-AutoDiff"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
+for ode in [(:cvode,"cvode"),
+			(:lsoda,"lsoda"),
+			(CVODE_BDF(),"CVODEBDF"),
+			(CVODE_Adams(),"CVODEAdams"),
+			(Tsit5(),"tsit5"),
+			(Rodas4P(autodiff=true),"rodas4P-AutoDiff"),
+			(Rodas4P(),"rodas4P-AutoDiff"),
+			(Rosenbrock23(),"RS23"),
+			(AutoTsit5(Rosenbrock23()),"AutoTsit5RS23")]
 	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
 	println("--> norm difference = ", norm(res.time[1:nj] - res_a[1],Inf64), "  - solver = ", ode[2])
 	push!(errors, norm(res.xc[1,1:nj] - res_a[2], Inf64))
-	end
+end
 
 println("test for allocations, should not depend on")
-	Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
-	Random.seed!(1234)
-	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
-	Random.seed!(1234)
-	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
-	Random.seed!(1234)
-	res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 3nj, save_positions = (false, false))
+Random.seed!(1234)
+problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+res =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
+Random.seed!(1234)
+res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj, save_positions = (false, false))
+Random.seed!(1234)
+res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
+Random.seed!(1234)
+res =  @time PDMP.solve(problem, Rejection(Tsit5()); n_jumps = 3nj, save_positions = (false, false))
 
 println("test for multiple calls, the result should not depend on")
-	Random.seed!(1234)
-	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
-	res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
-	@assert res1.time != res2.time
-	Random.seed!(1234)
-	res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
-	Random.seed!(1234)
-	res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
-	@assert res1.time == res2.time
+Random.seed!(1234)
+problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
+res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+@assert res1.time != res2.time
+Random.seed!(1234)
+res1 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+Random.seed!(1234)
+res2 =  PDMP.solve(problem, Rejection(Tsit5()); n_jumps = nj)
+@assert res1.time == res2.time
 
 # Random.seed!(1234)
 # 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
