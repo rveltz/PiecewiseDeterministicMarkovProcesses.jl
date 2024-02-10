@@ -116,10 +116,13 @@ function chv_diffeq!(problem::PDMPProblem,
 	X_extended[end] = ti
 
 	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose), save_positions = (false, false))
+	cb = DiscreteCallback(problem, 
+						integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose),
+						save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
 	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9), kwargs...)
+
 	integrator = init(prob_CHV, ode,
 						tstops = simjptimes.tstop_extended,
 						callback = cb,

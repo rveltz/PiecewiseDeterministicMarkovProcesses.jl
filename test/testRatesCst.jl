@@ -1,6 +1,6 @@
 # using Revise, Test
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
-	const PDMP = PiecewiseDeterministicMarkovProcesses
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
+const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F!(ẋ, xc, xd, parms, t)
 	if mod(xd[1], 2) == 0
@@ -24,13 +24,13 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 end
 
 xc0 = [1.0]
-	xd0 = [0, 0]
+xd0 = [0, 0]
 
-	nu = [1 0;0 -1]
-	parms = [.0]
-	ti = 0.0
-	tf = 100000.
-	nj = 14
+nu = [1 0;0 -1]
+parms = [.0]
+ti = 0.0
+tf = 100000.
+nj = 14
 
 # test the different way to write rates
 rate0 = zeros(2)
@@ -38,22 +38,22 @@ Rvar = PDMP.VariableRate(R!)
 Rcst = PDMP.ConstantRate(R!)
 
 out1 = R!(rate0, [1.0], [2,0], parms, 0., true)
-	outv = Rvar(rate0, [1.0], [2,0], parms, 0., true)
-	@test out1 == outv
-	outc = Rcst(rate0, [10.0], [2,0], parms, 0., true)
-	@test out1 == outc
-	outc = Rcst(rate0, [10.0], [3,0], parms, 0., true)
-	out1 = R!(rate0, [1.0], [3,0], parms, 0., true)
-	@test out1 != outc
-	outc = Rcst(rate0, [10.0], [3,0], parms, 0., false)
-	outc = Rcst(rate0, [10.0], [3,0], parms, 0., true)
-	@test out1 == outc
+outv = Rvar(rate0, [1.0], [2,0], parms, 0., true)
+@test out1 == outv
+outc = Rcst(rate0, [10.0], [2,0], parms, 0., true)
+@test out1 == outc
+outc = Rcst(rate0, [10.0], [3,0], parms, 0., true)
+out1 = R!(rate0, [1.0], [3,0], parms, 0., true)
+@test out1 != outc
+outc = Rcst(rate0, [10.0], [3,0], parms, 0., false)
+outc = Rcst(rate0, [10.0], [3,0], parms, 0., true)
+@test out1 == outc
 
 algo = CHV(Tsit5())
 
 Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	res0 =  PDMP.solve(problem, algo; n_jumps = nj)
+problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
+res0 =  PDMP.solve(problem, algo; n_jumps = nj)
 
 # using Plots
 # plot(res0.time, res0.xc[1,:], marker = :d)

@@ -1,6 +1,6 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials, Test
-	const PDMP = PiecewiseDeterministicMarkovProcesses
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Test
+const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSampleCHV(xc0, xd0, ti, nj::Int64)
 	xch = [xc0[1]]
@@ -90,25 +90,25 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 end
 
 xc0 = [1.0]
-	xd0 = [0, 0]
+xd0 = [0, 0]
 
-	nu = [1 0;0 -1]
-	parms = [.0]
-	ti = 0.322156
-	tf = 100000.
-	nj = 50
+nu = [1 0;0 -1]
+parms = [.0]
+ti = 0.322156
+tf = 100000.
+nj = 50
 
 errors = Float64[]
 
 Random.seed!(8)
-	res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
+res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
 Random.seed!(8)
-	res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
+res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
 
 algos = [(:cvode,"cvode"),
 			(:lsoda,"lsoda"),
-			(CVODE_BDF(),"CVODEBDF"),
-			(CVODE_Adams(),"CVODEAdams"),
+			# (CVODE_BDF(),"CVODEBDF"),
+			# (CVODE_Adams(),"CVODEAdams"),
 			(Tsit5(),"tsit5"),
 			(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),
 			(Rodas4P(),"rodas4P-AutoDiff"),
@@ -116,14 +116,14 @@ algos = [(:cvode,"cvode"),
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - CHV")
-	for ode in algos
+for ode in algos
 	Random.seed!(8)
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, reltol = 1e-8, abstol = 1e-11)
 	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
-		# compare jump times
-		@test norm(res.time - res_a_chv[1], Inf64) < 3e-3
-		# compare xc end values
-		@test norm(res.xc[end][1] - res_a_chv[2][end], Inf64) < 4e-6
+	# compare jump times
+	@test norm(res.time - res_a_chv[1], Inf64) < 3e-3
+	# compare xc end values
+	@test norm(res.xc[end][1] - res_a_chv[2][end], Inf64) < 4e-6
 end
 
 println("\n\nComparison of solvers - CHV (without saving solution)")
