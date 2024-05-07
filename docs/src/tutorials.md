@@ -20,7 +20,7 @@ In between jumps, $x_c$ evolves according to
 We first need to load the library.  
 
 ```@example TUT1
-using Revise, Sundials, Random
+using Sundials, Random
 using PiecewiseDeterministicMarkovProcesses
 const PDMP = PiecewiseDeterministicMarkovProcesses
 ```
