@@ -117,7 +117,7 @@ We also provide a wrapper to [JumpProcesses.jl](https://github.com/SciML/JumpPro
 """
 struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 						vectype_xd <: AbstractVector{Td},
-						Tcar}
+						Tcar, R}
 	tspan::Vector{Tc}				    			# final simulation time interval, we use an array to be able to mutate it
 	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
 	time::Vector{Tc}
@@ -126,6 +126,7 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	# variables for debugging
 	rate_hist::Vector{Tc}							# to save the rates for debugging purposes
 	caract::Tcar									# struct for characteristics of the PDMP
+	rng::R
 end
 
 pushTime!(pb::PDMPProblem, t) = push!(pb.time, t)
@@ -134,6 +135,7 @@ pushXd!(pb::PDMPProblem, xd) = push!(pb.Xd, xd)
 
 function init!(pb::PDMPProblem)
 	init!(pb.caract)
+	#TODO update with pb.rng
 	pb.simjptimes.tstop_extended = -log(rand())
 	pb.simjptimes.lastjumptime = pb.tspan[1]
 	pb.simjptimes.njumps = 0
@@ -155,14 +157,15 @@ function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				Ncache = 0,
 				rng::Trng = JumpProcesses.DEFAULT_RNG) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}, Trng}
 	ti, tf = tspan
-	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract)}(
 	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms; Ncache = Ncache)
+	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract), Trng}(
 			[ti, tf],
 			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
 			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
 			Tc[],
-			caract)
+			caract,
+			rng)
 end
 
 function PDMPProblem(F, R, nu::Tnu, xc0::vecc, xd0::vecd, parms,
