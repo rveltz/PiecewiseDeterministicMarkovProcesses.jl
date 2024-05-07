@@ -36,7 +36,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 	#variables for rejection algorithm
 	reject = true
 	lambda_star = 0.0 # this is the bound for the rejection method
-	ppf = caract.R(ratecache.rate, X0, Xd, caract.parms, t, true)
+	ppf = caract.R(get_tmp(ratecache, X0), X0, Xd, caract.parms, t, true)
 
 	δt = simjptimes.tstop_extended
 
@@ -53,7 +53,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 			verbose && println("----> δt = ", δt, ", t∈", tp, ", dt = ", tp[2]-tp[1], ", xc = ", X0)
 
 			t = tp[end]
-			ppf = caract.R(ratecache.rate, X0, Xd, caract.parms, t, true)
+			ppf = caract.R(get_tmp(ratecache, X0), X0, Xd, caract.parms, t, true)
 			@assert ppf[1] <= ppf[2] "(Rejection algorithm) Your bound on the total rate is wrong, $ppf"
 			if t == tf
 				reject = false
@@ -67,12 +67,12 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 		end
 
 		# there is a jump!
-		ppf = caract.R(ratecache.rate, X0, Xd, caract.parms, t, false)
+		ppf = caract.R(get_tmp(ratecache, X0), X0, Xd, caract.parms, t, false)
 
 		if (t < tf)
 			verbose && println("----> Jump!, ratio = ", ppf[1] / ppf[2], ", xd = ", Xd)
 			# make a jump
-			ev = pfsample(ratecache.rate)
+			ev = pfsample(get_tmp(ratecache, X0))
 
 			# we perform the jump
 			affect!(caract.pdmpjump, ev, X0, Xd, caract.parms, t)
@@ -82,8 +82,8 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 		pushTime!(problem, t)
 		push!(xc_hist, X0[ind_save_c])
 		push!(xd_hist, Xd[ind_save_d])
-		save_rate && push!(problem.rate_hist, sum(ratecache.rate))
-		finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
+		save_rate && push!(problem.rate_hist, sum(get_tmp(ratecache, X0)))
+		finalizer(get_tmp(ratecache, X0), caract.xc, caract.xd, caract.parms, t)
 	end
 	if verbose println("--> Done") end
 	if verbose println("--> xd = ",xd_hist[:,1:nsteps]) end

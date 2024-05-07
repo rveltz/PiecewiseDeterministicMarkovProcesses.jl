@@ -81,7 +81,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false,
 
 		verbose && println("├─── t = $t, -log(U) = $δt, nstep =  $nsteps")
 
-		res_ode .= Flow(X_extended, Xd, δt, ratecache.rate)
+		res_ode .= Flow(X_extended, Xd, δt, get_tmp(ratecache, X_extended))
 
 		verbose && println("│    ode solve has been performed!")
 
@@ -95,10 +95,10 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false,
 				X_extended[ii] = res_ode[ii]
 			end
 
-			caract.R(ratecache.rate, X_extended, Xd, caract.parms, t, false)
+			caract.R(get_tmp(ratecache, X_extended), X_extended, Xd, caract.parms, t, false)
 
 			# Update event
-			ev = pfsample(ratecache.rate)
+			ev = pfsample(get_tmp(ratecache, X_extended))
 
 			# we perform the jump, it changes Xd and (possibly) X_extended
 			affect!(caract.pdmpjump, ev, X_extended, Xd, caract.parms, t)
@@ -113,9 +113,9 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false,
 				push!(xd_hist, copy(Xd[ind_save_d]))
 			end
 
-			save_rate && push!(problem.rate_hist, caract.R(ratecache.rate, X_extended, Xd, caract.parms, t, true)[1])
+			save_rate && push!(problem.rate_hist, caract.R(get_tmp(ratecache, X_extended), X_extended, Xd, caract.parms, t, true)[1])
 
-			finalizer(ratecache.rate, caract.xc, caract.xd, caract.parms, t)
+			finalizer(get_tmp(ratecache, X_extended), caract.xc, caract.xd, caract.parms, t)
 
 			δt = - log(rand())
 
