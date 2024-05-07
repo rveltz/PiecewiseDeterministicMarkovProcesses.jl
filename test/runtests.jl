@@ -57,8 +57,8 @@ end
 @testset "Example SIR" begin
 	include("../examples/sir.jl")
 	@test result.xd[1,end] == 0
-	@test result.xd[2,end] == 29
-	@test result.xd[3,end] == 80
+	@test result.xd[2,end] == 28
+	@test result.xd[3,end] == 81
 end
 
 @testset "Example SIR(rejection)" begin

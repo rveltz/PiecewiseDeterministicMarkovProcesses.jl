@@ -1,4 +1,4 @@
-using Revise
+# using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
