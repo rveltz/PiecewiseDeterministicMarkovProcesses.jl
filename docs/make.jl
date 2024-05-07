@@ -24,4 +24,4 @@ makedocs(modules = [PiecewiseDeterministicMarkovProcesses],
 
 deploydocs(
 	repo   = "github.com/rveltz/PiecewiseDeterministicMarkovProcesses.jl.git",
-	push_preview=true, target="build", devbranch="main")
+	push_preview=true, target="build", devbranch="master")
