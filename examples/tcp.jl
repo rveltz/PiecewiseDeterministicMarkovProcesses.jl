@@ -1,4 +1,4 @@
-# using Revise
+using Revise
 using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
@@ -29,7 +29,7 @@ function F_tcp!(ẋ, xc, xd, parms, t)
 	else
 		 ẋ[1] = -1.
 	end
-	nothing
+	ẋ
 end
 
 rate_tcp(x) = 1/x
@@ -53,13 +53,13 @@ tf = 100000.
 nj = 10
 
 Random.seed!(43143)
-	res_a = AnalyticalSample(xc0, xd0, 0., nj)
-	# plot(res_a[1], res_a[2])
+res_a = @time AnalyticalSample(xc0, xd0, 0., nj)
+# plot(res_a[1], res_a[2])
 
 errors = Float64[]
 
 println("\n\nComparison of solvers")
-	for ode in [(:cvode, "cvode"),
+for ode in [(:cvode, "cvode"),
 					(:lsoda, "lsoda"),
 					(CVODE_BDF(), "CVODEBDF"),
 					(CVODE_Adams(), "CVODEAdams"),
@@ -71,17 +71,17 @@ println("\n\nComparison of solvers")
 		Random.seed!(43143)
 		problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 		res =  @time PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
-		printstyled(color=:green,"--> norm difference = ", norm(res.time - res_a[1], Inf64), "  - solver = ",ode[2],"\n\n")
+		printstyled(color=:green, "--> norm difference = ", norm(res.time - res_a[1], Inf64), "  - solver = ",ode[2],"\n\n")
 		push!(errors,norm(res.time - res_a[1], Inf64))
 end
 
 
 # case with no allocations  0.000721 seconds (330 allocations: 26.266 KiB)
-# Random.seed!(43143)
-# 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, 1e19))
-# 	res =  @time PDMP.solve(problem, CHV(Rodas4P()); n_jumps = nj, verbose = true)
+Random.seed!(43143)
+	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, 1e19))
+	res =  @time PDMP.solve(problem, CHV(TRBDF2()); n_jumps = nj, save_positions = (false, false))
 
-# plot!(res.time, res.xc[1,:])
+# plot(res.time, res.xc[1,:])
 
 # res =  @timed PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 # res[end].poolalloc

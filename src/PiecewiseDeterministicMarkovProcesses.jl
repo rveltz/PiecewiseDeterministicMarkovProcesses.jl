@@ -4,6 +4,7 @@ module PiecewiseDeterministicMarkovProcesses
 	using ForwardDiff
 	using JumpProcesses
 	import SciMLBase: solve
+	import PreallocationTools: dualcache, get_tmp
 
 	abstract type AbstractPDMPAlgorithm end
 	abstract type AbstractCHV <: AbstractPDMPAlgorithm end

@@ -13,10 +13,10 @@ PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::MassActionJump;k
 PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JumpProcesses.AbstractJump...;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps...);kwargs...)
 PDMPProblem(prob,jumps::JumpSet;kwargs...) = PDMPProblem(prob,NullAggregator(),jumps;kwargs...)
 
-struct DiffeqJumpWrapper
-	diffeqpb
-	jumps
-	u
+struct DiffeqJumpWrapper{T1, T2, Tu}
+	diffeqpb::T1
+	jumps::T2
+	u::Tu
 end
 
 # encode the vector field
@@ -56,9 +56,9 @@ function PDMPProblem(prob, aggregator::AbstractAggregatorAlgorithm, jumps::JumpS
 	pb_wrapper = DiffeqJumpWrapper(prob, jumps, copy(prob.u0))
 
 	# get PDMP characteristics
-	F = (xdot,xc,xd,p,t::Float64) -> pb_wrapper(xdot,xc,xd,p,t)
-	R = (rate,xc,xd,p,t::Float64,issum::Bool) -> pb_wrapper(rate,xc,xd,p,t,issum)
-	Delta = (xc,xd,p,t::Float64,ind_reaction::Int) -> pb_wrapper(xc,xd,p,t,ind_reaction)
+	F = (xdot, xc, xd, p, t::Float64) -> pb_wrapper(xdot, xc, xd, p, t)
+	R = (rate, xc, xd, p, t::Float64, issum::Bool) -> pb_wrapper(rate, xc, xd, p, t, issum)
+	Delta = (xc, xd, p, t::Float64, ind_reaction::Int) -> pb_wrapper(xc, xd, p, t, ind_reaction)
 
 	xc0 = copy(prob.u0)
 
@@ -69,5 +69,5 @@ function PDMPProblem(prob, aggregator::AbstractAggregatorAlgorithm, jumps::JumpS
 	# determine the number of reactions
 	nb_reactions = length(jumps.variable_jumps)
 
-	return PDMPProblem(F,R,Delta,nb_reactions,xc0,xd0,p,tspan)
+	return PDMPProblem(F, R, Delta, nb_reactions, xc0, xd0, p, tspan)
 end

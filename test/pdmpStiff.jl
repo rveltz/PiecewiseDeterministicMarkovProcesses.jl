@@ -1,6 +1,6 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials, Test
-	const PDMP = PiecewiseDeterministicMarkovProcesses
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Test
+const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSampleCHV(xc0, xd0, ti, nj::Int64)
 	xch = [xc0[1]]
@@ -90,20 +90,20 @@ function R!(rate, xc, xd, parms, t, issum::Bool)
 end
 
 xc0 = [1.0]
-	xd0 = [0, 0]
+xd0 = [0, 0]
 
-	nu = [1 0;0 -1]
-	parms = [.0]
-	ti = 0.322156
-	tf = 100000.
-	nj = 50
+nu = [1 0;0 -1]
+parms = [.0]
+ti = 0.322156
+tf = 100000.
+nj = 50
 
 errors = Float64[]
 
 Random.seed!(8)
-	res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
+res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
 Random.seed!(8)
-	res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
+res_a_rej = AnalyticalSampleRejection(xc0,xd0,ti,nj)
 
 algos = [(:cvode,"cvode"),
 			(:lsoda,"lsoda"),
@@ -116,7 +116,7 @@ algos = [(:cvode,"cvode"),
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - CHV")
-	for ode in algos
+for ode in algos
 	Random.seed!(8)
 	res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, reltol = 1e-8, abstol = 1e-11)
 	println("--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2])
@@ -220,12 +220,16 @@ Random.seed!(8)
 
 # test for allocations, should not depend on the requested number of jumps
 Random.seed!(8)
-	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-	alloc1 =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, 1e9))
+	res =  PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
+	Random.seed!(8)
 	alloc1 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 	Random.seed!(8)
 	alloc2 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 2nj, save_positions = (false, false))
-	println("--> allocations = ", (alloc1, alloc2))
+	Random.seed!(8)
+	alloc3 =  @allocated PDMP.solve(problem, CHV(Tsit5()); n_jumps = 3nj, save_positions = (false, false))
+	println("--> allocations = ", (alloc1, alloc2, alloc3)) #--> allocations = (58736, 13024)
 
 # test for many calls to solve, the trajectories should be the same
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
