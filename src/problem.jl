@@ -40,7 +40,10 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 	ratecache::vecrate			# to hold the rate vector for inplace computations. Also used to initialise rate as this can be an issue for StaticArrays.jl
 	parms::Tparms				# container to hold parameters to be passed to F, R, Delta
 
-	function PDMPCaracteristics(F, R, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
+	function PDMPCaracteristics(F, R, Delta,
+									nu::Tnu,
+									xc0::vecc, xd0::vecd,
+									parms::Tparms; Ncache = 0) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td}}
 		jump = Jump(nu, Delta)
@@ -49,7 +52,10 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate, parms)
 	end
 
-	function PDMPCaracteristics(F, R::TR, Delta, nu::Tnu, xc0::vecc, xd0::vecd, parms::Tparms) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
+	function PDMPCaracteristics(F, R::TR, Delta,
+									nu::Tnu,
+									xc0::vecc, xd0::vecd,
+									parms::Tparms; Ncache = 0) where {Tc, Td, Tparms, Tnu <: AbstractMatrix{Td},
 						vecc <: AbstractVector{Tc},
 						vecd <: AbstractVector{Td},
 						TR <: AbstractRate}

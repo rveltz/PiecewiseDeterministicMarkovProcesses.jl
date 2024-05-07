@@ -23,9 +23,7 @@ struct Jump{Td, Tnu <: AbstractArray{Td}, TD} <: AbstractJump
 
 end
 
-function get_rate_prototype(jp::Jump, Tc)
-	return zeros(Tc, size(jp.nu, 1))
-end
+get_rate_prototype(jp::Jump, Tc) = zeros(Tc, size(jp.nu, 1))
 
 function affect!(ratejump::Jump, ev, xc, xd, parms, t)
 	# perform the jump on the discrete variable
