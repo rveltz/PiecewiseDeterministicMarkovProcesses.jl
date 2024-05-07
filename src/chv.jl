@@ -66,13 +66,14 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 	# Main loop
 	while (t < tf) && (nsteps < n_jumps)
 
-		verbose && println("--> t = $t, δt = $δt, nstep =  $nsteps")
+		verbose && println("├─── t = $t, -log(U) = $δt, nstep =  $nsteps")
 
 		res_ode .= Flow(X_extended, Xd, δt, ratecache.rate)
 
-		verbose && println("--> ode solve has been performed!")
+		verbose && println("│    ode solve has been performed!")
 
 		if (res_ode[end] < tf) && nsteps < n_jumps
+			verbose && println("│    Δt = ", res_ode[end] - t)
 			# this is the next jump time
 			t = res_ode[end]
 
@@ -89,8 +90,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false, ind
 			# we perform the jump, it changes Xd and (possibly) X_extended
 			affect!(caract.pdmpjump, ev, X_extended, Xd, caract.parms, t)
 
-			verbose && println("--> Which reaction? => ", ev)
-			verbose && println("--> xd = ", Xd)
+			verbose && println("│    reaction = ", ev)
+			# verbose && println("--> xd = ", Xd)
 
 			# save state, post-jump
 			if save_positions[2] || (nsteps == n_jumps - 1)

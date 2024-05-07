@@ -1,16 +1,16 @@
-using DiffEqJump: AbstractAggregatorAlgorithm, NullAggregator
+using JumpProcesses: AbstractAggregatorAlgorithm, NullAggregator
 
 PDMPProblem(prob,jumps::ConstantRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,jumps::VariableRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,jumps::RegularJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,jumps::MassActionJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,jumps::DiffEqJump.AbstractJump...;kwargs...) = PDMPProblem(prob,JumpSet(jumps...);kwargs...)
+PDMPProblem(prob,jumps::JumpProcesses.AbstractJump...;kwargs...) = PDMPProblem(prob,JumpSet(jumps...);kwargs...)
 
 PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::ConstantRateJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::VariableRateJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::RegularJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
 PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::MassActionJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::DiffEqJump.AbstractJump...;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps...);kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JumpProcesses.AbstractJump...;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps...);kwargs...)
 PDMPProblem(prob,jumps::JumpSet;kwargs...) = PDMPProblem(prob,NullAggregator(),jumps;kwargs...)
 
 struct DiffeqJumpWrapper

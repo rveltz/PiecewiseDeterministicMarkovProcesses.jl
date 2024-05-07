@@ -97,7 +97,7 @@ We then need to provide the way the jumps affect the state variable. There are t
 - `PDMPProblem(F,R,nu,xc0,xd0,p,tspan)` when ones does not want to provide the function `Delta`
 - `PDMPProblem(F,R,Delta,reaction_number::Int64,xc0,xd0,p,tspan)` when ones does not want to provide the transition matrix `nu`. The length `reaction_number` of the rate vector must then be provided.
 
-We also provide a wrapper to [DiffEqJump.jl](https://github.com/JuliaDiffEq/DiffEqJump.jl). This is quite similar to how a `JumpProblem` would be created.
+We also provide a wrapper to [JumpProcesses.jl](https://github.com/SciML/JumpProcesses.jl). This is quite similar to how a `JumpProblem` would be created.
 
 - `PDMPProblem(prob, jumps...)` where `prob` can be an `ODEProblem`. For an example, please consider `example/examplediffeqjumpwrapper.jl`.
 """

@@ -52,7 +52,7 @@ ti = 0.332
 tf = 100000.
 nj = 50
 
-Random.seed!(8)
+Random.seed!(18)
 	res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
 errors = Float64[]
@@ -61,7 +61,7 @@ rnd_state = 0.
 
 println("\n\nComparison of solvers")
 	for ode in [(:lsoda,"lsoda"),(:cvode,"cvode"),(CVODE_BDF(),"CVODEBDF"),(CVODE_Adams(),"CVODEAdams"),(Tsit5(),"tsit5"),(Rodas4P(autodiff=true),"rodas4P-AutoDiff"),(Rodas5(),"rodas5"),(Rosenbrock23(),"RS23"),(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
-		Random.seed!(8)
+		Random.seed!(18)
 
 		problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 		res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
