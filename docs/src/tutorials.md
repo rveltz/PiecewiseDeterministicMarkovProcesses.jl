@@ -19,13 +19,14 @@ In between jumps, $x_c$ evolves according to
 
 We first need to load the library.  
 
-```julia
+```@example TUT1
+using Revise, Sundials, Random
 using PiecewiseDeterministicMarkovProcesses
 const PDMP = PiecewiseDeterministicMarkovProcesses
 ```
 We then define a function that encodes the dynamics in between jumps. We need to provide the vector field of the ODE. Hence, we define a function that, given the continuous state $x_c$ and the discrete state $x_d$ at time $t$, returns the vector field. In addition some parameters can be passed with the variable `parms`.
 
-```julia  
+```@example TUT1  
 function F!(ẋ, xc, xd, parms, t)
 	if mod(xd[1],2)==0
 		ẋ[1] = 10xc[1]
@@ -47,7 +48,7 @@ We implement these jumps using a 2x1 matrix `nu` of Integers, such that the jump
 The rates of these reactions are encoded in the following function.
 
 
-```julia
+```@example TUT1
 k(x) = 1 + x
 
 function R!(rate, xc, xd, parms, t, issum::Bool)
@@ -76,14 +77,14 @@ parms = [50.]
 
 We define a problem type by giving the characteristics of the process `F, R, Delta, nu`, the initial conditions, and the timespan to solve over:
 
-```julia
+```@example TUT1
 Random.seed!(8) # to get the same result as this simulation!
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (0.0, 10.0))
 ```
 
 After defining the problem, you solve it using `solve`.
 
-```julia
+```@example TUT1
 sol =  PDMP.solve(problem, CHV(CVODE_BDF()))
 ```
 
@@ -91,15 +92,11 @@ In this case, we chose to sample `pb` with the [CHV algorithm](https://arxiv.org
 
 We can then plot the solution as follows:
 
-```
+```@example TUT1
 # plotting
 using Plots
 Plots.plot(sol.time,sol.xc[1,:],label="xc")
 ```
-
-This produces the graph:
-
-![TCP](example1.png)
 
  
 ## Basic example with the rejection method
@@ -110,7 +107,7 @@ The **rejection method** assumes some a priori knowledge of the process one want
 
 `sum(rate)(t) <= bound_rejection `
 
-```julia
+```@example TUT1
 function R2!(rate, xc, xd, parms, t, issum::Bool)
 	# rate function
 	bound_rejection = 1. + parms[1] + 15  # bound on the total rate
@@ -128,7 +125,7 @@ end
 
 We can now simulate this process as follows
 
-```julia
+```@example TUT1
 Random.seed!(8) # to get the same result as this simulation!
 problem = PDMP.PDMPProblem(F!, R2!, nu, xc0, xd0, parms, (0.0, 1.0))
 sol =  PDMP.solve(problem, Rejection(CVODE_BDF()))
@@ -138,12 +135,8 @@ In this case, we chose to sample `pb` with the Rejection algorithm where the flo
 
 We can then plot the solution as follows:
 
-```
+```@example TUT1
 # plotting
 using Plots
 Plots.plot(sol.time,sol.xc[1,:],label="xc")
 ```
-
-This produces the graph:
-
-![TCP](example2.png)
