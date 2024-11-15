@@ -25,15 +25,10 @@ module PiecewiseDeterministicMarkovProcesses
 	include("tau-leap.jl")
 	include("diffeqwrap.jl")
 
-	export ssa,
-		chv!,chv,
-		rejection!,
-		rejection_exact,
-		chv_diffeq!,
+	export chv_diffeq!,
 		rejection_diffeq!,
-		pdmpArgs,
-		pdmpResult,
-		pdmp_data,
+		PDMPProblem,
+		PDMPResult,
 		ConstantRate, VariableRate, CompositeRate
 
 	export PDMPProblem, CHV, Rejection, RejectionExact, solve
