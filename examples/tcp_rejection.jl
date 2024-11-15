@@ -1,5 +1,5 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, parms, t)

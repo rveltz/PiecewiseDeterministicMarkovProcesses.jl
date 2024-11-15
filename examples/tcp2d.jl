@@ -1,4 +1,4 @@
-using PiecewiseDeterministicMarkovProcesses, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, Random, OrdinaryDiffEq
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, parms, t)

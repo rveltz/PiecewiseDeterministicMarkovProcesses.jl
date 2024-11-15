@@ -1,6 +1,6 @@
 module PiecewiseDeterministicMarkovProcesses
 	using Random, LinearAlgebra, SparseArrays, Parameters
-	using LSODA, Sundials, JumpProcesses, RecursiveArrayTools, SciMLBase, SparseArrays
+	using LSODA, Sundials, JumpProcesses, RecursiveArrayTools, SciMLBase
 	using ForwardDiff
 	using JumpProcesses
 	import SciMLBase: solve

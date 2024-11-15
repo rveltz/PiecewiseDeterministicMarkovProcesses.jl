@@ -1,5 +1,5 @@
 using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSampleCHV(xc0, xd0, ti, nj::Int64)

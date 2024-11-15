@@ -1,5 +1,5 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSample(xc0, xd0, ti, nj::Int64)
@@ -78,8 +78,8 @@ end
 
 # case with no allocations  0.000721 seconds (330 allocations: 26.266 KiB)
 Random.seed!(43143)
-	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, 1e19))
-	res =  @time PDMP.solve(problem, CHV(TRBDF2()); n_jumps = nj, save_positions = (false, false))
+problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, 1e19))
+res =  @time PDMP.solve(problem, CHV(Tsit5()); n_jumps = nj, save_positions = (false, false))
 
 # plot(res.time, res.xc[1,:])
 

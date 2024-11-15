@@ -1,4 +1,4 @@
-using Revise, PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations, Sundials
+using Revise, PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_fd!(ẋ, xc, xd, parms, t)
