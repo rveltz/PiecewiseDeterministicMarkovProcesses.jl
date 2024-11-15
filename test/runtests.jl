@@ -1,4 +1,4 @@
-using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, Test, LinearAlgebra, Random, OrdinaryDiffEq
 
 macro testS(label, args...)
 	:(@testset $label begin @test $(args...); end)

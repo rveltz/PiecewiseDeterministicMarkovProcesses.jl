@@ -1,5 +1,5 @@
 # using Revise, Test
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, DifferentialEquations
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F!(ẋ, xc, xd, parms, t)
