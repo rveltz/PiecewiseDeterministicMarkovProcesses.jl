@@ -3,7 +3,8 @@
 """
 Same as the `solve` for `CHV(::DiffEqBase.DEAlgorithm)` but for `CHV(::Symbol)`. This is an old implementation of the CHV algorithm which can be used with `:lsoda`. For all other solvers, use the the new solver.
 """
-function solve(problem::PDMPProblem, algo::CHV{Tode}; verbose::Bool = false,
+function solve(problem::PDMPProblem, algo::CHV{Tode};
+				verbose::Bool = false,
 				ind_save_d = -1:1,
 				ind_save_c = -1:1,
 				n_jumps = Inf64,

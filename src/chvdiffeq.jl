@@ -142,7 +142,7 @@ function chv_diffeq!(problem::PDMPProblem,
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
 		step!(integrator)
 
-		@assert( t < simjptimes.lastjumptime, "Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)")
+		@assert( t < simjptimes.lastjumptime, "Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
 		t, tprev = simjptimes.lastjumptime, t
 
 		# the previous step was a jump! should we save it?
@@ -208,7 +208,7 @@ Simulate the PDMP `problem` using the CHV algorithm.
     We provide a basic wrapper that should work for `VariableJumps` (the other types of jumps have not been thoroughly tested). You can use `CHV` for this type of problems. The `Rejection` solver is not functional yet.
 
 """
-function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar, TR},
+function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd},
 				algo::CHV{Tode};
 				verbose = false,
 				n_jumps = Inf64,
@@ -216,7 +216,7 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar, TR},
 				reltol = 1e-7,
 				abstol = 1e-9,
 				save_rate = false,
-				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, TR, Tcar, Tode <: SciMLBase.DEAlgorithm}
+				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, Tode <: SciMLBase.DEAlgorithm}
 
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)
