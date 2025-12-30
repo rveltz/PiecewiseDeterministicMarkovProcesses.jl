@@ -1,4 +1,7 @@
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, Sundials
+# using Revise
+using LinearAlgebra, Random, Sundials
+import PiecewiseDeterministicMarkovProcesses as PDMP
+import OrdinaryDiffEq as ODE
 
 function R_sir!(rate,xc,xd,parms,t::Float64,issum::Bool)
 	(S,I,R,~) = xd
@@ -18,7 +21,7 @@ end
 
 function F_sir!(xdot,xc,xd,parms,t::Float64)
 	# vector field used for the continuous variable
-	xdot[1] = 0.0
+	xdot[1] = 0
 	nothing
 end
 
@@ -30,6 +33,6 @@ tf = 150.0
 
 Random.seed!(1234)
 problem = PDMP.PDMPProblem(F_sir!,R_sir!,nu, xc0, xd0, parms, (0.0, tf))
-result = PDMP.solve(problem, CHV(Tsit5()); n_jumps = 1000)
-result = PDMP.solve(problem, CHV(:cvode); n_jumps = 1000)
-result = PDMP.solve(problem, CHV(CVODE_BDF()); n_jumps = 1000)
+result = PDMP.solve(problem, PDMP.CHV(ODE.Tsit5()); n_jumps = 1000)
+result = PDMP.solve(problem, PDMP.CHV(:cvode); n_jumps = 1000)
+result = PDMP.solve(problem, PDMP.CHV(Sundials.CVODE_BDF()); n_jumps = 1000)

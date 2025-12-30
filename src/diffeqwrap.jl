@@ -1,17 +1,17 @@
 using JumpProcesses: AbstractAggregatorAlgorithm, NullAggregator
 
-PDMPProblem(prob,jumps::ConstantRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,jumps::VariableRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,jumps::RegularJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,jumps::MassActionJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,jumps::JumpProcesses.AbstractJump...;kwargs...) = PDMPProblem(prob,JumpSet(jumps...);kwargs...)
+PDMPProblem(prob,jumps::JP.ConstantRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
+PDMPProblem(prob,jumps::JP.VariableRateJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
+PDMPProblem(prob,jumps::JP.RegularJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
+PDMPProblem(prob,jumps::JP.MassActionJump;kwargs...) = PDMPProblem(prob,JumpSet(jumps);kwargs...)
+PDMPProblem(prob,jumps::JP.AbstractJump...;kwargs...) = PDMPProblem(prob,JumpSet(jumps...);kwargs...)
 
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::ConstantRateJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::VariableRateJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::RegularJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::MassActionJump;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps);kwargs...)
-PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JumpProcesses.AbstractJump...;kwargs...) = PDMPProblem(prob,aggregator,JumpSet(jumps...);kwargs...)
-PDMPProblem(prob,jumps::JumpSet;kwargs...) = PDMPProblem(prob,NullAggregator(),jumps;kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JP.ConstantRateJump;kwargs...) = PDMPProblem(prob,aggregator,JP.JumpSet(jumps);kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JP.VariableRateJump;kwargs...) = PDMPProblem(prob,aggregator,JP.JumpSet(jumps);kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JP.RegularJump;kwargs...) = PDMPProblem(prob,aggregator,JP.JumpSet(jumps);kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JP.MassActionJump;kwargs...) = PDMPProblem(prob,aggregator,JP.JumpSet(jumps);kwargs...)
+PDMPProblem(prob,aggregator::AbstractAggregatorAlgorithm,jumps::JP.AbstractJump...;kwargs...) = PDMPProblem(prob,aggregator,JP.JumpSet(jumps...);kwargs...)
+PDMPProblem(prob,jumps::JP.JumpSet;kwargs...) = PDMPProblem(prob,JP.NullAggregator(),jumps;kwargs...)
 
 struct DiffeqJumpWrapper{T1, T2, Tu}
 	diffeqpb::T1
@@ -46,8 +46,8 @@ function (wrap::DiffeqJumpWrapper)(xc, xd, p, t::Float64, ind_reaction::Int64)
 	nothing
 end
 
-function PDMPProblem(prob, aggregator::AbstractAggregatorAlgorithm, jumps::JumpSet;
-	save_positions = typeof(prob) <: DiffEqBase.AbstractDiscreteProblem ? (false,true) : (true, true), kwargs...)
+function PDMPProblem(prob, aggregator::AbstractAggregatorAlgorithm, jumps::JP.JumpSet;
+	save_positions = typeof(prob) <: SciMLBase.AbstractDiscreteProblem ? (false,true) : (true, true), kwargs...)
 
 	@assert isinplace(prob) "The current interface requires the ODE to be written inplace"
 	@assert jumps.regular_jump == nothing

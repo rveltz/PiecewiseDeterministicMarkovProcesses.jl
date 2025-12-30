@@ -53,7 +53,21 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc), Ncache)
 		end
 		ratefunction = VariableRate(R)
-		return new{typeof(F), typeof(ratefunction), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, ratefunction, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
+		return new{typeof(F),
+					typeof(ratefunction),
+					typeof(jump),
+					vecc,
+					vecd,
+					typeof(rate_cache),
+					Tparms}(F,
+							ratefunction,
+							jump,
+							copy(xc0),
+							copy(xd0),
+							copy(xc0),
+							copy(xd0),
+							rate_cache,
+							parms)
 	end
 
 	function PDMPCaracteristics(F, R::TR, Delta,
@@ -121,8 +135,8 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	tspan::Vector{Tc}				    			# final simulation time interval, we use an array to be able to mutate it
 	simjptimes::PDMPJumpTime{Tc, Td}				# space to save result
 	time::Vector{Tc}
-	Xc::VectorOfArray{Tc, 2, Array{vectype_xc, 1}}	# continuous variable history
-	Xd::VectorOfArray{Td, 2, Array{vectype_xd, 1}}	# discrete variable history
+	Xc::RAT.VectorOfArray{Tc, 2, Array{vectype_xc, 1}}	# continuous variable history
+	Xd::RAT.VectorOfArray{Td, 2, Array{vectype_xd, 1}}	# discrete variable history
 	# variables for debugging
 	rate_hist::Vector{Tc}							# to save the rates for debugging purposes
 	caract::Tcar									# struct for characteristics of the PDMP
@@ -155,14 +169,14 @@ function PDMPProblem(F::TF, R::TR, DX::TD, nu::Tnu,
 				xc0::vecc, xd0::vecd, parms::Tp,
 				tspan;
 				Ncache = 0,
-				rng::Trng = JumpProcesses.DEFAULT_RNG) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}, Trng}
+				rng::Trng = JP.DEFAULT_RNG) where {Tc, Td, Tnu <: AbstractMatrix{Td}, Tp, TF ,TR ,TD, vecc <: AbstractVector{Tc}, vecd <:  AbstractVector{Td}, Trng}
 	ti, tf = tspan
 	caract = PDMPCaracteristics(F, R, DX, nu, xc0, xd0, parms; Ncache = Ncache)
 	return PDMPProblem{Tc, Td, vecc, vecd, typeof(caract), Trng}(
 			[ti, tf],
 			PDMPJumpTime{Tc, Td}(Tc(0), ti, 0, Tc(0), Vector{Tc}([0, 0]), false, 0),
 			[ti],
-			VectorOfArray([copy(xc0)]), VectorOfArray([copy(xd0)]),
+			RAT.VectorOfArray([copy(xc0)]), RAT.VectorOfArray([copy(xd0)]),
 			Tc[],
 			caract,
 			rng)

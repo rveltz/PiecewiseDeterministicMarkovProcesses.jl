@@ -65,10 +65,10 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 
 	nsteps += 1
 
-	probExtLsoda = ODEProblem((du, u, p, _t) -> algo(du, u, caract, _t), copy(X_extended), (ti, tf))
+	probExtLsoda = SciMLBase.ODEProblem((du, u, p, _t) -> algo(du, u, caract, _t), copy(X_extended), (ti, tf))
 
 	function Flow(_X0, _Xd, Δt, _r; _alg = odeTable[ode])
-		prob = DiffEqBase.remake(probExtLsoda; tspan = (0, Δt))
+		prob = SciMLBase.remake(probExtLsoda; tspan = (0, Δt))
 		prob.u0 .= _X0
 		sol = solve(prob, _alg; abstol = abstol, reltol = reltol, save_everystep = false)
 		return sol.u[end]
@@ -121,8 +121,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 			δt = - log(rand())
 
 		else
-			probLast = ODEProblem((du, u, p, _t) -> caract.F(du, u, Xd, caract.parms, _t), X_extended[1:end-1], (t, tf))
-			res_ode_last = solve(probLast, odeTable[ode]; abstol = 1e-9, reltol = 1e-7, save_everystep = false)
+			probLast = SciMLBase.ODEProblem((du, u, p, _t) -> caract.F(du, u, Xd, caract.parms, _t), X_extended[1:end-1], (t, tf))
+			res_ode_last = SciMLBase.solve(probLast, odeTable[ode]; abstol = 1e-9, reltol = 1e-7, save_everystep = false)
 
 			t = tf
 

@@ -1,8 +1,9 @@
 module PiecewiseDeterministicMarkovProcesses
-	using Random, LinearAlgebra, SparseArrays, Parameters
-	using LSODA, Sundials, JumpProcesses, RecursiveArrayTools, SciMLBase
-	using ForwardDiff
-	using JumpProcesses
+	using Random, LinearAlgebra, SparseArrays#, Parameters
+	import LSODA, Sundials
+	import RecursiveArrayTools as RAT
+	import JumpProcesses as JP
+	import SciMLBase
 	import SciMLBase: solve
 	import PreallocationTools: dualcache, get_tmp
 
@@ -26,10 +27,10 @@ module PiecewiseDeterministicMarkovProcesses
 	include("diffeqwrap.jl")
 
 	export chv_diffeq!,
-		rejection_diffeq!,
-		PDMPProblem,
-		PDMPResult,
-		ConstantRate, VariableRate, CompositeRate
+			rejection_diffeq!,
+			PDMPProblem,
+			PDMPResult,
+			ConstantRate, VariableRate, CompositeRate
 
 	export PDMPProblem, CHV, Rejection, RejectionExact, solve
 end # module

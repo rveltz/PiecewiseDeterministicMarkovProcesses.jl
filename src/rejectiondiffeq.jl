@@ -27,7 +27,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 	verbose && printstyled(color=:red,"--> REJECTION JUMP, t = $t\n")
 	verbose && printstyled(color=:red,"----> xc = $(integrator.u)\n")
 
-	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ",simjptimes.fictitous_jumps," !!\n")
+	verbose && printstyled(color=:green,"--> Fictitous jump at t = $t, # = ", simjptimes.fictitous_jumps, " !!\n")
 
 	simjptimes.ppf .= caract.R(get_tmp(ratecache, integrator.u), integrator.u, caract.xd, caract.parms, t, true)
 	@assert simjptimes.ppf[1] < simjptimes.ppf[2] "Error, your bound on the rates is not high enough!, $(simjptimes.ppf)"
@@ -35,7 +35,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 	simjptimes.reject = rand() < 1 - simjptimes.ppf[1] / simjptimes.ppf[2]
 	δt = -log(rand()) / simjptimes.ppf[2]
 
-	verbose && printstyled(color=:green,"----> xc = ",caract.xc ,", xd = ",caract.xd,", reject = ",simjptimes.reject,", rates = ",simjptimes.ppf,"\n")
+	verbose && printstyled(color=:green,"----> xc = ", caract.xc , ", xd = ", caract.xd, ", reject = ", simjptimes.reject, ", rates = ",simjptimes.ppf,	"\n")
 
 	# execute the jump
 	if t < tf && simjptimes.reject == false
@@ -56,7 +56,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
-		u_modified!(integrator, true)
+		SciMLBase.u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
 			caract.xc[ii] = integrator.u[ii]
@@ -69,7 +69,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 	# we register the next time interval to solve the extended ode
 	simjptimes.tstop_extended += δt
-	add_tstop!(integrator, simjptimes.tstop_extended)
+	SciMLBase.add_tstop!(integrator, simjptimes.tstop_extended)
 	verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
@@ -109,15 +109,15 @@ function rejection_diffeq!(problem::PDMPProblem,
 	simjptimes.reject = true
 
 	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, integrator -> rejectionjump(integrator, problem, save_positions[1], save_rate, verbose), save_positions = (false, false))
+	cb = SciMLBase.DiscreteCallback(problem, integrator -> rejectionjump(integrator, problem, save_positions[1], save_rate, verbose), save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_REJ = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
-	integrator = init(prob_REJ, ode, tstops = simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
+	prob_REJ = SciMLBase.ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X0, (ti, 1e9))
+	integrator = SciMLBase.init(prob_REJ, ode, tstops = simjptimes.tstop_extended, callback = cb, save_everystep = false, reltol = reltol, abstol = abstol, advance_to_tstop = true)
 
 	while (t < tf) && simjptimes.njumps < n_jumps #&& simjptimes.fictitous_jumps < 10
 		verbose && println("--> n = $(simjptimes.njumps), t = $t -> ", simjptimes.tstop_extended)
-		step!(integrator)
+		SciMLBase.step!(integrator)
 		if t >= simjptimes.lastjumptime
 			@warn "Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode"
 			return PDMPResult(problem, save_positions)
@@ -141,8 +141,8 @@ function rejection_diffeq!(problem::PDMPProblem,
 	# we check whether the last bit [t_last_jump, tf] is missing
 	if t>tf
 		verbose && println("----> LAST BIT!!, xc = ", caract.xc[end], ", xd = ",caract.xd)
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
-		sol = DiffEqBase.solve(prob_last_bit, ode)
+		prob_last_bit = SciMLBase.ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
+		sol = SciMLBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ", sol.u[end])
 		pushXc!(problem, sol.u[end])
 		pushXd!(problem, copy(caract.xd))
@@ -160,7 +160,7 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar},
 				reltol = 1e-7, 
 				abstol = 1e-9, 
 				save_rate = true, 
-				finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, Tcar, Tode <: DiffEqBase.DEAlgorithm}
+				finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, Tcar, Tode <: SciMLBase.DEAlgorithm}
 
 	return rejection_diffeq!(problem,
 							problem.tspan[1],

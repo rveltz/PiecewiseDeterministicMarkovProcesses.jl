@@ -65,12 +65,12 @@ for ode in [(:cvode, "cvode"),
 					(CVODE_Adams(), "CVODEAdams"),
 					(Rosenbrock23(), "RS23"),
 					(Tsit5(), "tsit5"),
-					(Rodas4P(autodiff=true), "rodas4P-AutoDiff"),
+					(Rodas4P(), "rodas4P-AutoDiff"),
 					(Rodas5(), "rodas5"),
 					(AutoTsit5(Rosenbrock23()), "AutoTsit5RS23")]
 		Random.seed!(43143)
 		problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-		res =  @time PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+		res =  @time PDMP.solve(problem, PDMP.CHV(ode[1]); n_jumps = nj)
 		printstyled(color=:green, "--> norm difference = ", norm(res.time - res_a[1], Inf64), "  - solver = ",ode[2],"\n\n")
 		push!(errors,norm(res.time - res_a[1], Inf64))
 end

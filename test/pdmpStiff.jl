@@ -110,9 +110,9 @@ algos = [(:cvode,"cvode"),
 			(CVODE_BDF(),"CVODEBDF"),
 			(CVODE_Adams(),"CVODEAdams"),
 			(Tsit5(),"tsit5"),
-			(Rodas4P(autodiff=false),"rodas4P-noAutoDiff"),
+			(Rodas4P(),"rodas4P-noAutoDiff"),
 			(Rodas4P(),"rodas4P-AutoDiff"),
-			(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23")]
+			(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - CHV")
@@ -127,22 +127,22 @@ for ode in algos
 end
 
 println("\n\nComparison of solvers - CHV (without saving solution)")
-	for ode in algos
+for ode in algos
 	Random.seed!(8)
 	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 	Random.seed!(8)
 	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
 		@test norm(res1.time[end] - res2.time[end]) ≈ 0
-	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
+	@test norm(res1.xc.u[end] - res2.xc.u[end]) ≈ 0
 	if ode[1] isa Symbol
-		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
+		@test norm(res1.xd.u[end] - res2.xd.u[end]) ≈ 0
 	end
 end
 
 println("\n\nComparison of solvers - CHV (limited by simulation time)")
-	problem.tspan[2] = 4.0
-	jumpsana = res_a_chv[1][res_a_chv[1] .< problem.tspan[2]]
-	for ode in algos
+problem.tspan[2] = 4.0
+jumpsana = res_a_chv[1][res_a_chv[1] .< problem.tspan[2]]
+for ode in algos
 	Random.seed!(8)
 	res1 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 		# same without recording the intermediate jumps
@@ -150,9 +150,9 @@ println("\n\nComparison of solvers - CHV (limited by simulation time)")
 	res2 =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, save_positions = (true, false))
 		@test norm(res1.time[1:end-1] .- jumpsana, Inf) < 2e-5
 		@test norm(res1.time[end] - res2.time[end]) ≈ 0
-	@test norm(res1.xc[end] - res2.xc[end]) ≈ 0
+	@test norm(res1.xc.u[end] - res2.xc.u[end]) ≈ 0
 	if ode[1] isa Symbol
-		@test norm(res1.xd[end] - res2.xd[end]) ≈ 0
+		@test norm(res1.xd.u[end] - res2.xd.u[end]) ≈ 0
 	end
 end
 
@@ -164,14 +164,14 @@ res3 =  @time PDMP.solve(prob2, CHV(:lsoda); n_jumps = 200)
 Random.seed!(8)
 res4 =  @time PDMP.solve(prob2, CHV(:lsoda); n_jumps = 20, save_positions = (true, false) )
 @test res3.time[end] ≈ res4.time[end]
-@test res3.xc[end] ≈ res3.xc[end]
+@test res3.xc.u[end] ≈ res4.xc.u[end]
 
 # using Plots
 # plot(res1.time, res1.xc[:,:]')
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - rejection")
-	for ode in algos
+for ode in algos
 	Random.seed!(8)
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = 4, verbose = false)
 	println("--> norm difference = ", norm(res.time - res_a_rej[1][1:4], Inf64), "  - solver = ",ode[2])

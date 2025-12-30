@@ -59,7 +59,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
 
-		u_modified!(integrator, true)
+		SciMLBase.u_modified!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
 			caract.xc[ii] = integrator.u[ii]
@@ -69,7 +69,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 	# we register the next time interval to solve the extended ode
 	simjptimes.njumps += 1
 	simjptimes.tstop_extended += -log(rand())
-	add_tstop!(integrator, simjptimes.tstop_extended)
+	SciMLBase.add_tstop!(integrator, simjptimes.tstop_extended)
 	verbose && printstyled(color=:green,"--> End jump\n\n")
 end
 
@@ -116,14 +116,14 @@ function chv_diffeq!(problem::PDMPProblem,
 	X_extended[end] = ti
 
 	# definition of the callback structure passed to DiffEq
-	cb = DiscreteCallback(problem, 
+	cb = SciMLBase.DiscreteCallback(problem, 
 						integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose),
 						save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
-	prob_CHV = ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9), kwargs...)
+	prob_CHV = SciMLBase.ODEProblem((xdot, x, data, tt) -> algopdmp(xdot, x, caract, tt), X_extended, (0.0, 1e9), kwargs...)
 
-	integrator = init(prob_CHV, ode,
+	integrator = SciMLBase.init(prob_CHV, ode,
 						tstops = simjptimes.tstop_extended,
 						callback = cb,
 						save_everystep = false,
@@ -140,7 +140,7 @@ function chv_diffeq!(problem::PDMPProblem,
 
 	while (t < tf) && (simjptimes.njumps < n_jumps)
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
-		step!(integrator)
+		SciMLBase.step!(integrator)
 
 		@assert( t < simjptimes.lastjumptime, "Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
 		t, tprev = simjptimes.lastjumptime, t
@@ -159,7 +159,7 @@ function chv_diffeq!(problem::PDMPProblem,
 	# we check that the last bit [t_last_jump, tf] is not missing
 	if t>tf
 		verbose && println("----> LAST BIT!!, xc = ", caract.xc[end], ", xd = ", caract.xd, ", t = ", problem.time[end])
-		prob_last_bit = ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
+		prob_last_bit = SciMLBase.ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
 		sol = SciMLBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ",sol.u[end])
 		pushXc!(problem, sol.u[end])

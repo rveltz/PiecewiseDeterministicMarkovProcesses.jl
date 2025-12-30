@@ -27,8 +27,8 @@ function allocate_arrays(ti	,xc0, xd0, n_max; rejection = false, ind_save_c=-1:1
 
 	# arrays for storing history, pre-allocate storage
 	t_hist  = [ti]
-	xc_hist = VectorOfArray([copy(xc0)[ind_save_c]])
-	xd_hist = VectorOfArray([copy(xd0)[ind_save_d]])
+	xc_hist = RAT.VectorOfArray([copy(xc0)[ind_save_c]])
+	xd_hist = RAT.VectorOfArray([copy(xd0)[ind_save_d]])
 	res_ode = zeros(2, length(X0))
 
 	return X0, Xc, Xd, t_hist, xc_hist, xd_hist, res_ode, ind_save_d, ind_save_c

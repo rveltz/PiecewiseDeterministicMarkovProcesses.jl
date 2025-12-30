@@ -53,7 +53,7 @@ tf = 100000.
 nj = 50
 
 Random.seed!(18)
-	res_a = AnalyticalSample(xc0,xd0,ti,nj)
+res_a = AnalyticalSample(xc0,xd0,ti,nj)
 
 errors = Float64[]
 # state of the random generator
@@ -65,7 +65,7 @@ println("\n\nComparison of solvers")
 				(CVODE_BDF(),"CVODEBDF"),
 				(CVODE_Adams(),"CVODEAdams"),
 				(Tsit5(),"tsit5"),
-				(Rodas4P(autodiff=true),"rodas4P-AutoDiff"),
+				(Rodas4P(),"rodas4P-AutoDiff"),
 				(Rodas5(),"rodas5"),
 				(Rosenbrock23(),"RS23"),
 				(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
