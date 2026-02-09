@@ -1,7 +1,7 @@
 using Pkg
 cd(@__DIR__)
 pkg" activate ."
-pkg" dev LSODA Sundials Plots"
+pkg" dev LSODA Sundials"
 
 using Documenter, PiecewiseDeterministicMarkovProcesses
 
