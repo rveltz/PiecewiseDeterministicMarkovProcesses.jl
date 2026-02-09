@@ -123,7 +123,7 @@ for ode in algos
 		# compare jump times
 		@test norm(res.time - res_a_chv[1], Inf64) < 3e-3
 		# compare xc end values
-		@test norm(res.xc[end][1] - res_a_chv[2][end], Inf64) < 4e-6
+		@test norm(res.xc.u[end][1] - res_a_chv[2][end], Inf64) < 4e-6
 end
 
 println("\n\nComparison of solvers - CHV (without saving solution)")
