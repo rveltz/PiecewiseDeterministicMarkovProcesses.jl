@@ -1,7 +1,7 @@
 name = "PiecewiseDeterministicMarkovProcesses"
 uuid = "86206cdf-4603-54e0-bd58-22a2dcbf57aa"
 authors = ["Romain Veltz <rveltz@salk.edu>", " Simon Frost <sdf22@cam.ac.uk>"]
-version = "0.0.10"
+version = "0.0.11"
 
 [deps]
 JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
