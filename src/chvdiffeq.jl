@@ -40,9 +40,9 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 
 	if save_pre_jump && (t <= tf)
 		verbose && printstyled(color=:green, "----> saving pre-jump\n")
-		pushXc!(prob, (integrator.u[1:end-1]))
-		pushXd!(prob, copy(caract.xd))
-		pushTime!(prob, t)
+		_push_xc!(prob, (integrator.u[1:end-1]))
+		_push_xd!(prob, copy(caract.xd))
+		_push_time!(prob, t)
 		#save rates for debugging
 		save_rate && push!(prob.rate_hist, sum(rate))
 	end
@@ -148,9 +148,9 @@ function chv_diffeq!(problem::PDMPProblem,
 		# the previous step was a jump! should we save it?
 		if njumps < simjptimes.njumps && save_positions[2] && (t <= tf)
 			verbose && println("----> save post-jump, xd = ",problem.Xd)
-			pushXc!(problem, copy(caract.xc))
-			pushXd!(problem, copy(caract.xd))
-			pushTime!(problem, t)
+			_push_xc!(problem, copy(caract.xc))
+			_push_xd!(problem, copy(caract.xd))
+			_push_time!(problem, t)
 			njumps +=1
 			verbose && println("----> end save post-jump, ")
 		end
@@ -162,9 +162,9 @@ function chv_diffeq!(problem::PDMPProblem,
 		prob_last_bit = SciMLBase.ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
 		sol = SciMLBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ",sol.u[end])
-		pushXc!(problem, sol.u[end])
-		pushXd!(problem, copy(caract.xd))
-		pushTime!(problem, sol.t[end])
+		_push_xc!(problem, sol.u[end])
+		_push_xd!(problem, copy(caract.xd))
+		_push_time!(problem, sol.t[end])
 	end
 	return PDMPResult(problem, save_positions)
 end

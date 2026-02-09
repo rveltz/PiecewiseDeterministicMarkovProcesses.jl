@@ -79,7 +79,7 @@ function solve(problem::PDMPProblem, Flow::Function; verbose::Bool = false, save
 		end
 
 		nsteps += 1
-		pushTime!(problem, t)
+		_push_time!(problem, t)
 		push!(xc_hist, X0[ind_save_c])
 		push!(xd_hist, Xd[ind_save_d])
 		save_rate && push!(problem.rate_hist, sum(get_tmp(ratecache, X0)))

@@ -20,11 +20,11 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 	@assert ode in [:cvode, :lsoda, :adams, :BDF]
 	verbose && printstyled(color=:red,"--> Start CHV method (algo::Symbol)\n")
 
-	# table to use DiffEqBase
-	odeTable = Dict(:lsoda => lsoda(),
-					:BDF => CVODE_BDF(),
-					:adams => CVODE_Adams(),
-					:cvode => CVODE_BDF())
+	# table to use SciMLBase
+	odeTable = Dict(:lsoda => LSODA.lsoda(),
+					:BDF => Sundials.CVODE_BDF(),
+					:adams => Sundials.CVODE_Adams(),
+					:cvode => Sundials.CVODE_BDF())
 
 	# initialise the problem. If I call twice this solve function, it should give the same result...
 	init!(problem)
@@ -58,8 +58,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 	if ind_save_d[1] == -1
 		ind_save_d = 1:length(xd0)
 	end
-	xc_hist = VectorOfArray([copy(xc0)[ind_save_c]])
-	xd_hist = VectorOfArray([copy(xd0)[ind_save_d]])
+	xc_hist = RAT.VectorOfArray([copy(xc0)[ind_save_c]])
+	xd_hist = RAT.VectorOfArray([copy(xd0)[ind_save_d]])
 
 	res_ode = zeros(length(X_extended))
 
@@ -109,7 +109,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 
 			# save state, post-jump
 			if save_positions[2] || (nsteps == n_jumps - 1)
-				pushTime!(problem, t)
+				_push_time!(problem, t)
 				push!(xc_hist, copy(X_extended[ind_save_c]))
 				push!(xd_hist, copy(Xd[ind_save_d]))
 			end
@@ -127,8 +127,8 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 			t = tf
 
 			# save state
-			pushTime!(problem, tf)
-			push!(xc_hist, copy(res_ode_last[end][ind_save_c]))
+			_push_time!(problem, tf)
+			push!(xc_hist, copy(res_ode_last.u[end][ind_save_c]))
 			push!(xd_hist, copy(Xd[ind_save_d]))
 		end
 		nsteps += 1

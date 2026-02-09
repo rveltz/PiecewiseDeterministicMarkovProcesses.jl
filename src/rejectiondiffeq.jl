@@ -127,9 +127,9 @@ function rejection_diffeq!(problem::PDMPProblem,
 		# the previous step was a jump!
 		if save_positions[2] && (t <= tf) && simjptimes.reject == false
 			verbose && println("----> save post-jump, xd = ", problem.Xd)
-			pushTime!(problem ,t)
-			pushXc!(problem, copy(caract.xc))
-			pushXd!(problem, copy(caract.xd))
+			_push_time!(problem ,t)
+			_push_xc!(problem, copy(caract.xc))
+			_push_xd!(problem, copy(caract.xd))
 			#save rates for debugging
 			save_rate && push!(problem.rate_hist, sum(get_tmp(ratecache, X0)))
 			verbose && println("----> end save post-jump, ")
@@ -144,9 +144,9 @@ function rejection_diffeq!(problem::PDMPProblem,
 		prob_last_bit = SciMLBase.ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
 		sol = SciMLBase.solve(prob_last_bit, ode)
 		verbose && println("-------> xc[end] = ", sol.u[end])
-		pushXc!(problem, sol.u[end])
-		pushXd!(problem, copy(caract.xd))
-		pushTime!(problem, sol.t[end])
+		_push_xc!(problem, sol.u[end])
+		_push_xd!(problem, copy(caract.xd))
+		_push_time!(problem, sol.t[end])
 	end
 	return PDMPResult(problem, save_positions)
 end

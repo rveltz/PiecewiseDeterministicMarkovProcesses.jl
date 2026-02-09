@@ -143,9 +143,9 @@ struct PDMPProblem{Tc, Td, vectype_xc <: AbstractVector{Tc},
 	rng::R
 end
 
-pushTime!(pb::PDMPProblem, t) = push!(pb.time, t)
-pushXc!(pb::PDMPProblem, xc) = push!(pb.Xc, xc)
-pushXd!(pb::PDMPProblem, xd) = push!(pb.Xd, xd)
+_push_time!(pb::PDMPProblem, t) = push!(pb.time, t)
+_push_xc!(pb::PDMPProblem, xc) = push!(pb.Xc, xc)
+_push_xd!(pb::PDMPProblem, xd) = push!(pb.Xd, xd)
 
 function init!(pb::PDMPProblem)
 	init!(pb.caract)
