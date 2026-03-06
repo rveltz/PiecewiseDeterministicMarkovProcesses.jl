@@ -82,10 +82,10 @@ function chv_diffeq!(problem::PDMPProblem,
 			save_positions = (false, true),
 			n_jumps::Td = Inf64,
 			save_rate = false,
-			finalizer = finalizer,
+			finalizer = finalize_dummy,
 			# options for DifferentialEquations
-			reltol=1e-7,
-			abstol=1e-9,
+			reltol = 1e-7,
+			abstol = 1e-9,
 			kwargs...) where {Tc, Td, vece}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in chv_diffeq\n")

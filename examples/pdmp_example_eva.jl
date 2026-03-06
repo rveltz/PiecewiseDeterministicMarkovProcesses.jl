@@ -18,12 +18,12 @@ function R_eva(rate, xc, xd, parms, t::Float64, issum::Bool)
 	if issum == false
 		if xd[1] == 0
 			rate[1] = R(xc[1])
-			rate[2] = 0.0
+			rate[2] = 0
 			rate[3] = rate_print
 			return 0.0, 4.95 #transition 0->1
 		else
-			rate[1] = 0.0
-			rate[2] = 1.0
+			rate[1] = 0
+			rate[2] = 1
 			rate[3] = rate_print
 			return 0.0, 4.95 #transition 1->0
 		end
