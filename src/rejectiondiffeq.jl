@@ -44,9 +44,9 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 		if (save_pre_jump) && (t <= tf)
 			verbose && printstyled(color=:green,"----> save pre-jump\n")
-			pushXc!(prob, integrator.u)
-			pushXd!(prob, copy(caract.xd))
-			pushTime!(prob, t)
+			_push_xc!(prob, integrator.u)
+			_push_xd!(prob, copy(caract.xd))
+			_push_time!(prob, t)
 			#save rates for debugging
 			save_rate && push!(prob.rate_hist, sum(ratecache.rate))
 		end

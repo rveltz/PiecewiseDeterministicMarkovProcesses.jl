@@ -3,45 +3,45 @@ using OrdinaryDiffEq, LinearAlgebra, Random
 import PiecewiseDeterministicMarkovProcesses as PDMP
 
 function F_eva!(xcdot, xc, xd, parms::Vector{Float64}, t::Float64)
-	# vector field used for the continuous variable
-	xcdot[1] = -(xc[1] - 1.5)
-	nothing
+    # vector field used for the continuous variable
+    xcdot[1] = -(xc[1] - 1.5)
+    nothing
 end
 
 function R(x)
-	return x^4
+    return x^4
 end
 
 function R_eva(rate, xc, xd, parms, t::Float64, issum::Bool)
-	# rate function
-	rate_print = parms[1]
-	if issum == false
-		if xd[1] == 0
-			rate[1] = R(xc[1])
-			rate[2] = 0
-			rate[3] = rate_print
-			return 0.0, 4.95 #transition 0->1
-		else
-			rate[1] = 0
-			rate[2] = 1
-			rate[3] = rate_print
-			return 0.0, 4.95 #transition 1->0
-		end
-	else
-		if xd[1] == 0
-			return R(xc[1]) + rate_print, 5. #transition 0->1
-		else
-			return 1.0 + rate_print, 5. #transition 1->0
-		end
-	end
+    # rate function
+    rate_print = parms[1]
+    if issum == false
+        if xd[1] == 0
+            rate[1] = R(xc[1])
+            rate[2] = 0
+            rate[3] = rate_print
+            return 0.0, 4.95 #transition 0->1
+        else
+            rate[1] = 0
+            rate[2] = 1
+            rate[3] = rate_print
+            return 0.0, 4.95 #transition 1->0
+        end
+    else
+        if xd[1] == 0
+            return R(xc[1]) + rate_print, 5. #transition 0->1
+        else
+            return 1.0 + rate_print, 5. #transition 1->0
+        end
+    end
 end
 
 function Delta_xc_eva(xc, xd, parms, t::Float64, ind_reaction::Int64)
-	# this function return the jump in the continuous component
-	if ind_reaction == 2
-		xc[1] = 0.0
-	end
-	return true
+    # this function return the jump in the continuous component
+    if ind_reaction == 2
+        xc[1] = 0
+    end
+    return true
 end
 
 xc0 = [0.0]
