@@ -143,7 +143,7 @@ function chv_diffeq!(problem::PDMPProblem,
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
 		SciMLBase.step!(integrator)
 
-		if t >= simjptimes.lastjumptime,
+		if t >= simjptimes.lastjumptime
 			error("Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
 		end
 		t, tprev = simjptimes.lastjumptime, t
