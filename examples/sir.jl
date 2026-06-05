@@ -2,8 +2,9 @@
 using LinearAlgebra, Random, Sundials
 import PiecewiseDeterministicMarkovProcesses as PDMP
 import OrdinaryDiffEq as ODE
+using OrdinaryDiffEqBDF
 
-function R_sir!(rate,xc,xd,parms,t::Float64,issum::Bool)
+function R_sir!(rate,xc,xd,parms,t, issum::Bool)
 	(S,I,R,~) = xd
 	(beta,mu) = parms
 	infection = beta*S*I
@@ -19,7 +20,7 @@ function R_sir!(rate,xc,xd,parms,t::Float64,issum::Bool)
 	end
 end
 
-function F_sir!(xdot,xc,xd,parms,t::Float64)
+function F_sir!(xdot,xc,xd,parms,t)
 	# vector field used for the continuous variable
 	xdot[1] = 0
 	nothing
@@ -35,4 +36,4 @@ Random.seed!(1234)
 problem = PDMP.PDMPProblem(F_sir!,R_sir!,nu, xc0, xd0, parms, (0.0, tf))
 result = PDMP.solve(problem, PDMP.CHV(ODE.Tsit5()); n_jumps = 1000)
 result = PDMP.solve(problem, PDMP.CHV(:cvode); n_jumps = 1000)
-result = PDMP.solve(problem, PDMP.CHV(Sundials.CVODE_BDF()); n_jumps = 1000)
+result = PDMP.solve(problem, PDMP.CHV(QNDF()); n_jumps = 1000)

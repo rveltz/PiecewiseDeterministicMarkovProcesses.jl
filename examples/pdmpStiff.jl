@@ -1,5 +1,14 @@
 using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
+using PiecewiseDeterministicMarkovProcesses,
+		LinearAlgebra,
+		Random,
+		OrdinaryDiffEq,
+		Sundials,
+		OrdinaryDiffEqSDIRK,
+		OrdinaryDiffEqRosenbrock,
+		OrdinaryDiffEqBDF
+		# LSODA
+
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSampleCHV(xc0, xd0, ti, nj::Int64)
@@ -50,8 +59,8 @@ end
 xc0 = [1.0]
 xd0 = [0, 0]
 
-nu = [1 0;0 -1]
-parms = [.0]
+nu = [1 0; 0 -1]
+parms = [0.0]
 ti = 0.322156
 tf = 100000.
 nj = 50
@@ -64,24 +73,25 @@ res_a_chv = AnalyticalSampleCHV(xc0,xd0,ti,nj)
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nSolvers comparison")
 for ode in [
-				(Tsit5(),"tsit5"),
-					(:lsoda,"lsoda"),
-					(Rodas5P(),"rodas5P"),
-					(TRBDF2(),"TRBDF2"),
-					(Rodas4P(),"rodas4P"),
-					(:cvode,"cvode"),
-					(Rosenbrock23(),"Rosenbrock23"),
-					(AutoTsit5(Rosenbrock23(autodiff=true)),"AutoTsit5-RS23"),
-					(CVODE_Adams(),"CVODEAdams"),
-					(CVODE_BDF(),"CVODEBDF"),
-					# (QNDF(), "QNDF"),
-					# (FBDF(), "FBDF"),
+					(Tsit5(),  "tsit5"),
+					(:lsoda, "lsoda"),
+					(:cvode,    "cvode"),
+					(Rodas5P(), "rodas5P"),
+					(Rodas4P(), "rodas4P"),
+					(Rosenbrock23(), "Rosenbrock23"),
+					(AutoTsit5(Rosenbrock23()), "AutoTsit5-RS23"),
+					(AutoVern7(Rodas5P()), "AutoVern7(Rodas5P())"),
+					(CVODE_Adams(), "CVODEAdams"),
+					(CVODE_BDF(), "CVODEBDF"),
+					(TRBDF2(),  "TRBDF2"),
+					(QNDF(), "QNDF"),
+					(FBDF(), "FBDF"),
 					]
 		abstol = 1e-8; reltol = 3e-6
 		Random.seed!(8)
-		res = PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, abstol = abstol, reltol = reltol,)
-		printstyled(color=:green, "\n--> norm difference = ", norm(res.time - res_a_chv[1], Inf64), "  - solver = ",ode[2],"\n")
+		res = PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, abstol, reltol,)
+		printstyled(color=:green, "\n--> norm difference = ", norm(res.time - res_a_chv[1], Inf), "  - solver = ",ode[2],"\n")
 		Random.seed!(8)
-		res = @time PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, abstol = abstol, reltol = reltol,)
+		res = @time PDMP.solve(problem, CHV(ode[1]); n_jumps = nj, abstol, reltol,)
 		push!(errors,norm(res.time - res_a_chv[1], Inf64))
 end

@@ -56,7 +56,7 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
-		SciMLBase.u_modified!(integrator, true)
+		SciMLBase.derivative_discontinuity!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
 			caract.xc[ii] = integrator.u[ii]
@@ -74,8 +74,16 @@ function rejectionjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, 
 end
 
 function rejection_diffeq!(problem::PDMPProblem,
-				ti::Tc, tf::Tc, verbose = false; ode = Tsit5(),
-				save_positions = (false, true), n_jumps::Td = Inf64, reltol=1e-7, abstol=1e-9, save_rate = false, finalizer = finalize_dummy) where {Tc, Td}
+				ti::Tc, 
+				tf::Tc,
+				verbose = false; 
+				ode = Tsit5(),
+				save_positions = (false, true),
+				n_jumps::Td = Inf64,
+				reltol=1e-7,
+				abstol=1e-9,
+				save_rate = false,
+				finalizer = finalize_dummy) where {Tc, Td}
 	verbose && println("#"^30)
 	verbose && printstyled(color=:red,"Entry in rejection_diffeq\n")
 	ti, tf = problem.tspan
@@ -160,7 +168,7 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd, Tcar},
 				reltol = 1e-7, 
 				abstol = 1e-9, 
 				save_rate = true, 
-				finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, Tcar, Tode <: SciMLBase.DEAlgorithm}
+				finalizer = finalize_dummy) where {Tc, Td, vectype_xc, vectype_xd, Tcar, Tode <: SciMLBase.AbstractDEAlgorithm}
 
 	return rejection_diffeq!(problem,
 							problem.tspan[1],

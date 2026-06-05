@@ -1,7 +1,7 @@
 name = "PiecewiseDeterministicMarkovProcesses"
 uuid = "86206cdf-4603-54e0-bd58-22a2dcbf57aa"
+version = "0.0.12"
 authors = ["Romain Veltz <romain.veltz@inria.fr>", " Simon Frost <sdf22@cam.ac.uk>"]
-version = "0.0.11"
 
 [deps]
 JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
@@ -16,18 +16,21 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-LSODA = "0.6.2, ^0.7"
-PreallocationTools = "^0.4"
-RecursiveArrayTools = "2.8, 2.9, ^3"
-Sundials = "4.5, 4.6, 4.7, 4.8, 4.9, ^4, 5"
-julia = "1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11"
 JumpProcesses = "^9.2"
-SciMLBase = "^1.59, ^2"
+LSODA = "1"
+PreallocationTools = "^0.4, 1"
+RecursiveArrayTools = "^4"
+SciMLBase = "^3"
+Sundials = "6"
+julia = "1.10"
 
 [extras]
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+OrdinaryDiffEqBDF = "6ad6398a-0878-4a85-9266-38940aa047c8"
+OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
+OrdinaryDiffEqSDIRK = "2d112036-d095-4a1e-ab9a-08536f3ecdbf"
 
 [targets]
-test = ["Test", "OrdinaryDiffEq", "Random"]
+test = ["Test", "OrdinaryDiffEq", "Random", "OrdinaryDiffEqRosenbrock", "OrdinaryDiffEqBDF"]

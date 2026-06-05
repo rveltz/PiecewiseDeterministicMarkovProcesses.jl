@@ -70,7 +70,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 	function Flow(_X0, _Xd, Δt, _r; _alg = odeTable[ode])
 		prob = SciMLBase.remake(probExtLsoda; tspan = (0, Δt))
 		prob.u0 .= _X0
-		sol = solve(prob, _alg; abstol = abstol, reltol = reltol, save_everystep = false)
+		sol = solve(prob, _alg; abstol, reltol, save_everystep = false, verbose = false)
 		return sol.u[end]
 	end
 

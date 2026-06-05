@@ -1,5 +1,5 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials, OrdinaryDiffEqRosenbrock
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function AnalyticalSample(xc0, xd0, ti, nj::Int64)

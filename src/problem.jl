@@ -48,9 +48,9 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 						vecd <: AbstractVector{Td}}
 		jump = Jump(nu, Delta)
 		if Ncache == 0
-			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+			rate_cache = PreallocationTools.DiffCache(get_rate_prototype(jump, Tc))
 		else
-			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc), Ncache)
+			rate_cache = PreallocationTools.DiffCache(get_rate_prototype(jump, Tc), Ncache)
 		end
 		ratefunction = VariableRate(R)
 		return new{typeof(F),
@@ -79,9 +79,9 @@ struct PDMPCaracteristics{TF, TR, TJ, vecc, vecd, vecrate, Tparms}
 						TR <: AbstractRate}
 		jump = Jump(nu, Delta)
 		if Ncache == 0
-			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc))
+			rate_cache = PreallocationTools.DiffCache(get_rate_prototype(jump, Tc))
 		else
-			rate_cache = PreallocationTools.dualcache(get_rate_prototype(jump, Tc), Ncache)
+			rate_cache = PreallocationTools.DiffCache(get_rate_prototype(jump, Tc), Ncache)
 		end
 		return new{typeof(F), typeof(R), typeof(jump), vecc, vecd, typeof(rate_cache), Tparms}(F, R, jump, copy(xc0), copy(xd0), copy(xc0), copy(xd0), rate_cache, parms)
 	end

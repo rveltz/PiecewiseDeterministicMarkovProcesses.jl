@@ -66,13 +66,14 @@ println("\n\nComparison of solvers")
 				(CVODE_Adams(),"CVODEAdams"),
 				(Tsit5(),"tsit5"),
 				(Rodas4P(),"rodas4P-AutoDiff"),
-				(Rodas5(),"rodas5"),
+				(Rodas5(),"rodas5-AutoDiff"),
 				(Rosenbrock23(),"RS23"),
-				(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
+				(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23"),
+				(AutoVern7(Rodas5()), "AutoVern7(Rodas5())")]
 		Random.seed!(18)
 
 		problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
-		res =  PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
+		res = PDMP.solve(problem, CHV(ode[1]); n_jumps = nj)
 		# this is to check the state of the random generator at the end of the simulation
 		if ode[1] == :lsoda
 			global rnd_state = rand()
@@ -80,6 +81,6 @@ println("\n\nComparison of solvers")
 			@assert rnd_state == rand()
 		end
 
-		println("--> norm difference = ", norm(res.time - res_a[1],Inf64), "  - solver = ",ode[2])
+		println("--> norm difference = ", norm(res.time - res_a[1], Inf64), "  - solver = ",ode[2])
 		push!(errors, norm(res.time - res_a[1], Inf64))
 	end

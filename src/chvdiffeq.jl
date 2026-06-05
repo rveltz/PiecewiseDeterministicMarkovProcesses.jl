@@ -19,7 +19,8 @@ end
 ### implementation of the CHV algo using DiffEq
 # the following does not allocate
 
-# The following function is a callback to discrete jump. Its role is to perform the jump on the solution given by the ODE solver
+# The following function is a callback to the discrete jump. 
+# Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
 function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose)
 	# we declare the characteristics for convenience
@@ -59,7 +60,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 		# we perform the jump
 		affect!(caract.pdmpjump, ev, integrator.u, caract.xd, caract.parms, t)
 
-		SciMLBase.u_modified!(integrator, true)
+		SciMLBase.derivative_discontinuity!(integrator, true)
 
 		@inbounds for ii in eachindex(caract.xc)
 			caract.xc[ii] = integrator.u[ii]
@@ -142,7 +143,9 @@ function chv_diffeq!(problem::PDMPProblem,
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
 		SciMLBase.step!(integrator)
 
-		@assert( t < simjptimes.lastjumptime, "Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
+		if t >= simjptimes.lastjumptime,
+			error("Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
+		end
 		t, tprev = simjptimes.lastjumptime, t
 
 		# the previous step was a jump! should we save it?
@@ -151,13 +154,13 @@ function chv_diffeq!(problem::PDMPProblem,
 			_push_xc!(problem, copy(caract.xc))
 			_push_xd!(problem, copy(caract.xd))
 			_push_time!(problem, t)
-			njumps +=1
+			njumps += 1
 			verbose && println("----> end save post-jump, ")
 		end
 		finalizer(rate, caract.xc, caract.xd, caract.parms, t)
 	end
 	# we check that the last bit [t_last_jump, tf] is not missing
-	if t>tf
+	if t > tf
 		verbose && println("----> LAST BIT!!, xc = ", caract.xc[end], ", xd = ", caract.xd, ", t = ", problem.time[end])
 		prob_last_bit = SciMLBase.ODEProblem((xdot,x,data,tt) -> caract.F(xdot, x, caract.xd, caract.parms, tt), copy(caract.xc), (tprev, tf))
 		sol = SciMLBase.solve(prob_last_bit, ode)
@@ -174,14 +177,24 @@ function solve(problem::PDMPProblem,
 				X_extended;
 				verbose = false,
 				n_jumps = Inf64,
-				save_positions = (false,
-				true),
+				save_positions = (false, true),
 				reltol = 1e-7,
 				abstol = 1e-9,
 				save_rate = false,
-				finalizer = finalize_dummy) where {Tode <: SciMLBase.DEAlgorithm}
+				finalizer = finalize_dummy) where {Tode <: SciMLBase.AbstractDEAlgorithm}
 
-	return chv_diffeq!(problem, problem.tspan[1], problem.tspan[2], X_extended, verbose; ode = algo.ode, save_positions = save_positions, n_jumps = n_jumps, reltol = reltol, abstol = abstol, save_rate = save_rate, finalizer = finalizer)
+	return chv_diffeq!(problem, 
+					problem.tspan[1], 
+					problem.tspan[2], 
+					X_extended, 
+					verbose; 
+					ode = algo.ode,
+					save_positions = save_positions,
+					n_jumps = n_jumps,
+					reltol = reltol,
+					abstol = abstol,
+					save_rate = save_rate,
+					finalizer = finalizer)
 end
 
 """
@@ -216,7 +229,7 @@ function solve(problem::PDMPProblem{Tc, Td, vectype_xc, vectype_xd},
 				reltol = 1e-7,
 				abstol = 1e-9,
 				save_rate = false,
-				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, Tode <: SciMLBase.DEAlgorithm}
+				finalizer = finalize_dummy, kwargs...) where {Tc, Td, vectype_xc, vectype_xd, Tode <: SciMLBase.AbstractDEAlgorithm}
 
 	# resize the extended vector to the proper dimension
 	X_extended = zeros(Tc, length(problem.caract.xc) + 1)

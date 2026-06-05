@@ -112,7 +112,8 @@ algos = [(:cvode,"cvode"),
 			(Tsit5(),"tsit5"),
 			(Rodas4P(),"rodas4P-noAutoDiff"),
 			(Rodas4P(),"rodas4P-AutoDiff"),
-			(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")]
+			(AutoTsit5(Rosenbrock23()),"AutoTsit5-RS23")
+		]
 
 problem = PDMP.PDMPProblem(F!, R!, nu, xc0, xd0, parms, (ti, tf))
 println("\n\nComparison of solvers - CHV")

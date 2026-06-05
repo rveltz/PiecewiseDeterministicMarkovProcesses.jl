@@ -1,5 +1,5 @@
 # using Revise
-using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials
+using PiecewiseDeterministicMarkovProcesses, LinearAlgebra, Random, OrdinaryDiffEq, Sundials, OrdinaryDiffEqBDF
 const PDMP = PiecewiseDeterministicMarkovProcesses
 
 function F_tcp!(ẋ, xc, xd, parms, t)
@@ -67,7 +67,7 @@ end
 xc0 = [ 0.0 ]
 xd0 = [0, 0]
 
-nu_tcp = [1 0;0 -1]
+nu_tcp = [1 0; 0 -1]
 parms = [0.0]
 tf = 100000.
 nj = 50
@@ -83,9 +83,10 @@ for ode in [(:cvode, "cvode"),
 			(CVODE_Adams(), "CVODEAdams"),
 			(Tsit5(), "tsit5"),
 			(Rodas4P(), "rodas4P-AutoDiff"),
-			(Rodas4P(), "rodas4P-AutoDiff"),
+			(Rodas5P(), "rodas5P-AutoDiff"),
 			(Rosenbrock23(), "RS23"),
-			(AutoTsit5(Rosenbrock23()), "AutoTsit5RS23")]
+			(AutoTsit5(Rosenbrock23()), "AutoTsit5RS23")
+			]
 	Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
 	res =  PDMP.solve(problem, Rejection(ode[1]); n_jumps = nj)
@@ -139,4 +140,4 @@ Random.seed!(1234)
 	res1 =  PDMP.solve(problem, Rejection(:cvode); n_jumps = nj)
 Random.seed!(1234)
 	problem = PDMP.PDMPProblem(F_tcp!, R_tcp!, nu_tcp, xc0, xd0, parms, (0.0, tf))
-	res2 =  PDMP.solve(problem, Rejection(CVODE_BDF()); n_jumps = nj)
+	res2 =  PDMP.solve(problem, Rejection(QNDF()); n_jumps = nj)
