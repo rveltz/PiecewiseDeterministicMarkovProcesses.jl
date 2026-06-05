@@ -122,7 +122,7 @@ function solve(problem::PDMPProblem, algo::CHV{Tode};
 
 		else
 			probLast = SciMLBase.ODEProblem((du, u, p, _t) -> caract.F(du, u, Xd, caract.parms, _t), X_extended[1:end-1], (t, tf))
-			res_ode_last = SciMLBase.solve(probLast, odeTable[ode]; abstol = 1e-9, reltol = 1e-7, save_everystep = false)
+			res_ode_last = SciMLBase.solve(probLast, odeTable[ode]; abstol, reltol, save_everystep = false, verbose = false)
 
 			t = tf
 
