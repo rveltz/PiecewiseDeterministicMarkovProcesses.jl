@@ -1,7 +1,7 @@
 name = "PiecewiseDeterministicMarkovProcesses"
 uuid = "86206cdf-4603-54e0-bd58-22a2dcbf57aa"
-version = "0.0.12"
-authors = ["Romain Veltz <romain.veltz@inria.fr>", " Simon Frost <sdf22@cam.ac.uk>"]
+version = "0.0.13"
+authors = ["Romain Veltz <romain.veltz@inria.fr>", "Simon Frost <sdf22@cam.ac.uk>"]
 
 [deps]
 JumpProcesses = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
@@ -13,24 +13,29 @@ RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-JumpProcesses = "^9.2"
+JumpProcesses = "9.2"
 LSODA = "1"
-PreallocationTools = "^0.4, 1"
-RecursiveArrayTools = "^4"
-SciMLBase = "^3"
+LinearAlgebra = "1"
+PreallocationTools = "0.4, 1"
+Random = "1"
+RecursiveArrayTools = "4"
+SciMLBase = "3, 4"
+SparseArrays = "1"
 Sundials = "6"
+Test = "1"
+OrdinaryDiffEq = "6, 7"
+OrdinaryDiffEqBDF = "1, 2"
+OrdinaryDiffEqRosenbrock = "1, 2"
 julia = "1.10"
 
 [extras]
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 OrdinaryDiffEqBDF = "6ad6398a-0878-4a85-9266-38940aa047c8"
 OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
-OrdinaryDiffEqSDIRK = "2d112036-d095-4a1e-ab9a-08536f3ecdbf"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "OrdinaryDiffEq", "Random", "OrdinaryDiffEqRosenbrock", "OrdinaryDiffEqBDF"]
