@@ -77,3 +77,5 @@ end
 @testset "JumpProcesses Wrap" begin
 	# include("../examples/examplediffeqjumpwrapper.jl")
 end
+
+include("rounded_jump_time.jl")
