@@ -22,7 +22,7 @@ end
 # The following function is a callback to the discrete jump. 
 # Its role is to perform the jump on the solution given by the ODE solver
 # callable struct
-function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose)
+function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbose, tied_rate)
 	# we declare the characteristics for convenience
 	caract = prob.caract
 	rate = get_tmp(caract.ratecache, integrator.u)
@@ -34,6 +34,7 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 	# find the next jump time
 	t = integrator.u[end]
 
+	same_time = t == simjptimes.lastjumptime
 	simjptimes.lastjumptime = t
 
 	verbose && printstyled(color=:green, "--> Jump detected at t = $t !!\n")
@@ -50,6 +51,10 @@ function chvjump(integrator, prob::PDMPProblem, save_pre_jump, save_rate, verbos
 
 	# execute the jump
 	caract.R(rate, integrator.u, caract.xd, caract.parms, t, false)
+	if same_time
+		# These are the transition rates before the discrete state is updated.
+		tied_rate[] = sum(rate)
+	end
 	if t < tf
 		#save rates for debugging
 		save_rate && push!(prob.rate_hist, sum(rate) )
@@ -117,8 +122,9 @@ function chv_diffeq!(problem::PDMPProblem,
 	X_extended[end] = ti
 
 	# definition of the callback structure passed to DiffEq
+	tied_rate = Ref(zero(ti))
 	cb = SciMLBase.DiscreteCallback(problem, 
-						integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose),
+						integrator -> chvjump(integrator, problem, save_positions[1], save_rate, verbose, tied_rate),
 						save_positions = (false, false))
 
 	# define the ODE flow, this leads to big memory saving
@@ -139,14 +145,30 @@ function chv_diffeq!(problem::PDMPProblem,
 	# reference to the rate vector
 	rate = get_tmp(caract.ratecache, integrator.u)
 
+	last_step_tied = false
 	while (t < tf) && (simjptimes.njumps < n_jumps)
 		verbose && println("--> n = $(problem.simjptimes.njumps), t = $t, δt = ", simjptimes.tstop_extended)
+		old_count = simjptimes.njumps
+		internal_start = integrator.t
+		target = simjptimes.tstop_extended
 		SciMLBase.step!(integrator)
 
-		if t >= simjptimes.lastjumptime
+		physical_end = simjptimes.lastjumptime
+		if physical_end == t && !last_step_tied &&
+				simjptimes.njumps == old_count + 1 &&
+				t == integrator.u[end] &&
+				internal_start < integrator.t == target < simjptimes.tstop_extended &&
+				isfinite(tied_rate[]) && tied_rate[] > 0
+			estimated_dt = (target - internal_start) / tied_rate[]
+			if !(0 < estimated_dt && t + estimated_dt == t)
+				error("PDMP jump time stalled at $t despite estimated dt=$estimated_dt")
+			end
+			@info "PDMP: isolated jump at rounded time" jump=simjptimes.njumps t estimated_dt
+		elseif !(physical_end > t)
 			error("Could not compute next jump time $(simjptimes.njumps).\nReturn code = $(integrator.sol.retcode)\n $t < $(simjptimes.lastjumptime),\n solver = $ode. dt = $(t - simjptimes.lastjumptime)\n From xc = $(integrator.sol.u)")
 		end
-		t, tprev = simjptimes.lastjumptime, t
+		last_step_tied = physical_end == t
+		t, tprev = physical_end, t
 
 		# the previous step was a jump! should we save it?
 		if njumps < simjptimes.njumps && save_positions[2] && (t <= tf)
